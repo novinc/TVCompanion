@@ -9,7 +9,8 @@
     android:id="@+id/constraintLayout">
 
     <TextView
-        android:text="Show Title"
+        android:text="Mr. Robot"
+        android:maxLines="2"
         android:textStyle="bold"
         android:textSize="20sp"
         android:layout_width="0dp"
@@ -26,7 +27,7 @@
         android:layout_marginEnd="8dp" />
 
     <TextView
-        android:text="Genres: some genres"
+        android:text="Genres: Drama, Crime, Thriller"
         android:layout_width="0dp"
         android:layout_height="20dp"
         android:id="@+id/genres"
@@ -42,9 +43,9 @@
         android:layout_marginEnd="8dp" />
 
     <TextView
-        android:text="Description is very long Description is very long Description is very long Description is very long Description is very long"
+        android:text="The show follows Elliot, who is a cyber-security tech by day and vigilante hacker by night. He has used his hacking skills for justice and to protect those he cares about, but has problems connecting to people in the real world due to social anxiety. He strongly believes that the world is being ruled by the 1% of the 1% and, that using money and debt, they have enslaved mankind and he wishes desperately to change this. He is recruited by the head of a highly secret hacking group to take down the corporation he is being paid to protect with the hope of erasing 70% of all the debt in the world. He has had delusions in the past and sees a therapist who tries to help him and takes medication for it, but in the end he is unsure what is real and what is not, and so are we as we experience everything from his perspective."
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:id="@+id/description"
         tools:ignore="HardcodedText"
         android:textSize="12sp"
@@ -54,7 +55,9 @@
         app:layout_constraintTop_toBottomOf="@+id/genres"
         app:layout_constraintRight_toLeftOf="@+id/poster"
         android:layout_marginRight="8dp"
-        android:layout_marginEnd="8dp" />
+        android:layout_marginEnd="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/seasons"
+        android:layout_marginBottom="8dp" />
 
     <TextView
         android:text="2 Seasons"
@@ -81,4 +84,25 @@
         android:layout_marginEnd="16dp"
         app:layout_constraintBottom_toBottomOf="@+id/constraintLayout"
         android:layout_marginBottom="16dp" />
+
+    <ImageView
+        android:src="@drawable/ic_heart"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/heart"
+        app:layout_constraintRight_toLeftOf="@+id/poster"
+        android:layout_marginRight="8dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintBottom_toBottomOf="@+id/poster" />
+
+    <TextView
+        android:text="90%"
+        tools:ignore="HardcodedText"
+        android:layout_width="0dp"
+        android:layout_height="20dp"
+        android:id="@+id/percentage"
+        app:layout_constraintRight_toLeftOf="@+id/heart"
+        android:layout_marginRight="8dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintBaseline_toBaselineOf="@+id/seasons" />
 </android.support.constraint.ConstraintLayout>
