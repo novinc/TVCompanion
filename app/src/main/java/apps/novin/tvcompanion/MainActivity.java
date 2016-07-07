@@ -1,10 +1,8 @@
 package apps.novin.tvcompanion;
 
-import android.net.Uri;
+import android.content.res.Configuration;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -18,25 +16,61 @@ import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import butterknife.BindView;
+import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, RecommendationsFragment.OnFragmentInteractionListener{
 
     @BindView(R.id.content_frame)
     FrameLayout contentFragment;
+    @BindView(R.id.drawer_layout)
+    DrawerLayout mDrawerLayout;
+    @BindView(R.id.toolbar)
+    Toolbar mToolbar;
+
+    private enum ScreenType {
+        PHONE, SMALL_TABLET, SMALL_TABLET_LAND, BIG_TABLET
+    }
+
+    private ScreenType screenType;
+
+    private boolean isDrawerLocked;
+
+    private ActionBarDrawerToggle mDrawerToggle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        ButterKnife.bind(this);
+        String screen = getString(R.string.screen_type);
+        switch (screen) {
+            case "Phone":
+                screenType = ScreenType.PHONE;
+                break;
+            case "Small Tablet":
+                screenType = ScreenType.SMALL_TABLET;
+                break;
+            case "Small Tablet Landscape":
+                screenType = ScreenType.SMALL_TABLET_LAND;
+                break;
+            case "Big Tablet":
+                screenType = ScreenType.BIG_TABLET;
+                break;
+        }
+        setSupportActionBar(mToolbar);
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
+        if (screenType.equals(ScreenType.BIG_TABLET) || screenType.equals(ScreenType.SMALL_TABLET_LAND)) {
+            mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_OPEN);
+            mDrawerLayout.setScrimColor(0x00000000);
+            isDrawerLocked = true;
+        } else {
+            mDrawerToggle = new ActionBarDrawerToggle(
+                    this, mDrawerLayout, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+            mDrawerLayout.addDrawerListener(mDrawerToggle);
+            mDrawerToggle.syncState();
+            isDrawerLocked = false;
+        }
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
@@ -49,6 +83,23 @@ public class MainActivity extends AppCompatActivity
             drawer.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
+        }
+    }
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        // Sync the toggle state after onRestoreInstanceState has occurred.
+        if (mDrawerToggle != null) {
+            mDrawerToggle.syncState();
+        }
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if (mDrawerToggle != null) {
+            mDrawerToggle.onConfigurationChanged(newConfig);
         }
     }
 
@@ -93,9 +144,10 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_about) {
 
         }
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
+        if (!isDrawerLocked) {
+            DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+            drawer.closeDrawer(GravityCompat.START);
+        }
         return true;
     }
 
