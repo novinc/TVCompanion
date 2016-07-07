@@ -1,7 +1,9 @@
 package apps.novin.tvcompanion;
 
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -19,7 +21,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, RecommendationsFragment.OnFragmentInteractionListener{
+        implements NavigationView.OnNavigationItemSelectedListener {
 
     @BindView(R.id.content_frame)
     FrameLayout contentFragment;
@@ -60,20 +62,28 @@ public class MainActivity extends AppCompatActivity
         }
         setSupportActionBar(mToolbar);
 
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
         if (screenType.equals(ScreenType.BIG_TABLET) || screenType.equals(ScreenType.SMALL_TABLET_LAND)) {
             mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_OPEN);
             mDrawerLayout.setScrimColor(0x00000000);
             isDrawerLocked = true;
+            if (mDrawerToggle != null) {
+                mDrawerToggle.syncState();
+            }
         } else {
             mDrawerToggle = new ActionBarDrawerToggle(
                     this, mDrawerLayout, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
             mDrawerLayout.addDrawerListener(mDrawerToggle);
-            mDrawerToggle.syncState();
             isDrawerLocked = false;
+            mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+            mDrawerToggle.syncState();
         }
-
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
     }
 
     @Override
@@ -117,11 +127,6 @@ public class MainActivity extends AppCompatActivity
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -131,19 +136,24 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
+        Fragment fragment = null;
+
         if (id == R.id.nav_recommendation) {
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.content_frame, new RecommendationsFragment())
-                    .commit();
+            fragment = new RecommendationsFragment();
         } else if (id == R.id.nav_find_shows) {
 
         } else if (id == R.id.nav_my_shows) {
-
+            fragment = new MyShowsFragment();
         } else if (id == R.id.nav_settings) {
 
         } else if (id == R.id.nav_about) {
 
         }
+
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.content_frame, fragment)
+                .commit();
+
         if (!isDrawerLocked) {
             DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
             drawer.closeDrawer(GravityCompat.START);
@@ -152,11 +162,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void onButtonPressed(View view) {
-        Toast.makeText(this, "clicked", Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onFragmentInteraction() {
         Toast.makeText(this, "clicked", Toast.LENGTH_SHORT).show();
     }
 }
