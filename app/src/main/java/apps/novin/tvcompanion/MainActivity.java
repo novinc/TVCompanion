@@ -4,6 +4,7 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -65,6 +66,11 @@ public class MainActivity extends AppCompatActivity
         setSupportActionBar(mToolbar);
 
         mNavigationView.setNavigationItemSelectedListener(this);
+
+        if (savedInstanceState == null) {
+            mNavigationView.setCheckedItem(R.id.nav_recommendation);
+            mNavigationView.getMenu().performIdentifierAction(R.id.nav_recommendation, 0);
+        }
     }
 
     @Override
@@ -86,6 +92,14 @@ public class MainActivity extends AppCompatActivity
             ((CustomDrawerLayout) mDrawerLayout).setDrawerViewWithoutIntercepting(null);
             isDrawerLocked = false;
             mDrawerToggle.syncState();
+        }
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        if (savedInstanceState == null) {
+            mNavigationView.getMenu().findItem(R.id.nav_recommendation).setChecked(true);
         }
     }
 
@@ -144,7 +158,7 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_recommendation) {
             fragment = new RecommendationsFragment();
         } else if (id == R.id.nav_find_shows) {
-
+            fragment = new FindShowsFragment();
         } else if (id == R.id.nav_my_shows) {
             fragment = new MyShowsFragment();
         } else if (id == R.id.nav_settings) {
@@ -164,7 +178,8 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    public void onButtonPressed(View view) {
+    public void onShowPressed(View view) {
         Toast.makeText(this, "clicked", Toast.LENGTH_SHORT).show();
+        CardView card = (CardView) view.findViewById(R.id.card_view);
     }
 }
