@@ -29,6 +29,8 @@ public class MainActivity extends AppCompatActivity
     DrawerLayout mDrawerLayout;
     @BindView(R.id.toolbar)
     Toolbar mToolbar;
+    @BindView(R.id.nav_view)
+    NavigationView mNavigationView;
 
     private enum ScreenType {
         PHONE, SMALL_TABLET, SMALL_TABLET_LAND, BIG_TABLET
@@ -62,8 +64,7 @@ public class MainActivity extends AppCompatActivity
         }
         setSupportActionBar(mToolbar);
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+        mNavigationView.setNavigationItemSelectedListener(this);
     }
 
     @Override
@@ -72,6 +73,7 @@ public class MainActivity extends AppCompatActivity
         if (screenType.equals(ScreenType.BIG_TABLET) || screenType.equals(ScreenType.SMALL_TABLET_LAND)) {
             mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_OPEN);
             mDrawerLayout.setScrimColor(0x00000000);
+            ((CustomDrawerLayout) mDrawerLayout).setDrawerViewWithoutIntercepting(mNavigationView);
             isDrawerLocked = true;
             if (mDrawerToggle != null) {
                 mDrawerToggle.syncState();
@@ -80,8 +82,9 @@ public class MainActivity extends AppCompatActivity
             mDrawerToggle = new ActionBarDrawerToggle(
                     this, mDrawerLayout, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
             mDrawerLayout.addDrawerListener(mDrawerToggle);
-            isDrawerLocked = false;
             mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+            ((CustomDrawerLayout) mDrawerLayout).setDrawerViewWithoutIntercepting(null);
+            isDrawerLocked = false;
             mDrawerToggle.syncState();
         }
     }
