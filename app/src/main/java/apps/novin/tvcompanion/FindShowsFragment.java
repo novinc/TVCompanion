@@ -53,21 +53,6 @@ public class FindShowsFragment extends Fragment {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 mViewPager.setCurrentItem(tab.getPosition());
-                switch (tab.getPosition()) {
-                    case 0:
-                        showToast("One");
-                        break;
-                    case 1:
-                        showToast("Two");
-                        break;
-                    case 2:
-                        showToast("Three");
-                        break;
-                }
-            }
-
-            private void showToast(String s) {
-                Toast.makeText(getContext(), s, Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -81,9 +66,10 @@ public class FindShowsFragment extends Fragment {
 
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getChildFragmentManager());
-        /*adapter.addFrag(new DummyFragment(getResources().getColor(R.color.accent_material_light)), "CAT");
-        adapter.addFrag(new DummyFragment(getResources().getColor(R.color.ripple_material_light)), "DOG");
-        adapter.addFrag(new DummyFragment(getResources().getColor(R.color.button_material_dark)), "MOUSE");*/
+        adapter.addFrag(FindShowsPageFragment.newInstance(FindShowsPageFragment.TRENDING), "Trending");
+        adapter.addFrag(FindShowsPageFragment.newInstance(FindShowsPageFragment.MOST_POPULAR), "Most Popular");
+        adapter.addFrag(FindShowsPageFragment.newInstance(FindShowsPageFragment.MOST_PLAYED), "Most Played");
+        adapter.addFrag(FindShowsPageFragment.newInstance(FindShowsPageFragment.SEARCH), "Search");
         viewPager.setAdapter(adapter);
     }
 
@@ -94,12 +80,6 @@ public class FindShowsFragment extends Fragment {
 
         public ViewPagerAdapter(FragmentManager supportFragmentManager) {
             super(supportFragmentManager);
-            mFragmentList.add(new RecommendationsFragment());
-            mFragmentList.add(new RecommendationsFragment());
-            mFragmentList.add(new RecommendationsFragment());
-            mFragmentTitleList.add("one");
-            mFragmentTitleList.add("two");
-            mFragmentTitleList.add("three");
         }
 
         @Override

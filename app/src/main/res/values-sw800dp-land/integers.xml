@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <integer name="my_shows_span">8</integer>
+    <integer name="find_shows_span">6</integer>
 
 </resources>
