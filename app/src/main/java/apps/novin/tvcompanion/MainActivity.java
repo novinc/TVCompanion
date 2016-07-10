@@ -1,8 +1,11 @@
 package apps.novin.tvcompanion;
 
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.CardView;
 import android.util.Log;
@@ -182,7 +185,18 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void onShowPressed(View view) {
-        Toast.makeText(this, "clicked", Toast.LENGTH_SHORT).show();
-        CardView card = (CardView) view.findViewById(R.id.card_view);
+        long id = 0;
+        Intent intent = new Intent(this, ShowDetailActivity.class);
+        intent.putExtra(ShowDetailActivity.ID_KEY, id);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            CardView card = (CardView) view.findViewById(R.id.card_view);
+            card.setTransitionName(getString(R.string.border_transition) + id);
+            ActivityOptionsCompat options = ActivityOptionsCompat.
+                    makeSceneTransitionAnimation(this, card, getString(R.string.border_transition));
+            startActivity(intent, options.toBundle());
+
+        } else {
+            startActivity(intent);
+        }
     }
 }
