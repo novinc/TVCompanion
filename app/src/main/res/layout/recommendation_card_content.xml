@@ -70,7 +70,7 @@
         android:layout_marginStart="16dp"
         app:layout_constraintBottom_toBottomOf="@+id/poster" />
 
-    <ImageView
+    <android.support.v7.widget.AppCompatImageView
         android:src="@android:color/holo_green_dark"
         android:layout_width="100dp"
         android:layout_height="150dp"

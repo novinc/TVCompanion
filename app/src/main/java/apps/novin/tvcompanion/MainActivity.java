@@ -7,6 +7,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.util.Pair;
 import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.View;
@@ -19,6 +20,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import butterknife.BindView;
@@ -190,9 +192,13 @@ public class MainActivity extends AppCompatActivity
         intent.putExtra(ShowDetailActivity.ID_KEY, id);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             CardView card = (CardView) view.findViewById(R.id.card_view);
+            ImageView poster = (ImageView) card.findViewById(R.id.poster);
             card.setTransitionName(getString(R.string.border_transition) + id);
+            poster.setTransitionName(getString(R.string.poster_transition) + id);
+            Pair<View, String> border = Pair.create((View) card, getString(R.string.border_transition));
+            Pair<View, String> pic = Pair.create((View) poster, getString(R.string.poster_transition));
             ActivityOptionsCompat options = ActivityOptionsCompat.
-                    makeSceneTransitionAnimation(this, card, getString(R.string.border_transition));
+                    makeSceneTransitionAnimation(this, border, pic);
             startActivity(intent, options.toBundle());
 
         } else {
