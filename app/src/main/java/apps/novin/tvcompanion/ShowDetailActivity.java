@@ -59,7 +59,49 @@ public class ShowDetailActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             scheduleStartPostponedTransition(poster);
         }
+        mAppBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
 
+            private State state;
+
+            @Override
+            public synchronized void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
+                if (verticalOffset == 0) {
+                    if (state != State.EXPANDED) {
+
+                        ViewCompat.animate(cardViewPoster)
+                                .setInterpolator(new OvershootInterpolator())
+                                .scaleX(1)
+                                .scaleY(1)
+                                .start();
+
+                    }
+                    state = State.EXPANDED;
+
+                } else if (Math.abs(verticalOffset) >= appBarLayout.getTotalScrollRange()) {
+                    if (state != State.COLLAPSED) {
+                        ViewCompat.animate(cardViewPoster)
+                                .setInterpolator(new OvershootInterpolator())
+                                .scaleX(0)
+                                .scaleY(0)
+                                .start();
+
+                    }
+                    state = State.COLLAPSED;
+                } else {
+                    if (state != State.IDLE) {
+                        if (state == State.COLLAPSED) {
+                            ViewCompat.animate(cardViewPoster)
+                                    .setInterpolator(new OvershootInterpolator())
+                                    .scaleX(1)
+                                    .scaleY(1)
+                                    .start();
+                        }
+                    }
+                    state = State.IDLE;
+                }
+            }
+
+        });
     }
 
     private void scheduleStartPostponedTransition(final View sharedElement) {
@@ -70,49 +112,6 @@ public class ShowDetailActivity extends AppCompatActivity {
                     public boolean onPreDraw() {
                         sharedElement.getViewTreeObserver().removeOnPreDrawListener(this);
                         startPostponedEnterTransition();
-                        mAppBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
-
-                            private State state;
-
-                            @Override
-                            public synchronized void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
-                                if (verticalOffset == 0) {
-                                    if (state != State.EXPANDED) {
-
-                                        ViewCompat.animate(cardViewPoster)
-                                                .setInterpolator(new OvershootInterpolator())
-                                                .scaleX(1)
-                                                .scaleY(1)
-                                                .start();
-
-                                    }
-                                    state = State.EXPANDED;
-
-                                } else if (Math.abs(verticalOffset) >= appBarLayout.getTotalScrollRange()) {
-                                    if (state != State.COLLAPSED) {
-                                        ViewCompat.animate(cardViewPoster)
-                                                .setInterpolator(new OvershootInterpolator())
-                                                .scaleX(0)
-                                                .scaleY(0)
-                                                .start();
-
-                                    }
-                                    state = State.COLLAPSED;
-                                } else {
-                                    if (state != State.IDLE) {
-                                        if (state == State.COLLAPSED) {
-                                            ViewCompat.animate(cardViewPoster)
-                                                    .setInterpolator(new OvershootInterpolator())
-                                                    .scaleX(1)
-                                                    .scaleY(1)
-                                                    .start();
-                                        }
-                                    }
-                                    state = State.IDLE;
-                                }
-                            }
-
-                        });
                         return true;
                     }
                 });
