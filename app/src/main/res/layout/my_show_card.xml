@@ -20,7 +20,7 @@
 
         <ImageView
             android:id="@+id/poster"
-            android:src="@android:color/holo_blue_dark"
+            android:src="@drawable/show_background"
             android:layout_width="100dp"
             android:layout_height="150dp"
             android:contentDescription="@string/desc_poster" />

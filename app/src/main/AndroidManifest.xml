@@ -20,7 +20,7 @@
         </activity>
         <activity
             android:name=".ShowDetailActivity"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:theme="@style/AppTheme.Details" />
     </application>
 
 </manifest>

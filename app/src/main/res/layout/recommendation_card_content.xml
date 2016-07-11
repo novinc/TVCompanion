@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:showIn="@layout/fragment_recommendations"
+    tools:showIn="@layout/recommendation_card"
     tools:context=".MainActivity"
     android:id="@+id/constraintLayout">
 
@@ -70,8 +70,8 @@
         android:layout_marginStart="16dp"
         app:layout_constraintBottom_toBottomOf="@+id/poster" />
 
-    <android.support.v7.widget.AppCompatImageView
-        android:src="@android:color/holo_green_dark"
+    <ImageView
+        android:src="@drawable/show_background"
         android:layout_width="100dp"
         android:layout_height="150dp"
         android:id="@+id/poster"
