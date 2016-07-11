@@ -6,12 +6,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.Pair;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.AppCompatDialogFragment;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -188,7 +190,8 @@ public class MainActivity extends AppCompatActivity
         long id = 0;
         Intent intent = new Intent(this, ShowDetailActivity.class);
         intent.putExtra(ShowDetailActivity.ID_KEY, id);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && screenType != ScreenType.BIG_TABLET) {
             ImageView poster = (ImageView) view.findViewById(R.id.poster);
             TextView title = (TextView) view.findViewById(R.id.title);
             TextView genre = (TextView) view.findViewById(R.id.genres);
@@ -212,6 +215,9 @@ public class MainActivity extends AppCompatActivity
             }
             startActivity(intent, options.toBundle());
 
+        } else if (screenType == ScreenType.BIG_TABLET) {
+            DialogFragment dialogFragment = new ShowDetailDialog();
+            dialogFragment.show(getSupportFragmentManager(), "details");
         } else {
             startActivity(intent);
         }
