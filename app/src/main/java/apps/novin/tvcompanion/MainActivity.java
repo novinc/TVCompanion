@@ -2,16 +2,12 @@ package apps.novin.tvcompanion;
 
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.Pair;
-import android.support.v7.widget.CardView;
-import android.util.Log;
-import android.view.View;
-import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -19,10 +15,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -176,7 +172,7 @@ public class MainActivity extends AppCompatActivity
 
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.content_frame, fragment)
-                .commit();
+                .commitNow();
 
         invalidateOptionsMenu();
 
@@ -200,10 +196,10 @@ public class MainActivity extends AppCompatActivity
             Pair<View, String> titleTrans = null;
             Pair<View, String> genreTrans = null;
             if (title != null) {
-                titleTrans = Pair.create((View) title, getString(R.string.title_transition));
+                //titleTrans = Pair.create((View) title, getString(R.string.title_transition));
             }
             if (genre != null) {
-                genreTrans = Pair.create((View) genre, getString(R.string.genre_transition));
+                //genreTrans = Pair.create((View) genre, getString(R.string.genre_transition));
             }
             ActivityOptionsCompat options;
             if (titleTrans == null && genreTrans == null) {

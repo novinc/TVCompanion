@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<transitionSet xmlns:android="http://schemas.android.com/apk/res/android" android:transitionOrdering="together">
+<transitionSet xmlns:android="http://schemas.android.com/apk/res/android" android:transitionOrdering="together" android:duration="400">
     <slide android:slideEdge="top">
         <targets>
             <target android:targetId="@id/appbar"/>
@@ -9,7 +9,7 @@
             <target android:targetId="@id/add_fab"/>
         </targets>
     </slide>
-    <slide android:slideEdge="bottom" android:interpolator="@android:interpolator/accelerate_decelerate">
+    <slide android:slideEdge="bottom" android:interpolator="@android:interpolator/decelerate_cubic">
         <targets>
             <target android:excludeId="@id/appbar"/>
             <target android:excludeId="@id/collapsing_toolbar"/>
