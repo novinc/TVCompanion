@@ -190,7 +190,7 @@ public class MainActivity extends AppCompatActivity
         long id = 0;
         Intent intent = new Intent(this, ShowDetailActivity.class);
         intent.putExtra(ShowDetailActivity.ID_KEY, id);
-        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) { // disables big tablet dialog
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && screenType != ScreenType.BIG_TABLET) {
             ImageView poster = (ImageView) view.findViewById(R.id.poster);
             TextView title = (TextView) view.findViewById(R.id.title);

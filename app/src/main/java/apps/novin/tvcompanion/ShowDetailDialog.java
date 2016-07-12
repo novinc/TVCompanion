@@ -6,11 +6,15 @@ import android.support.design.widget.AppBarLayout;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.CardView;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.OvershootInterpolator;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.Spinner;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -28,6 +32,13 @@ public class ShowDetailDialog extends DialogFragment {
     AppBarLayout mAppBarLayout;
     @BindView(R.id.card_view_poster)
     CardView cardViewPoster;
+    @BindView(R.id.seasons_spinner)
+    Spinner spinner;
+    @BindView(R.id.seasons_list)
+    RecyclerView mRecyclerView;
+
+    private RecyclerView.LayoutManager mLayoutManager;
+    private RecyclerView.Adapter mAdapter;
 
     private enum State {
         EXPANDED,
@@ -52,6 +63,19 @@ public class ShowDetailDialog extends DialogFragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.activity_show_detail, container, false);
         ButterKnife.bind(this, view);
+        mLayoutManager = new LinearLayoutManager(getContext());
+        mLayoutManager.setAutoMeasureEnabled(true);
+        mRecyclerView.setLayoutManager(mLayoutManager);
+        mAdapter = new ShowDetailActivity.MyAdapter(new String[2]);
+        mRecyclerView.setFocusable(false);
+        mRecyclerView.setAdapter(mAdapter);
+        mRecyclerView.getLayoutParams().height = mRecyclerView.getLayoutParams().height * 2;
+        mRecyclerView.requestLayout();
+
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getContext(),
+                R.array.find_shows_tabs, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
         return view;
     }
 

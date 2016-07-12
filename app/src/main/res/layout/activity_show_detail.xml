@@ -53,18 +53,27 @@
         tools:targetApi="lollipop" />-->
 
     <android.support.v4.widget.NestedScrollView
+        android:id="@+id/scrollView"
+        android:descendantFocusability="beforeDescendants"
+        android:fillViewport="true"
+        android:focusableInTouchMode="true"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-
         <android.support.v7.widget.CardView
             android:layout_margin="6dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-            <include layout="@layout/activity_show_detail_content"
-                android:layout_height="wrap_content"
-                android:layout_width="match_parent" />
+                <include layout="@layout/activity_show_detail_content"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent" />
+
+            </LinearLayout>
 
         </android.support.v7.widget.CardView>
 
