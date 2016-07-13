@@ -3,6 +3,7 @@ package apps.novin.tvcompanion;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.CardView;
@@ -11,6 +12,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.animation.OvershootInterpolator;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
@@ -61,15 +63,14 @@ public class ShowDetailDialog extends DialogFragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.activity_show_detail, container, false);
+        View view = inflater.inflate(R.layout.dialog_show_detail, container, false);
         ButterKnife.bind(this, view);
         mLayoutManager = new LinearLayoutManager(getContext());
         mLayoutManager.setAutoMeasureEnabled(true);
         mRecyclerView.setLayoutManager(mLayoutManager);
-        mAdapter = new ShowDetailActivity.MyAdapter(new String[2]);
+        mAdapter = new ShowDetailActivity.MyAdapter(new String[5]);
         mRecyclerView.setFocusable(false);
         mRecyclerView.setAdapter(mAdapter);
-        mRecyclerView.getLayoutParams().height = mRecyclerView.getLayoutParams().height * 2;
         mRecyclerView.requestLayout();
 
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getContext(),
