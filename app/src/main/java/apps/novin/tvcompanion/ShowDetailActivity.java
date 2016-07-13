@@ -1,7 +1,6 @@
 package apps.novin.tvcompanion;
 
 import android.annotation.TargetApi;
-import android.content.Context;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.AppBarLayout;
@@ -12,32 +11,49 @@ import android.os.Bundle;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.animation.OvershootInterpolator;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class ShowDetailActivity extends AppCompatActivity {
 
-    @BindView(R.id.scrollView)
-    NestedScrollView scrollView;
-    @BindView(R.id.poster)
-    ImageView poster;
     @BindView(R.id.appbar)
     AppBarLayout mAppBarLayout;
+    @BindView(R.id.backdrop)
+    ImageView backdropImage;
     @BindView(R.id.card_view_poster)
     CardView cardViewPoster;
+    @BindView(R.id.poster)
+    ImageView poster;
+    @BindView(R.id.scrollView)
+    NestedScrollView scrollView;
+    @BindView(R.id.percentage)
+    TextView percentage;
+    @BindView(R.id.watchers)
+    TextView watchers;
+    @BindView(R.id.plays)
+    TextView plays;
+    @BindView(R.id.title)
+    TextView title;
+    @BindView(R.id.year)
+    TextView year;
+    @BindView(R.id.genres)
+    TextView genres;
+    @BindView(R.id.description)
+    TextView description;
     @BindView(R.id.seasons_spinner)
     Spinner spinner;
-    @BindView(R.id.seasons_list)
+    @BindView(R.id.episodes_list)
     RecyclerView mRecyclerView;
 
     private RecyclerView.LayoutManager mLayoutManager;
@@ -155,13 +171,22 @@ public class ShowDetailActivity extends AppCompatActivity {
         // Complex data items may need more than one view per item, and
         // you provide access to all the views for a data item in a view holder
         public static class ViewHolder extends RecyclerView.ViewHolder {
-            // each data item is just a string in this case
-            //@BindView(R.id.text)
-            //TextView mTextView;
+            @BindView(R.id.episode_title)
+            TextView title;
+            @BindView(R.id.episode_number)
+            TextView number;
+            @BindView(R.id.episode_desc)
+            TextView description;
+            @BindView(R.id.episode_poster)
+            ImageView poster;
+            @BindView(R.id.watched_button)
+            Button watchedButton;
+            @BindView(R.id.heart_button)
+            Button heartButton;
 
             public ViewHolder(View view) {
                 super(view);
-                //ButterKnife.bind(this, view);
+                ButterKnife.bind(this, view);
             }
         }
 

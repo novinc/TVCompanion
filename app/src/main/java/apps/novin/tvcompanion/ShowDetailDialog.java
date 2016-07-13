@@ -3,20 +3,20 @@ package apps.novin.tvcompanion;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
-import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.view.ViewCompat;
+import android.support.v4.widget.NestedScrollView;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.view.animation.OvershootInterpolator;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -27,16 +27,33 @@ import butterknife.ButterKnife;
 
 public class ShowDetailDialog extends DialogFragment {
 
-
-    @BindView(R.id.poster)
-    ImageView poster;
     @BindView(R.id.appbar)
     AppBarLayout mAppBarLayout;
+    @BindView(R.id.backdrop)
+    ImageView backdropImage;
     @BindView(R.id.card_view_poster)
     CardView cardViewPoster;
+    @BindView(R.id.poster)
+    ImageView poster;
+    @BindView(R.id.scrollView)
+    NestedScrollView scrollView;
+    @BindView(R.id.percentage)
+    TextView percentage;
+    @BindView(R.id.watchers)
+    TextView watchers;
+    @BindView(R.id.plays)
+    TextView plays;
+    @BindView(R.id.title)
+    TextView title;
+    @BindView(R.id.year)
+    TextView year;
+    @BindView(R.id.genres)
+    TextView genres;
+    @BindView(R.id.description)
+    TextView description;
     @BindView(R.id.seasons_spinner)
     Spinner spinner;
-    @BindView(R.id.seasons_list)
+    @BindView(R.id.episodes_list)
     RecyclerView mRecyclerView;
 
     private RecyclerView.LayoutManager mLayoutManager;
