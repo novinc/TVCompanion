@@ -36,6 +36,7 @@ dependencies {
     compile 'com.android.support:appcompat-v7:24.0.0'
     compile 'com.android.support:design:24.0.0'
     compile 'org.greenrobot:greendao:2.2.0'
+    //noinspection GradleDynamicVersion
     compile 'com.github.provigen:ProviGen-lib:2.0.+'
     compile 'com.github.bumptech.glide:glide:3.7.0'
     compile 'com.squareup.retrofit2:retrofit:2.1.0'
@@ -50,5 +51,4 @@ dependencies {
     androidTestCompile 'com.android.support.test:runner:0.5'
     androidTestCompile 'com.android.support:support-annotations:24.0.0'
     apt 'com.jakewharton:butterknife-compiler:8.1.0'
-    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha4'
 }

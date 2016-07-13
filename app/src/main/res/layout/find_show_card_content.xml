@@ -1,86 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:id="@+id/constraintLayout2">
+    android:layout_height="wrap_content"
+    android:layout_width="wrap_content"
+    android:orientation="vertical">
 
     <ImageView
         android:src="@drawable/show_background"
         android:layout_width="150dp"
         android:layout_height="225dp"
         android:id="@+id/poster"
-        tools:ignore="ContentDescription"
-        app:layout_constraintLeft_toLeftOf="@+id/constraintLayout2"
-        app:layout_constraintTop_toTopOf="@+id/constraintLayout2" />
+        tools:ignore="ContentDescription"/>
 
     <TextView
+        android:id="@+id/title"
         android:text="Person of Interest"
         android:maxLines="2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/title"
         android:textSize="12sp"
         tools:ignore="HardcodedText"
         android:textStyle="normal|bold"
-        app:layout_constraintLeft_toLeftOf="@+id/poster"
         android:layout_marginLeft="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginRight="8dp"
-        app:layout_constraintRight_toRightOf="@+id/poster"
-        app:layout_constraintTop_toBottomOf="@+id/poster"
-        android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/genres" />
+        android:layout_marginTop="8dp" />
 
     <TextView
+        android:id="@+id/genres"
         android:text="Genres: Drama, Mystery, Thriller, Action, Adventure"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:layout_marginStart="8dp"
         android:layout_marginRight="8dp"
         android:layout_marginEnd="8dp"
         android:maxLines="2"
-        android:id="@+id/genres"
         tools:ignore="HardcodedText"
-        android:textSize="12sp"
-        app:layout_constraintLeft_toLeftOf="@+id/title"
-        app:layout_constraintTop_toBottomOf="@+id/title"
-        app:layout_constraintRight_toRightOf="@+id/poster" />
+        android:textSize="12sp" />
 
-    <ImageView
-        android:src="@drawable/ic_heart"
-        android:paddingBottom="4dp"
-        android:layout_width="25dp"
-        android:layout_height="29dp"
-        android:id="@+id/imageView3"
-        android:contentDescription="@string/desc_poster"
-        app:layout_constraintTop_toBottomOf="@+id/genres"
-        app:layout_constraintRight_toRightOf="@+id/poster"
-        android:layout_marginRight="4dp"
-        android:layout_marginEnd="4dp" />
+    <LinearLayout
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
-    <TextView
-        android:text="90%"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/rating"
-        tools:ignore="HardcodedText"
-        android:textSize="13sp"
-        app:layout_constraintRight_toLeftOf="@+id/imageView3"
-        app:layout_constraintBottom_toBottomOf="@+id/imageView3"
-        android:layout_marginBottom="4dp" />
+        <TextView
+            android:id="@+id/year"
+            android:text="2011"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="13sp"
+            tools:ignore="HardcodedText"
+            android:layout_marginLeft="8dp"
+            android:layout_marginStart="8dp"/>
 
-    <TextView
-        android:text="2011"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/year"
-        android:textSize="13sp"
-        tools:ignore="HardcodedText"
-        app:layout_constraintLeft_toLeftOf="@+id/title"
-        app:layout_constraintBottom_toBottomOf="@+id/imageView3"
-        android:layout_marginBottom="4dp" />
+        <LinearLayout
+            android:orientation="horizontal"
+            android:gravity="end|center_vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-</android.support.constraint.ConstraintLayout>
+            <TextView
+                android:id="@+id/rating"
+                android:text="90%"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:ignore="HardcodedText"
+                android:textSize="13sp" />
+
+            <ImageView
+                android:id="@+id/heart_icon"
+                android:src="@drawable/ic_heart"
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:contentDescription="@string/desc_poster"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="4dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+
+</LinearLayout>

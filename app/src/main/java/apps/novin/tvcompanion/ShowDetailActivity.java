@@ -70,7 +70,7 @@ public class ShowDetailActivity extends AppCompatActivity {
         mLayoutManager = new LinearLayoutManager(this);
         mLayoutManager.setAutoMeasureEnabled(true);
         mRecyclerView.setLayoutManager(mLayoutManager);
-        mAdapter = new MyAdapter(new String[2]);
+        mAdapter = new MyAdapter(new String[5]);
         mRecyclerView.setFocusable(false);
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.getLayoutParams().height = mRecyclerView.getLayoutParams().height * 2;
@@ -139,6 +139,7 @@ public class ShowDetailActivity extends AppCompatActivity {
     private void scheduleStartPostponedTransition(final View sharedElement) {
         sharedElement.getViewTreeObserver().addOnPreDrawListener(
                 new ViewTreeObserver.OnPreDrawListener() {
+                    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
                     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
                     @Override
                     public boolean onPreDraw() {
@@ -176,7 +177,7 @@ public class ShowDetailActivity extends AppCompatActivity {
                                                        int viewType) {
             // create a new view
             View v = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.recommendation_card, parent, false);
+                    .inflate(R.layout.episode_card, parent, false);
             // set the view's size, margins, paddings and layout parameters
 
             ViewHolder vh = new ViewHolder(v);
