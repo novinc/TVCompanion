@@ -68,10 +68,10 @@ public class ShowDetailDialog extends DialogFragment {
         mLayoutManager = new LinearLayoutManager(getContext());
         mLayoutManager.setAutoMeasureEnabled(true);
         mRecyclerView.setLayoutManager(mLayoutManager);
+        mRecyclerView.setNestedScrollingEnabled(false);
         mAdapter = new ShowDetailActivity.MyAdapter(new String[5]);
         mRecyclerView.setFocusable(false);
         mRecyclerView.setAdapter(mAdapter);
-        mRecyclerView.requestLayout();
 
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getContext(),
                 R.array.find_shows_tabs, android.R.layout.simple_spinner_item);

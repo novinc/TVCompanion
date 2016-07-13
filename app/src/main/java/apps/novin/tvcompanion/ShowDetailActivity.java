@@ -70,11 +70,10 @@ public class ShowDetailActivity extends AppCompatActivity {
         mLayoutManager = new LinearLayoutManager(this);
         mLayoutManager.setAutoMeasureEnabled(true);
         mRecyclerView.setLayoutManager(mLayoutManager);
+        mRecyclerView.setNestedScrollingEnabled(false);
         mAdapter = new MyAdapter(new String[5]);
         mRecyclerView.setFocusable(false);
         mRecyclerView.setAdapter(mAdapter);
-        mRecyclerView.getLayoutParams().height = mRecyclerView.getLayoutParams().height * 2;
-        mRecyclerView.requestLayout();
 
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
                 R.array.find_shows_tabs, android.R.layout.simple_spinner_item);
