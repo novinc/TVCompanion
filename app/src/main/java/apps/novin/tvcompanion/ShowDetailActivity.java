@@ -22,6 +22,9 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
@@ -95,7 +98,14 @@ public class ShowDetailActivity extends AppCompatActivity {
                 R.array.find_shows_tabs, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
-
+        Glide.with(this).load("https://walter.trakt.us/images/shows/000/093/720/posters/thumb/e90844dd99.jpg")
+                .placeholder(R.drawable.show_background)
+                .error(R.drawable.ic_close_black)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .into(poster);
+        Glide.with(this).load("https://walter.trakt.us/images/shows/000/093/720/fanarts/original/a526847f48.jpg")
+                .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                .into(backdropImage);
     }
 
 
@@ -164,13 +174,13 @@ public class ShowDetailActivity extends AppCompatActivity {
                     }
                 });
     }
-    public static class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
+    public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         private String[] mDataset;
 
         // Provide a reference to the views for each data item
         // Complex data items may need more than one view per item, and
         // you provide access to all the views for a data item in a view holder
-        public static class ViewHolder extends RecyclerView.ViewHolder {
+        public class ViewHolder extends RecyclerView.ViewHolder {
             @BindView(R.id.episode_title)
             TextView title;
             @BindView(R.id.episode_number)
@@ -215,7 +225,6 @@ public class ShowDetailActivity extends AppCompatActivity {
             // - get element from your dataset at this position
             // - replace the contents of the view with that element
             //holder.mTextView.setText(mDataset[position]);
-
         }
 
         // Return the size of your dataset (invoked by the layout manager)

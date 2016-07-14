@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="apps.novin.tvcompanion">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -21,6 +23,21 @@
         <activity
             android:name=".ShowDetailActivity"
             android:theme="@style/AppTheme.Details" />
+        <service
+            android:name=".AuthenticatorService">
+            <intent-filter>
+                <action android:name="android.accounts.AccountAuthenticator"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.accounts.AccountAuthenticator"
+                android:resource="@xml/authenticator" />
+        </service>
+        <provider
+            android:name="apps.novin.tvcompanion.db.EpisodeEntityContentProvider"
+            android:authorities="apps.novin.tvcompanion.db.provider" />
+        <provider
+            android:name="apps.novin.tvcompanion.db.ShowEntityContentProvider"
+            android:authorities="apps.novin.tvcompanion.db.provider" />
     </application>
 
 </manifest>

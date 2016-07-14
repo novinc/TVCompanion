@@ -13,17 +13,15 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 
 /**
  * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link RecommendationsFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link RecommendationsFragment#newInstance} factory method to
- * create an instance of this fragment.
  */
 public class RecommendationsFragment extends Fragment {
 
@@ -58,13 +56,13 @@ public class RecommendationsFragment extends Fragment {
         mRecyclerView.setAdapter(mAdapter);
     }
 
-    public static class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
+    public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         private String[] mDataset;
 
         // Provide a reference to the views for each data item
         // Complex data items may need more than one view per item, and
         // you provide access to all the views for a data item in a view holder
-        public static class ViewHolder extends RecyclerView.ViewHolder {
+        public class ViewHolder extends RecyclerView.ViewHolder {
             @BindView(R.id.title)
             TextView title;
             @BindView(R.id.genres)
@@ -109,7 +107,12 @@ public class RecommendationsFragment extends Fragment {
             // - get element from your dataset at this position
             // - replace the contents of the view with that element
             //holder.mTextView.setText(mDataset[position]);
-
+            Glide.with(RecommendationsFragment.this)
+                    .load("https://walter.trakt.us/images/shows/000/093/720/posters/thumb/e90844dd99.jpg")
+                    .placeholder(R.drawable.show_background)
+                    .error(R.drawable.ic_close_black)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(holder.poster);
         }
 
         // Return the size of your dataset (invoked by the layout manager)

@@ -35,8 +35,8 @@ dependencies {
     }
     compile 'com.android.support:appcompat-v7:24.0.0'
     compile 'com.android.support:design:24.0.0'
-    compile 'org.greenrobot:greendao:2.2.0'
     //noinspection GradleDynamicVersion
+    compile 'de.greenrobot:greendao:2.1.0'
     compile 'com.github.provigen:ProviGen-lib:2.0.+'
     compile 'com.github.bumptech.glide:glide:3.7.0'
     compile 'com.squareup.retrofit2:retrofit:2.1.0'

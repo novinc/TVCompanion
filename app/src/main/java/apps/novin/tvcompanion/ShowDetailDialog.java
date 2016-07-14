@@ -14,9 +14,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.OvershootInterpolator;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -86,7 +90,7 @@ public class ShowDetailDialog extends DialogFragment {
         mLayoutManager.setAutoMeasureEnabled(true);
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setNestedScrollingEnabled(false);
-        mAdapter = new ShowDetailActivity.MyAdapter(new String[5]);
+        mAdapter = new MyAdapter(new String[5]);
         mRecyclerView.setFocusable(false);
         mRecyclerView.setAdapter(mAdapter);
 
@@ -94,6 +98,14 @@ public class ShowDetailDialog extends DialogFragment {
                 R.array.find_shows_tabs, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
+        Glide.with(this).load("https://walter.trakt.us/images/shows/000/093/720/posters/thumb/e90844dd99.jpg")
+                .placeholder(R.drawable.show_background)
+                .error(R.drawable.ic_close_black)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .into(poster);
+        Glide.with(this).load("https://walter.trakt.us/images/shows/000/093/720/fanarts/original/a526847f48.jpg")
+                .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                .into(backdropImage);
         return view;
     }
 
@@ -143,5 +155,64 @@ public class ShowDetailDialog extends DialogFragment {
             }
 
         });
+    }
+    public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
+        private String[] mDataset;
+
+        // Provide a reference to the views for each data item
+        // Complex data items may need more than one view per item, and
+        // you provide access to all the views for a data item in a view holder
+        public class ViewHolder extends RecyclerView.ViewHolder {
+            @BindView(R.id.episode_title)
+            TextView title;
+            @BindView(R.id.episode_number)
+            TextView number;
+            @BindView(R.id.episode_desc)
+            TextView description;
+            @BindView(R.id.episode_poster)
+            ImageView poster;
+            @BindView(R.id.watched_button)
+            Button watchedButton;
+            @BindView(R.id.heart_button)
+            Button heartButton;
+
+            public ViewHolder(View view) {
+                super(view);
+                ButterKnife.bind(this, view);
+            }
+        }
+
+        // Provide a suitable constructor (depends on the kind of dataset)
+        public MyAdapter(String[] myDataset) {
+            mDataset = myDataset;
+        }
+
+        // Create new views (invoked by the layout manager)
+        @Override
+        public MyAdapter.ViewHolder onCreateViewHolder(ViewGroup parent,
+                                                       int viewType) {
+            // create a new view
+            View v = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.episode_card, parent, false);
+            // set the view's size, margins, paddings and layout parameters
+
+            ViewHolder vh = new ViewHolder(v);
+            v.setTag(vh);
+            return vh;
+        }
+
+        // Replace the contents of a view (invoked by the layout manager)
+        @Override
+        public void onBindViewHolder(ViewHolder holder, int position) {
+            // - get element from your dataset at this position
+            // - replace the contents of the view with that element
+            //holder.mTextView.setText(mDataset[position]);
+        }
+
+        // Return the size of your dataset (invoked by the layout manager)
+        @Override
+        public int getItemCount() {
+            return mDataset.length;
+        }
     }
 }
