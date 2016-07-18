@@ -1,5 +1,9 @@
 package apps.novin.tvcompanion;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
+import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Build;
@@ -36,6 +40,22 @@ public class MainActivity extends AppCompatActivity
     Toolbar mToolbar;
     @BindView(R.id.nav_view)
     NavigationView mNavigationView;
+
+    // The authority for the sync adapter's content provider
+    public static final String AUTHORITY = "apps.novin.tvcompanion.db.provider";
+    // An account type, in the form of a domain name
+    public static final String ACCOUNT_TYPE = "tvcompanion.novin.apps";
+    // The account name
+    public static final String ACCOUNT = "TV companion";
+    // Instance fields
+    Account mAccount;
+
+    // Sync interval constants
+    public static final long SECONDS_PER_MINUTE = 60L;
+    public static final long SYNC_INTERVAL_IN_MINUTES = 60L;
+    public static final long SYNC_INTERVAL =
+            SYNC_INTERVAL_IN_MINUTES *
+                    SECONDS_PER_MINUTE;
 
     private enum ScreenType {
         PHONE, SMALL_TABLET, SMALL_TABLET_LAND, BIG_TABLET
@@ -75,6 +95,47 @@ public class MainActivity extends AppCompatActivity
             mNavigationView.setCheckedItem(R.id.nav_recommendation);
             mNavigationView.getMenu().performIdentifierAction(R.id.nav_recommendation, 0);
         }
+        mAccount = createSyncAccount(this);
+        /*
+         * Turn on periodic syncing
+         */
+        ContentResolver.setIsSyncable(mAccount, AUTHORITY, 1);
+        ContentResolver.setSyncAutomatically(mAccount, AUTHORITY, true);
+
+        ContentResolver.addPeriodicSync(
+                mAccount,
+                AUTHORITY,
+                Bundle.EMPTY,
+                SYNC_INTERVAL);
+    }
+
+    private static Account createSyncAccount(Context context) {
+        // Create the account type and default account
+        Account newAccount = new Account(
+                ACCOUNT, ACCOUNT_TYPE);
+        // Get an instance of the Android account manager
+        AccountManager accountManager =
+                (AccountManager) context.getSystemService(
+                        ACCOUNT_SERVICE);
+        /*
+         * Add the account and account type, no password or user data
+         * If successful, return the Account object, otherwise report an error.
+         */
+        boolean success = accountManager.addAccountExplicitly(newAccount, null, null);
+        if (success) {
+            /*
+             * If you don't set android:syncable="true" in
+             * in your <provider> element in the manifest,
+             * then call context.setIsSyncable(account, AUTHORITY, 1)
+             * here.
+             */
+        } else {
+            /*
+             * The account exists or some other error occurred. Log this, report it,
+             * or handle it internally.
+             */
+        }
+        return newAccount;
     }
 
     @Override
