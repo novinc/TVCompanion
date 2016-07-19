@@ -44,21 +44,20 @@
                 android:resource="@xml/authenticator" />
         </service>
         <provider
-            android:name="apps.novin.tvcompanion.db.EpisodeEntityContentProvider"
-            android:label="episode provider"
+            android:name="apps.novin.tvcompanion.db.ShowEntityContentProvider"
+            android:label="show provider"
             android:syncable="true"
             android:exported="false"
             android:authorities="apps.novin.tvcompanion.db.provider" />
         <provider
-            android:name="apps.novin.tvcompanion.db.ShowEntityContentProvider"
-            android:label="show provider"
+            android:name="apps.novin.tvcompanion.db.EpisodeEntityContentProvider"
+            android:label="episode provider"
             android:syncable="true"
             android:exported="false"
             android:authorities="apps.novin.tvcompanion.db.provider" />
         <service
             android:name=".SyncService"
             android:exported="true"
-            android:process=":sync"
             android:permission="apps.novin.tvcompanion.sync">
             <intent-filter>
                 <action android:name="android.content.SyncAdapter"/>

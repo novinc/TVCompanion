@@ -38,7 +38,7 @@ public class ExampleInstrumentationTest {
         DaoSession daoSession = daoMaster.newSession();
         daoSession.getShowEntityDao().deleteAll();
         daoSession.getShowEntityDao().insert(new ShowEntity(
-                1, "show name", "action", "long description", 5, 90, "poster url.com", "backdrop.com", 2011, 50000, 100000, false, null, false, null, false, null
+                null, "show name", "action", "long description", 5, 90, "poster url.com", "backdrop.com", 2011, 50000, 100000, false, null, false, null, false, null, true
         ));
         assertEquals(daoSession.getShowEntityDao().queryBuilder().list().size(), 1);
         assertEquals(daoSession.getShowEntityDao().queryBuilder().list().get(0).getName(), "show name");

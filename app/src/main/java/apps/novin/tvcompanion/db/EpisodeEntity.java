@@ -6,7 +6,7 @@ package apps.novin.tvcompanion.db;
  */
 public class EpisodeEntity {
 
-    private long id;
+    private Long id;
     private long show_id;
     private int season;
     /** Not-null value. */
@@ -16,15 +16,16 @@ public class EpisodeEntity {
     private String ep_description;
     private boolean watched;
     private int percent_heart;
+    private boolean synced;
 
     public EpisodeEntity() {
     }
 
-    public EpisodeEntity(long id) {
+    public EpisodeEntity(Long id) {
         this.id = id;
     }
 
-    public EpisodeEntity(long id, long show_id, int season, String ep_name, int ep_number, String ep_description, boolean watched, int percent_heart) {
+    public EpisodeEntity(Long id, long show_id, int season, String ep_name, int ep_number, String ep_description, boolean watched, int percent_heart, boolean synced) {
         this.id = id;
         this.show_id = show_id;
         this.season = season;
@@ -33,13 +34,14 @@ public class EpisodeEntity {
         this.ep_description = ep_description;
         this.watched = watched;
         this.percent_heart = percent_heart;
+        this.synced = synced;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -101,6 +103,14 @@ public class EpisodeEntity {
 
     public void setPercent_heart(int percent_heart) {
         this.percent_heart = percent_heart;
+    }
+
+    public boolean getSynced() {
+        return synced;
+    }
+
+    public void setSynced(boolean synced) {
+        this.synced = synced;
     }
 
 }

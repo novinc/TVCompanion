@@ -12,7 +12,7 @@ public class Main {
         Schema schema = new Schema(1, "apps.novin.tvcompanion.db");
         Entity show = schema.addEntity("ShowEntity");
         show.addContentProvider();
-        show.addIdProperty().autoincrement().unique().notNull();
+        show.addIdProperty().autoincrement();
         show.addStringProperty("name").notNull();
         show.addStringProperty("genres").notNull();
         show.addStringProperty("description").notNull();
@@ -29,10 +29,11 @@ public class Main {
         show.addIntProperty("most_popular_pos");
         show.addBooleanProperty("most_played").notNull();
         show.addIntProperty("most_played_pos");
+        show.addBooleanProperty("synced").notNull();
 
         Entity episode = schema.addEntity("EpisodeEntity");
         episode.addContentProvider();
-        episode.addIdProperty().autoincrement().notNull().unique();
+        episode.addIdProperty().autoincrement();
         Property epShowId = episode.addLongProperty("show_id").notNull().getProperty();
         episode.addIntProperty("season").notNull();
         episode.addStringProperty("ep_name").notNull();
@@ -40,6 +41,7 @@ public class Main {
         episode.addStringProperty("ep_description").notNull();
         episode.addBooleanProperty("watched").notNull();
         episode.addIntProperty("percent_heart").notNull();
+        episode.addBooleanProperty("synced").notNull();
 
         show.addToMany(episode, epShowId);
 

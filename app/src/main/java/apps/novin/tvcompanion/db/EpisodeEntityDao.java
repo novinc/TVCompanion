@@ -26,7 +26,7 @@ public class EpisodeEntityDao extends AbstractDao<EpisodeEntity, Long> {
      * Can be used for QueryBuilder and for referencing column names.
     */
     public static class Properties {
-        public final static Property Id = new Property(0, long.class, "id", true, "_id");
+        public final static Property Id = new Property(0, Long.class, "id", true, "_id");
         public final static Property Show_id = new Property(1, long.class, "show_id", false, "SHOW_ID");
         public final static Property Season = new Property(2, int.class, "season", false, "SEASON");
         public final static Property Ep_name = new Property(3, String.class, "ep_name", false, "EP_NAME");
@@ -34,6 +34,7 @@ public class EpisodeEntityDao extends AbstractDao<EpisodeEntity, Long> {
         public final static Property Ep_description = new Property(5, String.class, "ep_description", false, "EP_DESCRIPTION");
         public final static Property Watched = new Property(6, boolean.class, "watched", false, "WATCHED");
         public final static Property Percent_heart = new Property(7, int.class, "percent_heart", false, "PERCENT_HEART");
+        public final static Property Synced = new Property(8, boolean.class, "synced", false, "SYNCED");
     };
 
     private Query<EpisodeEntity> showEntity_EpisodeEntityListQuery;
@@ -50,14 +51,15 @@ public class EpisodeEntityDao extends AbstractDao<EpisodeEntity, Long> {
     public static void createTable(SQLiteDatabase db, boolean ifNotExists) {
         String constraint = ifNotExists? "IF NOT EXISTS ": "";
         db.execSQL("CREATE TABLE " + constraint + "\"EPISODE_ENTITY\" (" + //
-                "\"_id\" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE ," + // 0: id
+                "\"_id\" INTEGER PRIMARY KEY AUTOINCREMENT ," + // 0: id
                 "\"SHOW_ID\" INTEGER NOT NULL ," + // 1: show_id
                 "\"SEASON\" INTEGER NOT NULL ," + // 2: season
                 "\"EP_NAME\" TEXT NOT NULL ," + // 3: ep_name
                 "\"EP_NUMBER\" INTEGER NOT NULL ," + // 4: ep_number
                 "\"EP_DESCRIPTION\" TEXT NOT NULL ," + // 5: ep_description
                 "\"WATCHED\" INTEGER NOT NULL ," + // 6: watched
-                "\"PERCENT_HEART\" INTEGER NOT NULL );"); // 7: percent_heart
+                "\"PERCENT_HEART\" INTEGER NOT NULL ," + // 7: percent_heart
+                "\"SYNCED\" INTEGER NOT NULL );"); // 8: synced
     }
 
     /** Drops the underlying database table. */
@@ -70,7 +72,11 @@ public class EpisodeEntityDao extends AbstractDao<EpisodeEntity, Long> {
     @Override
     protected void bindValues(SQLiteStatement stmt, EpisodeEntity entity) {
         stmt.clearBindings();
-        stmt.bindLong(1, entity.getId());
+ 
+        Long id = entity.getId();
+        if (id != null) {
+            stmt.bindLong(1, id);
+        }
         stmt.bindLong(2, entity.getShow_id());
         stmt.bindLong(3, entity.getSeason());
         stmt.bindString(4, entity.getEp_name());
@@ -78,26 +84,28 @@ public class EpisodeEntityDao extends AbstractDao<EpisodeEntity, Long> {
         stmt.bindString(6, entity.getEp_description());
         stmt.bindLong(7, entity.getWatched() ? 1L: 0L);
         stmt.bindLong(8, entity.getPercent_heart());
+        stmt.bindLong(9, entity.getSynced() ? 1L: 0L);
     }
 
     /** @inheritdoc */
     @Override
     public Long readKey(Cursor cursor, int offset) {
-        return cursor.getLong(offset + 0);
+        return cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0);
     }    
 
     /** @inheritdoc */
     @Override
     public EpisodeEntity readEntity(Cursor cursor, int offset) {
         EpisodeEntity entity = new EpisodeEntity( //
-            cursor.getLong(offset + 0), // id
+            cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0), // id
             cursor.getLong(offset + 1), // show_id
             cursor.getInt(offset + 2), // season
             cursor.getString(offset + 3), // ep_name
             cursor.getInt(offset + 4), // ep_number
             cursor.getString(offset + 5), // ep_description
             cursor.getShort(offset + 6) != 0, // watched
-            cursor.getInt(offset + 7) // percent_heart
+            cursor.getInt(offset + 7), // percent_heart
+            cursor.getShort(offset + 8) != 0 // synced
         );
         return entity;
     }
@@ -105,7 +113,7 @@ public class EpisodeEntityDao extends AbstractDao<EpisodeEntity, Long> {
     /** @inheritdoc */
     @Override
     public void readEntity(Cursor cursor, EpisodeEntity entity, int offset) {
-        entity.setId(cursor.getLong(offset + 0));
+        entity.setId(cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0));
         entity.setShow_id(cursor.getLong(offset + 1));
         entity.setSeason(cursor.getInt(offset + 2));
         entity.setEp_name(cursor.getString(offset + 3));
@@ -113,6 +121,7 @@ public class EpisodeEntityDao extends AbstractDao<EpisodeEntity, Long> {
         entity.setEp_description(cursor.getString(offset + 5));
         entity.setWatched(cursor.getShort(offset + 6) != 0);
         entity.setPercent_heart(cursor.getInt(offset + 7));
+        entity.setSynced(cursor.getShort(offset + 8) != 0);
      }
     
     /** @inheritdoc */

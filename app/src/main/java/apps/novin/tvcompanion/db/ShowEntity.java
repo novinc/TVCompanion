@@ -10,7 +10,7 @@ import de.greenrobot.dao.DaoException;
  */
 public class ShowEntity {
 
-    private long id;
+    private Long id;
     /** Not-null value. */
     private String name;
     /** Not-null value. */
@@ -32,6 +32,7 @@ public class ShowEntity {
     private Integer most_popular_pos;
     private boolean most_played;
     private Integer most_played_pos;
+    private boolean synced;
 
     /** Used to resolve relations */
     private transient DaoSession daoSession;
@@ -44,11 +45,11 @@ public class ShowEntity {
     public ShowEntity() {
     }
 
-    public ShowEntity(long id) {
+    public ShowEntity(Long id) {
         this.id = id;
     }
 
-    public ShowEntity(long id, String name, String genres, String description, int seasons, int percent_heart, String poster_url, String backdrop_url, int year, long watchers, long players, boolean trending, Integer trending_pos, boolean most_popular, Integer most_popular_pos, boolean most_played, Integer most_played_pos) {
+    public ShowEntity(Long id, String name, String genres, String description, int seasons, int percent_heart, String poster_url, String backdrop_url, int year, long watchers, long players, boolean trending, Integer trending_pos, boolean most_popular, Integer most_popular_pos, boolean most_played, Integer most_played_pos, boolean synced) {
         this.id = id;
         this.name = name;
         this.genres = genres;
@@ -66,6 +67,7 @@ public class ShowEntity {
         this.most_popular_pos = most_popular_pos;
         this.most_played = most_played;
         this.most_played_pos = most_played_pos;
+        this.synced = synced;
     }
 
     /** called by internal mechanisms, do not call yourself. */
@@ -74,11 +76,11 @@ public class ShowEntity {
         myDao = daoSession != null ? daoSession.getShowEntityDao() : null;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -218,6 +220,14 @@ public class ShowEntity {
 
     public void setMost_played_pos(Integer most_played_pos) {
         this.most_played_pos = most_played_pos;
+    }
+
+    public boolean getSynced() {
+        return synced;
+    }
+
+    public void setSynced(boolean synced) {
+        this.synced = synced;
     }
 
     /** To-many relationship, resolved on first access (and after reset). Changes to to-many relations are not persisted, make changes to the target entity. */

@@ -23,7 +23,7 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
      * Can be used for QueryBuilder and for referencing column names.
     */
     public static class Properties {
-        public final static Property Id = new Property(0, long.class, "id", true, "_id");
+        public final static Property Id = new Property(0, Long.class, "id", true, "_id");
         public final static Property Name = new Property(1, String.class, "name", false, "NAME");
         public final static Property Genres = new Property(2, String.class, "genres", false, "GENRES");
         public final static Property Description = new Property(3, String.class, "description", false, "DESCRIPTION");
@@ -40,6 +40,7 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
         public final static Property Most_popular_pos = new Property(14, Integer.class, "most_popular_pos", false, "MOST_POPULAR_POS");
         public final static Property Most_played = new Property(15, boolean.class, "most_played", false, "MOST_PLAYED");
         public final static Property Most_played_pos = new Property(16, Integer.class, "most_played_pos", false, "MOST_PLAYED_POS");
+        public final static Property Synced = new Property(17, boolean.class, "synced", false, "SYNCED");
     };
 
     private DaoSession daoSession;
@@ -58,7 +59,7 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
     public static void createTable(SQLiteDatabase db, boolean ifNotExists) {
         String constraint = ifNotExists? "IF NOT EXISTS ": "";
         db.execSQL("CREATE TABLE " + constraint + "\"SHOW_ENTITY\" (" + //
-                "\"_id\" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE ," + // 0: id
+                "\"_id\" INTEGER PRIMARY KEY AUTOINCREMENT ," + // 0: id
                 "\"NAME\" TEXT NOT NULL ," + // 1: name
                 "\"GENRES\" TEXT NOT NULL ," + // 2: genres
                 "\"DESCRIPTION\" TEXT NOT NULL ," + // 3: description
@@ -74,7 +75,8 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
                 "\"MOST_POPULAR\" INTEGER NOT NULL ," + // 13: most_popular
                 "\"MOST_POPULAR_POS\" INTEGER," + // 14: most_popular_pos
                 "\"MOST_PLAYED\" INTEGER NOT NULL ," + // 15: most_played
-                "\"MOST_PLAYED_POS\" INTEGER);"); // 16: most_played_pos
+                "\"MOST_PLAYED_POS\" INTEGER," + // 16: most_played_pos
+                "\"SYNCED\" INTEGER NOT NULL );"); // 17: synced
     }
 
     /** Drops the underlying database table. */
@@ -87,7 +89,11 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
     @Override
     protected void bindValues(SQLiteStatement stmt, ShowEntity entity) {
         stmt.clearBindings();
-        stmt.bindLong(1, entity.getId());
+ 
+        Long id = entity.getId();
+        if (id != null) {
+            stmt.bindLong(1, id);
+        }
         stmt.bindString(2, entity.getName());
         stmt.bindString(3, entity.getGenres());
         stmt.bindString(4, entity.getDescription());
@@ -116,6 +122,7 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
         if (most_played_pos != null) {
             stmt.bindLong(17, most_played_pos);
         }
+        stmt.bindLong(18, entity.getSynced() ? 1L: 0L);
     }
 
     @Override
@@ -127,14 +134,14 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
     /** @inheritdoc */
     @Override
     public Long readKey(Cursor cursor, int offset) {
-        return cursor.getLong(offset + 0);
+        return cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0);
     }    
 
     /** @inheritdoc */
     @Override
     public ShowEntity readEntity(Cursor cursor, int offset) {
         ShowEntity entity = new ShowEntity( //
-            cursor.getLong(offset + 0), // id
+            cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0), // id
             cursor.getString(offset + 1), // name
             cursor.getString(offset + 2), // genres
             cursor.getString(offset + 3), // description
@@ -150,7 +157,8 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
             cursor.getShort(offset + 13) != 0, // most_popular
             cursor.isNull(offset + 14) ? null : cursor.getInt(offset + 14), // most_popular_pos
             cursor.getShort(offset + 15) != 0, // most_played
-            cursor.isNull(offset + 16) ? null : cursor.getInt(offset + 16) // most_played_pos
+            cursor.isNull(offset + 16) ? null : cursor.getInt(offset + 16), // most_played_pos
+            cursor.getShort(offset + 17) != 0 // synced
         );
         return entity;
     }
@@ -158,7 +166,7 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
     /** @inheritdoc */
     @Override
     public void readEntity(Cursor cursor, ShowEntity entity, int offset) {
-        entity.setId(cursor.getLong(offset + 0));
+        entity.setId(cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0));
         entity.setName(cursor.getString(offset + 1));
         entity.setGenres(cursor.getString(offset + 2));
         entity.setDescription(cursor.getString(offset + 3));
@@ -175,6 +183,7 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
         entity.setMost_popular_pos(cursor.isNull(offset + 14) ? null : cursor.getInt(offset + 14));
         entity.setMost_played(cursor.getShort(offset + 15) != 0);
         entity.setMost_played_pos(cursor.isNull(offset + 16) ? null : cursor.getInt(offset + 16));
+        entity.setSynced(cursor.getShort(offset + 17) != 0);
      }
     
     /** @inheritdoc */
