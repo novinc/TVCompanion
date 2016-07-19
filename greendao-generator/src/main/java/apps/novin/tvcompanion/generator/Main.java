@@ -14,6 +14,7 @@ public class Main {
         show.implementsSerializable();
         show.addContentProvider();
         show.addIdProperty().autoincrement();
+        show.addLongProperty("trakt_id").notNull().unique();
         show.addStringProperty("name").notNull();
         show.addStringProperty("genres").notNull();
         show.addStringProperty("description").notNull();

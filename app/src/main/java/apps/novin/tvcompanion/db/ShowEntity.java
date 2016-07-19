@@ -11,6 +11,7 @@ import de.greenrobot.dao.DaoException;
 public class ShowEntity implements java.io.Serializable {
 
     private Long id;
+    private long trakt_id;
     /** Not-null value. */
     private String name;
     /** Not-null value. */
@@ -49,8 +50,9 @@ public class ShowEntity implements java.io.Serializable {
         this.id = id;
     }
 
-    public ShowEntity(Long id, String name, String genres, String description, int seasons, int percent_heart, String poster_url, String backdrop_url, int year, long watchers, long players, boolean trending, Integer trending_pos, boolean most_popular, Integer most_popular_pos, boolean most_played, Integer most_played_pos, boolean synced) {
+    public ShowEntity(Long id, long trakt_id, String name, String genres, String description, int seasons, int percent_heart, String poster_url, String backdrop_url, int year, long watchers, long players, boolean trending, Integer trending_pos, boolean most_popular, Integer most_popular_pos, boolean most_played, Integer most_played_pos, boolean synced) {
         this.id = id;
+        this.trakt_id = trakt_id;
         this.name = name;
         this.genres = genres;
         this.description = description;
@@ -82,6 +84,14 @@ public class ShowEntity implements java.io.Serializable {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public long getTrakt_id() {
+        return trakt_id;
+    }
+
+    public void setTrakt_id(long trakt_id) {
+        this.trakt_id = trakt_id;
     }
 
     /** Not-null value. */

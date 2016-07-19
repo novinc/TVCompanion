@@ -59,23 +59,39 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
         ShowEntityDao showEntityDao = mDaoSession.getShowEntityDao();
         for (TrendingShow show : trendingShows) {
-            showEntityDao.insertOrReplace(getEntityFromTrendingShow(show.show, show, trendingShows.indexOf(show)));
+            List<ShowEntity> list = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(show.show.ids.trakt)).list();
+            if (list.size() == 0) {
+                showEntityDao.insert(getEntityFromTrendingShow(show.show, show, trendingShows.indexOf(show)));
+            } else {
+                ShowEntity showEntity = list.get(0);
+                showEntity.setTrending(true);
+                showEntity.setTrending_pos(trendingShows.indexOf(show));
+                showEntity.update();
+            }
         }
         for (Show show : popular) {
-            showEntityDao.insertOrReplace(getEntityFromPopularShow(show, popular.indexOf(show)));
+            List<ShowEntity> list = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(show.ids.trakt)).list();
+            if (list.size() == 0) {
+                showEntityDao.insertOrReplace(getEntityFromPopularShow(show, popular.indexOf(show)));
+            } else {
+                ShowEntity showEntity = list.get(0);
+                showEntity.setMost_popular(true);
+                showEntity.setMost_popular_pos(popular.indexOf(show));
+                showEntity.update();
+            }
         }
         EventBus.getDefault().post(new DatabaseUpdatedEvent());
     }
 
     private ShowEntity getEntityFromPopularShow(Show show, int i) {
-        return new ShowEntity(null, show.title, "genres: " + show.genres.toString().replace("[", "").replace("]", ""), show.overview,
+        return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + show.genres.toString().replace("[", "").replace("]", ""), show.overview,
                 2, ((int) (show.rating * 10)),
                 show.images.poster.thumb, show.images.fanart.medium, show.year, 10000, 20000,
                 false, null, true, i, false, null, true);
     }
 
     private static ShowEntity getEntityFromTrendingShow(Show show, TrendingShow trendingShow, int i) {
-        return new ShowEntity(null, show.title, "genres: " + show.genres.toString().replace("[", "").replace("]", ""), show.overview,
+        return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + show.genres.toString().replace("[", "").replace("]", ""), show.overview,
                 2, ((int) (show.rating * 10)),
                 show.images.poster.thumb, show.images.fanart.medium, show.year, trendingShow.watchers, trendingShow.watchers,
                 true, i, false, null, false, null, true);
