@@ -39,11 +39,10 @@ public class FindShowsPageFragment extends Fragment {
 
     static final int TRENDING = 0;
     static final int MOST_POPULAR = 1;
-    static final int MOST_PLAYED = 2;
-    static final int SEARCH = 3;
+    static final int SEARCH = 2;
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({TRENDING, MOST_POPULAR, MOST_PLAYED, SEARCH})
+    @IntDef({TRENDING, MOST_POPULAR, SEARCH})
     @interface TabMode {}
     private static final String TAB_MODE = "tab";
     private @TabMode int tabMode;
@@ -126,6 +125,8 @@ public class FindShowsPageFragment extends Fragment {
         } else if (tabMode == MOST_POPULAR) {
             List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.Most_popular.eq(true)).orderAsc(ShowEntityDao.Properties.Most_popular_pos).build().list();
             mAdapter = new MyAdapter(list);
+        } else { // search
+
         }
         mRecyclerView.setAdapter(mAdapter);
     }

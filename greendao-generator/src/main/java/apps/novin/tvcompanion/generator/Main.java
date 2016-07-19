@@ -29,8 +29,6 @@ public class Main {
         show.addIntProperty("trending_pos");
         show.addBooleanProperty("most_popular").notNull();
         show.addIntProperty("most_popular_pos");
-        show.addBooleanProperty("most_played").notNull();
-        show.addIntProperty("most_played_pos");
         show.addBooleanProperty("synced").notNull();
 
         Entity episode = schema.addEntity("EpisodeEntity");

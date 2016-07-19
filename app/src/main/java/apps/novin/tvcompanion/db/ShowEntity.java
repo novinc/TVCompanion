@@ -31,8 +31,6 @@ public class ShowEntity implements java.io.Serializable {
     private Integer trending_pos;
     private boolean most_popular;
     private Integer most_popular_pos;
-    private boolean most_played;
-    private Integer most_played_pos;
     private boolean synced;
 
     /** Used to resolve relations */
@@ -50,7 +48,7 @@ public class ShowEntity implements java.io.Serializable {
         this.id = id;
     }
 
-    public ShowEntity(Long id, long trakt_id, String name, String genres, String description, int seasons, int percent_heart, String poster_url, String backdrop_url, int year, long watchers, long players, boolean trending, Integer trending_pos, boolean most_popular, Integer most_popular_pos, boolean most_played, Integer most_played_pos, boolean synced) {
+    public ShowEntity(Long id, long trakt_id, String name, String genres, String description, int seasons, int percent_heart, String poster_url, String backdrop_url, int year, long watchers, long players, boolean trending, Integer trending_pos, boolean most_popular, Integer most_popular_pos, boolean synced) {
         this.id = id;
         this.trakt_id = trakt_id;
         this.name = name;
@@ -67,8 +65,6 @@ public class ShowEntity implements java.io.Serializable {
         this.trending_pos = trending_pos;
         this.most_popular = most_popular;
         this.most_popular_pos = most_popular_pos;
-        this.most_played = most_played;
-        this.most_played_pos = most_played_pos;
         this.synced = synced;
     }
 
@@ -214,22 +210,6 @@ public class ShowEntity implements java.io.Serializable {
 
     public void setMost_popular_pos(Integer most_popular_pos) {
         this.most_popular_pos = most_popular_pos;
-    }
-
-    public boolean getMost_played() {
-        return most_played;
-    }
-
-    public void setMost_played(boolean most_played) {
-        this.most_played = most_played;
-    }
-
-    public Integer getMost_played_pos() {
-        return most_played_pos;
-    }
-
-    public void setMost_played_pos(Integer most_played_pos) {
-        this.most_played_pos = most_played_pos;
     }
 
     public boolean getSynced() {

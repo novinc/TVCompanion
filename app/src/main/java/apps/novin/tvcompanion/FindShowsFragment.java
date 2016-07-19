@@ -90,7 +90,6 @@ public class FindShowsFragment extends Fragment {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getChildFragmentManager());
         adapter.addFrag(FindShowsPageFragment.newInstance(FindShowsPageFragment.TRENDING), "Trending");
         adapter.addFrag(FindShowsPageFragment.newInstance(FindShowsPageFragment.MOST_POPULAR), "Most Popular");
-        adapter.addFrag(FindShowsPageFragment.newInstance(FindShowsPageFragment.MOST_PLAYED), "Most Played");
         adapter.addFrag(FindShowsPageFragment.newInstance(FindShowsPageFragment.SEARCH), "Search");
         viewPager.setAdapter(adapter);
     }

@@ -30,7 +30,6 @@
     <string-array name="find_shows_tabs">
         <item>Trending</item>
         <item>Most Popular</item>
-        <item>Most Played</item>
         <item>Search</item>
     </string-array>
 

@@ -87,13 +87,13 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + show.genres.toString().replace("[", "").replace("]", ""), show.overview,
                 2, ((int) (show.rating * 10)),
                 show.images.poster.thumb, show.images.fanart.medium, show.year, 10000, 20000,
-                false, null, true, i, false, null, true);
+                false, null, true, i, true);
     }
 
     private static ShowEntity getEntityFromTrendingShow(Show show, TrendingShow trendingShow, int i) {
         return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + show.genres.toString().replace("[", "").replace("]", ""), show.overview,
                 2, ((int) (show.rating * 10)),
                 show.images.poster.thumb, show.images.fanart.medium, show.year, trendingShow.watchers, trendingShow.watchers,
-                true, i, false, null, false, null, true);
+                true, i, false, null, true);
     }
 }

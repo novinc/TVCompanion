@@ -285,6 +285,9 @@ public class MainActivity extends AppCompatActivity
 
         } else if (screenType == ScreenType.BIG_TABLET) {
             DialogFragment dialogFragment = new ShowDetailDialog();
+            Bundle bundle = new Bundle();
+            bundle.putLong(ShowDetailDialog.ID_KEY, id);
+            dialogFragment.setArguments(bundle);
             dialogFragment.show(getSupportFragmentManager(), "details");
         } else {
             startActivity(intent);

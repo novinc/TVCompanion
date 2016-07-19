@@ -22,6 +22,10 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
+import java.util.Locale;
+
+import apps.novin.tvcompanion.db.ShowEntity;
+import apps.novin.tvcompanion.db.ShowEntityDao;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
@@ -94,18 +98,28 @@ public class ShowDetailDialog extends DialogFragment {
         mRecyclerView.setFocusable(false);
         mRecyclerView.setAdapter(mAdapter);
 
+        ShowEntityDao dao = ((App) getActivity().getApplication()).getDaoSession().getShowEntityDao();
+        ShowEntity showEntity = dao.loadByRowId(id);
+
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getContext(),
                 R.array.find_shows_tabs, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
-        Glide.with(this).load("https://walter.trakt.us/images/shows/000/093/720/posters/thumb/e90844dd99.jpg")
-                .placeholder(R.drawable.show_background)
-                .error(R.drawable.ic_close_black)
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                .into(poster);
-        Glide.with(this).load("https://walter.trakt.us/images/shows/000/093/720/fanarts/original/a526847f48.jpg")
-                .diskCacheStrategy(DiskCacheStrategy.SOURCE)
-                .into(backdropImage);
+        if (showEntity != null) {
+            Glide.with(this).load(showEntity.getPoster_url())
+                    .placeholder(R.drawable.show_background)
+                    .error(R.drawable.ic_close_black)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(poster);
+            Glide.with(this).load(showEntity.getBackdrop_url())
+                    .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                    .into(backdropImage);
+            title.setText(showEntity.getName());
+            genres.setText(showEntity.getGenres());
+            description.setText(showEntity.getDescription());
+            year.setText(String.format(Locale.ENGLISH, "%d", showEntity.getYear()));
+            percentage.setText(String.format(Locale.ENGLISH, "%d", showEntity.getPercent_heart()));
+        }
         return view;
     }
 
