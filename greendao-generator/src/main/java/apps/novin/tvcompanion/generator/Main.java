@@ -11,6 +11,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         Schema schema = new Schema(1, "apps.novin.tvcompanion.db");
         Entity show = schema.addEntity("ShowEntity");
+        show.implementsSerializable();
         show.addContentProvider();
         show.addIdProperty().autoincrement();
         show.addStringProperty("name").notNull();
@@ -32,6 +33,7 @@ public class Main {
         show.addBooleanProperty("synced").notNull();
 
         Entity episode = schema.addEntity("EpisodeEntity");
+        episode.implementsSerializable();
         episode.addContentProvider();
         episode.addIdProperty().autoincrement();
         Property epShowId = episode.addLongProperty("show_id").notNull().getProperty();

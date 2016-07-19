@@ -249,6 +249,13 @@ public class MainActivity extends AppCompatActivity
     @SuppressWarnings("unchecked")
     public void onShowPressed(View view) {
         long id = 0;
+        if (view.getTag() instanceof FindShowsPageFragment.MyAdapter.ViewHolder) {
+            id = ((FindShowsPageFragment.MyAdapter.ViewHolder) view.getTag()).id;
+        } else if (view.getTag() instanceof RecommendationsFragment.MyAdapter.ViewHolder) {
+            id = ((RecommendationsFragment.MyAdapter.ViewHolder) view.getTag()).id;
+        } else if (view.getTag() instanceof  MyShowsFragment.MyAdapter.ViewHolder) {
+            id = ((MyShowsFragment.MyAdapter.ViewHolder) view.getTag()).id;
+        }
         Intent intent = new Intent(this, ShowDetailActivity.class);
         intent.putExtra(ShowDetailActivity.ID_KEY, id);
         //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) { // disables big tablet dialog

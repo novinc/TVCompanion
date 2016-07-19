@@ -12,6 +12,13 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+
+import java.util.List;
+
+import apps.novin.tvcompanion.db.ShowEntity;
+import apps.novin.tvcompanion.db.ShowEntityDao;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
@@ -47,19 +54,22 @@ public class MyShowsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         mLayoutManager = new GridLayoutManager(getContext(), getContext().getResources().getInteger(R.integer.my_shows_span));
         mRecyclerView.setLayoutManager(mLayoutManager);
-        mAdapter = new MyAdapter(new String[100]);
+        List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).build().list();
+        mAdapter = new MyAdapter(list);
         mRecyclerView.setAdapter(mAdapter);
     }
 
-    public static class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
-        private String[] mDataset;
+    public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
+        private List<ShowEntity> mDataset;
 
         // Provide a reference to the views for each data item
         // Complex data items may need more than one view per item, and
         // you provide access to all the views for a data item in a view holder
-        public static class ViewHolder extends RecyclerView.ViewHolder {
+        public class ViewHolder extends RecyclerView.ViewHolder {
             @BindView(R.id.poster)
             ImageView poster;
+
+            long id;
 
             public ViewHolder(View view) {
                 super(view);
@@ -68,7 +78,7 @@ public class MyShowsFragment extends Fragment {
         }
 
         // Provide a suitable constructor (depends on the kind of dataset)
-        public MyAdapter(String[] myDataset) {
+        public MyAdapter(List<ShowEntity> myDataset) {
             mDataset = myDataset;
         }
 
@@ -82,23 +92,28 @@ public class MyShowsFragment extends Fragment {
             // set the view's size, margins, paddings and layout parameters
 
             ViewHolder vh = new ViewHolder(v);
-            v.setTag(vh);
+            v.findViewById(R.id.card_view).setTag(vh);
             return vh;
         }
 
         // Replace the contents of a view (invoked by the layout manager)
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
-            // - get element from your dataset at this position
-            // - replace the contents of the view with that element
-            //holder.mTextView.setText(mDataset[position]);
+            ShowEntity showEntity = mDataset.get(position);
+            Glide.with(MyShowsFragment.this)
+                    .load(showEntity.getPoster_url())
+                    .placeholder(R.drawable.show_background)
+                    .error(R.drawable.ic_close_black)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(holder.poster);
+            holder.id = showEntity.getId();
 
         }
 
         // Return the size of your dataset (invoked by the layout manager)
         @Override
         public int getItemCount() {
-            return mDataset.length;
+            return mDataset.size();
         }
     }
 }

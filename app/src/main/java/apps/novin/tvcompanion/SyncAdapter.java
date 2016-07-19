@@ -48,8 +48,10 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
         TraktV2 trakt = new TraktV2(BuildConfig.API_KEY);
         List<TrendingShow> trendingShows;
+        List<Show> popular;
         try {
             trendingShows = trakt.shows().trending(1, 10, Extended.FULLIMAGES).execute().body();
+            popular = trakt.shows().popular(1, 10, Extended.FULLIMAGES).execute().body();
         } catch (IOException e) {
             e.printStackTrace();
             Log.e("sync", "couldn't get trending shows");
@@ -57,14 +59,25 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
         ShowEntityDao showEntityDao = mDaoSession.getShowEntityDao();
         for (TrendingShow show : trendingShows) {
-            showEntityDao.insertOrReplace(getEntityFromShow(show.show));
+            showEntityDao.insertOrReplace(getEntityFromTrendingShow(show.show, show, trendingShows.indexOf(show)));
+        }
+        for (Show show : popular) {
+            showEntityDao.insertOrReplace(getEntityFromPopularShow(show, popular.indexOf(show)));
         }
         EventBus.getDefault().post(new DatabaseUpdatedEvent());
     }
-    private static ShowEntity getEntityFromShow(Show show) {
+
+    private ShowEntity getEntityFromPopularShow(Show show, int i) {
         return new ShowEntity(null, show.title, "genres: " + show.genres.toString().replace("[", "").replace("]", ""), show.overview,
-                2, ((int) (show.rating * 100)),
-                show.images.poster.thumb, show.images.banner.full, show.year, 5000, 10000,
-                false, null, false, null, false, null, true);
+                2, ((int) (show.rating * 10)),
+                show.images.poster.thumb, show.images.fanart.medium, show.year, 10000, 20000,
+                false, null, true, i, false, null, true);
+    }
+
+    private static ShowEntity getEntityFromTrendingShow(Show show, TrendingShow trendingShow, int i) {
+        return new ShowEntity(null, show.title, "genres: " + show.genres.toString().replace("[", "").replace("]", ""), show.overview,
+                2, ((int) (show.rating * 10)),
+                show.images.poster.thumb, show.images.fanart.medium, show.year, trendingShow.watchers, trendingShow.watchers,
+                true, i, false, null, false, null, true);
     }
 }

@@ -21,8 +21,10 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.List;
+import java.util.Locale;
 
 import apps.novin.tvcompanion.db.ShowEntity;
+import apps.novin.tvcompanion.db.ShowEntityDao;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
@@ -56,7 +58,7 @@ public class RecommendationsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         mLayoutManager = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(mLayoutManager);
-        List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).build().list();
+        List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.Percent_heart.ge(85)).build().list();
         mAdapter = new MyAdapter(list);
         mRecyclerView.setAdapter(mAdapter);
     }
@@ -81,7 +83,7 @@ public class RecommendationsFragment extends Fragment {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void dataChange(DatabaseUpdatedEvent event) {
-        List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).build().list();
+        List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.Percent_heart.ge(85)).build().list();
         mAdapter.setData(list);
         mAdapter.notifyDataSetChanged();
     }
@@ -107,6 +109,8 @@ public class RecommendationsFragment extends Fragment {
             @BindView(R.id.poster)
             ImageView poster;
 
+            long id;
+
             public ViewHolder(View view) {
                 super(view);
                 ButterKnife.bind(this, view);
@@ -129,7 +133,7 @@ public class RecommendationsFragment extends Fragment {
             View v = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.recommendation_card, parent, false);
             ViewHolder vh = new ViewHolder(v);
-            v.setTag(vh);
+            v.findViewById(R.id.card_view).setTag(vh);
             return vh;
         }
 
@@ -147,7 +151,8 @@ public class RecommendationsFragment extends Fragment {
             holder.genres.setText(showEntity.getGenres());
             holder.description.setText(showEntity.getDescription());
             holder.seasons.setText(getString(R.string.seasons_format, showEntity.getSeasons()));
-            //holder.percentage.setText(showEntity.getPercent_heart());
+            holder.percentage.setText(String.format(Locale.ENGLISH, "%d", showEntity.getPercent_heart()));
+            holder.id = showEntity.getId();
         }
 
         // Return the size of your dataset (invoked by the layout manager)

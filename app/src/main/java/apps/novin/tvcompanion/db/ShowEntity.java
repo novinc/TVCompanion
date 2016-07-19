@@ -8,7 +8,7 @@ import de.greenrobot.dao.DaoException;
 /**
  * Entity mapped to table "SHOW_ENTITY".
  */
-public class ShowEntity {
+public class ShowEntity implements java.io.Serializable {
 
     private Long id;
     /** Not-null value. */

@@ -4,7 +4,7 @@ package apps.novin.tvcompanion.db;
 /**
  * Entity mapped to table "EPISODE_ENTITY".
  */
-public class EpisodeEntity {
+public class EpisodeEntity implements java.io.Serializable {
 
     private Long id;
     private long show_id;
