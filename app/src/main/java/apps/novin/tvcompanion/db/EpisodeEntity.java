@@ -9,14 +9,13 @@ public class EpisodeEntity implements java.io.Serializable {
     private Long id;
     private long show_id;
     private int season;
-    /** Not-null value. */
     private String ep_name;
     private int ep_number;
-    /** Not-null value. */
     private String ep_description;
     private boolean watched;
     private int percent_heart;
     private boolean synced;
+    private String poster_url;
 
     public EpisodeEntity() {
     }
@@ -25,7 +24,7 @@ public class EpisodeEntity implements java.io.Serializable {
         this.id = id;
     }
 
-    public EpisodeEntity(Long id, long show_id, int season, String ep_name, int ep_number, String ep_description, boolean watched, int percent_heart, boolean synced) {
+    public EpisodeEntity(Long id, long show_id, int season, String ep_name, int ep_number, String ep_description, boolean watched, int percent_heart, boolean synced, String poster_url) {
         this.id = id;
         this.show_id = show_id;
         this.season = season;
@@ -35,6 +34,7 @@ public class EpisodeEntity implements java.io.Serializable {
         this.watched = watched;
         this.percent_heart = percent_heart;
         this.synced = synced;
+        this.poster_url = poster_url;
     }
 
     public Long getId() {
@@ -61,12 +61,10 @@ public class EpisodeEntity implements java.io.Serializable {
         this.season = season;
     }
 
-    /** Not-null value. */
     public String getEp_name() {
         return ep_name;
     }
 
-    /** Not-null value; ensure this value is available before it is saved to the database. */
     public void setEp_name(String ep_name) {
         this.ep_name = ep_name;
     }
@@ -79,12 +77,10 @@ public class EpisodeEntity implements java.io.Serializable {
         this.ep_number = ep_number;
     }
 
-    /** Not-null value. */
     public String getEp_description() {
         return ep_description;
     }
 
-    /** Not-null value; ensure this value is available before it is saved to the database. */
     public void setEp_description(String ep_description) {
         this.ep_description = ep_description;
     }
@@ -111,6 +107,14 @@ public class EpisodeEntity implements java.io.Serializable {
 
     public void setSynced(boolean synced) {
         this.synced = synced;
+    }
+
+    public String getPoster_url() {
+        return poster_url;
+    }
+
+    public void setPoster_url(String poster_url) {
+        this.poster_url = poster_url;
     }
 
 }

@@ -12,22 +12,29 @@ import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.test.mock.MockApplication;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.animation.OvershootInterpolator;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
+import apps.novin.tvcompanion.db.EpisodeEntity;
+import apps.novin.tvcompanion.db.EpisodeEntityDao;
 import apps.novin.tvcompanion.db.ShowEntity;
 import apps.novin.tvcompanion.db.ShowEntityDao;
 import butterknife.BindView;
@@ -65,7 +72,7 @@ public class ShowDetailActivity extends AppCompatActivity {
     RecyclerView mRecyclerView;
 
     private RecyclerView.LayoutManager mLayoutManager;
-    private RecyclerView.Adapter mAdapter;
+    private MyAdapter mAdapter;
 
     private enum State {
         EXPANDED,
@@ -97,29 +104,49 @@ public class ShowDetailActivity extends AppCompatActivity {
         mLayoutManager.setAutoMeasureEnabled(true);
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setNestedScrollingEnabled(false);
-        mAdapter = new MyAdapter(new String[5]);
-        mRecyclerView.setFocusable(false);
+        final EpisodeEntityDao episodeEntityDao = ((App) getApplication()).getDaoSession().getEpisodeEntityDao();
+        List<EpisodeEntity> list = episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(id), EpisodeEntityDao.Properties.Season.eq(1)).orderAsc(EpisodeEntityDao.Properties.Ep_number).list();
+        mAdapter = new MyAdapter(list);
         mRecyclerView.setAdapter(mAdapter);
+        mRecyclerView.setFocusable(false);
 
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.find_shows_tabs, android.R.layout.simple_spinner_item);
+        List<EpisodeEntity> all = episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(id)).orderAsc(EpisodeEntityDao.Properties.Season).list();
+        final int seasonStart = all.get(0).getSeason();
+        int numSeasons = showEntity.getSeasons();
+        Log.d("details", "start " + seasonStart + " num " + numSeasons);
+        List<String> seasons = new ArrayList<>(numSeasons);
+        for (int i = seasonStart; i < numSeasons + seasonStart; i++) {
+            seasons.add("season " + i);
+        }
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, seasons);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
-        if (showEntity != null) {
-            Glide.with(this).load(showEntity.getPoster_url())
-                    .placeholder(R.drawable.show_background)
-                    .error(R.drawable.ic_close_black)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .into(poster);
-            Glide.with(this).load(showEntity.getBackdrop_url())
-                    .diskCacheStrategy(DiskCacheStrategy.SOURCE)
-                    .into(backdropImage);
-            title.setText(showEntity.getName());
-            genres.setText(showEntity.getGenres());
-            description.setText(showEntity.getDescription());
-            year.setText(String.format(Locale.ENGLISH, "%d", showEntity.getYear()));
-            percentage.setText(String.format(Locale.ENGLISH, "%d", showEntity.getPercent_heart()));
-        }
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                List<EpisodeEntity> list = episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(id), EpisodeEntityDao.Properties.Season.eq(i + seasonStart)).orderAsc(EpisodeEntityDao.Properties.Ep_number).list();
+                mAdapter.setData(list);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+        Glide.with(this).load(showEntity.getPoster_url())
+                .placeholder(R.drawable.show_background)
+                .error(R.drawable.ic_close_black)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .into(poster);
+        Glide.with(this).load(showEntity.getBackdrop_url())
+                .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                .into(backdropImage);
+        title.setText(showEntity.getName());
+        genres.setText(showEntity.getGenres());
+        description.setText(showEntity.getDescription());
+        year.setText(String.format(Locale.ENGLISH, "%d", showEntity.getYear()));
+        percentage.setText(String.format(Locale.ENGLISH, "%d", showEntity.getPercent_heart()));
     }
 
 
@@ -189,7 +216,13 @@ public class ShowDetailActivity extends AppCompatActivity {
                 });
     }
     public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
-        private String[] mDataset;
+        private List<EpisodeEntity> mDataset;
+        private List<EpisodeEntity> data;
+
+        public void setData(List<EpisodeEntity> data) {
+            this.data = data;
+            notifyDataSetChanged();
+        }
 
         // Provide a reference to the views for each data item
         // Complex data items may need more than one view per item, and
@@ -197,8 +230,6 @@ public class ShowDetailActivity extends AppCompatActivity {
         public class ViewHolder extends RecyclerView.ViewHolder {
             @BindView(R.id.episode_title)
             TextView title;
-            @BindView(R.id.episode_number)
-            TextView number;
             @BindView(R.id.episode_desc)
             TextView description;
             @BindView(R.id.episode_poster)
@@ -215,7 +246,7 @@ public class ShowDetailActivity extends AppCompatActivity {
         }
 
         // Provide a suitable constructor (depends on the kind of dataset)
-        public MyAdapter(String[] myDataset) {
+        public MyAdapter(List<EpisodeEntity> myDataset) {
             mDataset = myDataset;
         }
 
@@ -236,15 +267,22 @@ public class ShowDetailActivity extends AppCompatActivity {
         // Replace the contents of a view (invoked by the layout manager)
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
-            // - get element from your dataset at this position
-            // - replace the contents of the view with that element
-            //holder.mTextView.setText(mDataset[position]);
+            EpisodeEntity episode = mDataset.get(position);
+            holder.title.setText(String.format(Locale.ENGLISH, "%s %s", episode.getEp_name(), String.format(Locale.ENGLISH, "%dx%s", episode.getSeason(), episode.getEp_number())));
+            holder.description.setText(episode.getEp_description());
+            Glide.with(ShowDetailActivity.this)
+                    .load(episode.getPoster_url())
+                    .placeholder(R.drawable.show_background)
+                    .error(R.drawable.ic_close_black)
+                    .centerCrop()
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(holder.poster);
         }
 
         // Return the size of your dataset (invoked by the layout manager)
         @Override
         public int getItemCount() {
-            return mDataset.length;
+            return mDataset.size();
         }
     }
 }

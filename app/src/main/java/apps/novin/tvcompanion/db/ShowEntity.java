@@ -32,6 +32,7 @@ public class ShowEntity implements java.io.Serializable {
     private boolean most_popular;
     private Integer most_popular_pos;
     private boolean synced;
+    private boolean my_show;
 
     /** Used to resolve relations */
     private transient DaoSession daoSession;
@@ -48,7 +49,7 @@ public class ShowEntity implements java.io.Serializable {
         this.id = id;
     }
 
-    public ShowEntity(Long id, long trakt_id, String name, String genres, String description, int seasons, int percent_heart, String poster_url, String backdrop_url, int year, long watchers, long players, boolean trending, Integer trending_pos, boolean most_popular, Integer most_popular_pos, boolean synced) {
+    public ShowEntity(Long id, long trakt_id, String name, String genres, String description, int seasons, int percent_heart, String poster_url, String backdrop_url, int year, long watchers, long players, boolean trending, Integer trending_pos, boolean most_popular, Integer most_popular_pos, boolean synced, boolean my_show) {
         this.id = id;
         this.trakt_id = trakt_id;
         this.name = name;
@@ -66,6 +67,7 @@ public class ShowEntity implements java.io.Serializable {
         this.most_popular = most_popular;
         this.most_popular_pos = most_popular_pos;
         this.synced = synced;
+        this.my_show = my_show;
     }
 
     /** called by internal mechanisms, do not call yourself. */
@@ -218,6 +220,14 @@ public class ShowEntity implements java.io.Serializable {
 
     public void setSynced(boolean synced) {
         this.synced = synced;
+    }
+
+    public boolean getMy_show() {
+        return my_show;
+    }
+
+    public void setMy_show(boolean my_show) {
+        this.my_show = my_show;
     }
 
     /** To-many relationship, resolved on first access (and after reset). Changes to to-many relations are not persisted, make changes to the target entity. */

@@ -40,6 +40,7 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
         public final static Property Most_popular = new Property(14, boolean.class, "most_popular", false, "MOST_POPULAR");
         public final static Property Most_popular_pos = new Property(15, Integer.class, "most_popular_pos", false, "MOST_POPULAR_POS");
         public final static Property Synced = new Property(16, boolean.class, "synced", false, "SYNCED");
+        public final static Property My_show = new Property(17, boolean.class, "my_show", false, "MY_SHOW");
     };
 
     private DaoSession daoSession;
@@ -71,10 +72,11 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
                 "\"WATCHERS\" INTEGER NOT NULL ," + // 10: watchers
                 "\"PLAYERS\" INTEGER NOT NULL ," + // 11: players
                 "\"TRENDING\" INTEGER NOT NULL ," + // 12: trending
-                "\"TRENDING_POS\" INTEGER," + // 13: trending_pos
+                "\"TRENDING_POS\" INTEGER UNIQUE ," + // 13: trending_pos
                 "\"MOST_POPULAR\" INTEGER NOT NULL ," + // 14: most_popular
-                "\"MOST_POPULAR_POS\" INTEGER," + // 15: most_popular_pos
-                "\"SYNCED\" INTEGER NOT NULL );"); // 16: synced
+                "\"MOST_POPULAR_POS\" INTEGER UNIQUE ," + // 15: most_popular_pos
+                "\"SYNCED\" INTEGER NOT NULL ," + // 16: synced
+                "\"MY_SHOW\" INTEGER NOT NULL );"); // 17: my_show
     }
 
     /** Drops the underlying database table. */
@@ -116,6 +118,7 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
             stmt.bindLong(16, most_popular_pos);
         }
         stmt.bindLong(17, entity.getSynced() ? 1L: 0L);
+        stmt.bindLong(18, entity.getMy_show() ? 1L: 0L);
     }
 
     @Override
@@ -150,7 +153,8 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
             cursor.isNull(offset + 13) ? null : cursor.getInt(offset + 13), // trending_pos
             cursor.getShort(offset + 14) != 0, // most_popular
             cursor.isNull(offset + 15) ? null : cursor.getInt(offset + 15), // most_popular_pos
-            cursor.getShort(offset + 16) != 0 // synced
+            cursor.getShort(offset + 16) != 0, // synced
+            cursor.getShort(offset + 17) != 0 // my_show
         );
         return entity;
     }
@@ -175,6 +179,7 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
         entity.setMost_popular(cursor.getShort(offset + 14) != 0);
         entity.setMost_popular_pos(cursor.isNull(offset + 15) ? null : cursor.getInt(offset + 15));
         entity.setSynced(cursor.getShort(offset + 16) != 0);
+        entity.setMy_show(cursor.getShort(offset + 17) != 0);
      }
     
     /** @inheritdoc */

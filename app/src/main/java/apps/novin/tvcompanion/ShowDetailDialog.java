@@ -22,8 +22,11 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
+import java.util.List;
 import java.util.Locale;
 
+import apps.novin.tvcompanion.db.EpisodeEntity;
+import apps.novin.tvcompanion.db.EpisodeEntityDao;
 import apps.novin.tvcompanion.db.ShowEntity;
 import apps.novin.tvcompanion.db.ShowEntityDao;
 import butterknife.BindView;
@@ -94,7 +97,9 @@ public class ShowDetailDialog extends DialogFragment {
         mLayoutManager.setAutoMeasureEnabled(true);
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setNestedScrollingEnabled(false);
-        mAdapter = new MyAdapter(new String[5]);
+        EpisodeEntityDao episodeEntityDao = ((App) getActivity().getApplication()).getDaoSession().getEpisodeEntityDao();
+        List<EpisodeEntity> list = episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(id), EpisodeEntityDao.Properties.Season.eq(1)).orderAsc(EpisodeEntityDao.Properties.Ep_number).list();
+        mAdapter = new MyAdapter(list);
         mRecyclerView.setFocusable(false);
         mRecyclerView.setAdapter(mAdapter);
 
@@ -171,7 +176,7 @@ public class ShowDetailDialog extends DialogFragment {
         });
     }
     public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
-        private String[] mDataset;
+        private List<EpisodeEntity> mDataset;
 
         // Provide a reference to the views for each data item
         // Complex data items may need more than one view per item, and
@@ -179,8 +184,6 @@ public class ShowDetailDialog extends DialogFragment {
         public class ViewHolder extends RecyclerView.ViewHolder {
             @BindView(R.id.episode_title)
             TextView title;
-            @BindView(R.id.episode_number)
-            TextView number;
             @BindView(R.id.episode_desc)
             TextView description;
             @BindView(R.id.episode_poster)
@@ -197,7 +200,7 @@ public class ShowDetailDialog extends DialogFragment {
         }
 
         // Provide a suitable constructor (depends on the kind of dataset)
-        public MyAdapter(String[] myDataset) {
+        public MyAdapter(List<EpisodeEntity> myDataset) {
             mDataset = myDataset;
         }
 
@@ -218,15 +221,22 @@ public class ShowDetailDialog extends DialogFragment {
         // Replace the contents of a view (invoked by the layout manager)
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
-            // - get element from your dataset at this position
-            // - replace the contents of the view with that element
-            //holder.mTextView.setText(mDataset[position]);
+            EpisodeEntity episode = mDataset.get(position);
+            holder.title.setText(String.format(Locale.ENGLISH, "%s %s", episode.getEp_name(), String.format(Locale.ENGLISH, "%dx%s", episode.getSeason(), episode.getEp_number())));
+            holder.description.setText(episode.getEp_description());
+            Glide.with(ShowDetailDialog.this)
+                    .load(episode.getPoster_url())
+                    .placeholder(R.drawable.show_background)
+                    .error(R.drawable.ic_close_black)
+                    .centerCrop()
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(holder.poster);
         }
 
         // Return the size of your dataset (invoked by the layout manager)
         @Override
         public int getItemCount() {
-            return mDataset.length;
+            return mDataset.size();
         }
     }
 }

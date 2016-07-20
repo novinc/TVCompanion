@@ -26,10 +26,11 @@ public class Main {
         show.addLongProperty("watchers").notNull();
         show.addLongProperty("players").notNull();
         show.addBooleanProperty("trending").notNull();
-        show.addIntProperty("trending_pos");
+        show.addIntProperty("trending_pos").unique();
         show.addBooleanProperty("most_popular").notNull();
-        show.addIntProperty("most_popular_pos");
+        show.addIntProperty("most_popular_pos").unique();
         show.addBooleanProperty("synced").notNull();
+        show.addBooleanProperty("my_show").notNull();
 
         Entity episode = schema.addEntity("EpisodeEntity");
         episode.implementsSerializable();
@@ -37,12 +38,13 @@ public class Main {
         episode.addIdProperty().autoincrement();
         Property epShowId = episode.addLongProperty("show_id").notNull().getProperty();
         episode.addIntProperty("season").notNull();
-        episode.addStringProperty("ep_name").notNull();
+        episode.addStringProperty("ep_name");
         episode.addIntProperty("ep_number").notNull();
-        episode.addStringProperty("ep_description").notNull();
+        episode.addStringProperty("ep_description");
         episode.addBooleanProperty("watched").notNull();
         episode.addIntProperty("percent_heart").notNull();
         episode.addBooleanProperty("synced").notNull();
+        episode.addStringProperty("poster_url");
 
         show.addToMany(episode, epShowId);
 

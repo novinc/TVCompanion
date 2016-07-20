@@ -54,7 +54,7 @@ public class MyShowsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         mLayoutManager = new GridLayoutManager(getContext(), getContext().getResources().getInteger(R.integer.my_shows_span));
         mRecyclerView.setLayoutManager(mLayoutManager);
-        List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).build().list();
+        List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.My_show.eq(true)).list();
         mAdapter = new MyAdapter(list);
         mRecyclerView.setAdapter(mAdapter);
     }
