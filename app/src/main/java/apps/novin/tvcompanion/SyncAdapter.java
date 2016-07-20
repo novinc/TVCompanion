@@ -64,49 +64,70 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
         ShowEntityDao showEntityDao = mDaoSession.getShowEntityDao();
         EpisodeEntityDao episodeEntityDao = mDaoSession.getEpisodeEntityDao();
+        // trending sync
         for (TrendingShow show : trendingShows) {
             List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(show.show.ids.trakt)).list();
             if (sameShows.size() == 0) {
                 List<ShowEntity> samePos = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trending_pos.eq(trendingShows.indexOf(show))).list();
                 if (samePos.size() != 0) {
-                    showEntityDao.delete(samePos.get(0));
-                    episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(samePos.get(0).getId())).buildDelete().executeDeleteWithoutDetachingEntities();
+                    samePos.get(0).setTrending(false);
+                    samePos.get(0).setTrending_pos(null);
+                    samePos.get(0).update();
                 }
                 showEntityDao.insert(getEntityFromTrendingShow(show.show, show, trendingShows.indexOf(show)));
             } else {
+                List<ShowEntity> samePos = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trending_pos.eq(trendingShows.indexOf(show))).list();
+                if (samePos.size() != 0) {
+                    samePos.get(0).setTrending(false);
+                    samePos.get(0).setTrending_pos(null);
+                    samePos.get(0).update();
+                }
                 ShowEntity showEntity = sameShows.get(0);
                 showEntity.setTrending(true);
                 showEntity.setTrending_pos(trendingShows.indexOf(show));
                 showEntity.update();
             }
         }
+        // most popular sync
         for (Show show : popular) {
-            List<ShowEntity> list = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(show.ids.trakt)).list();
-            if (list.size() == 0) {
+            List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(show.ids.trakt)).list();
+            if (sameShows.size() == 0) {
                 List<ShowEntity> samePos = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Most_popular_pos.eq(popular.indexOf(show))).list();
                 if (samePos.size() != 0) {
-                    showEntityDao.delete(samePos.get(0));
-                    episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(samePos.get(0).getId())).buildDelete().executeDeleteWithoutDetachingEntities();
+                    samePos.get(0).setMost_popular(false);
+                    samePos.get(0).update();
                 }
                 showEntityDao.insert(getEntityFromPopularShow(show, popular.indexOf(show)));
             } else {
-                ShowEntity showEntity = list.get(0);
+                List<ShowEntity> samePos = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Most_popular_pos.eq(popular.indexOf(show))).list();
+                if (samePos.size() != 0) {
+                    samePos.get(0).setMost_popular(false);
+                    samePos.get(0).update();
+                }
+                ShowEntity showEntity = sameShows.get(0);
                 showEntity.setMost_popular(true);
                 showEntity.setMost_popular_pos(popular.indexOf(show));
                 showEntity.update();
             }
         }
+        // episodes sync
         for (ShowEntity showEntity : showEntityDao.loadAll()) {
             // load up all the seasons for show and all episodes for each season
-            episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(showEntity.getId())).buildDelete().executeDeleteWithoutDetachingEntities();
             try {
-                List<Season> seasons = trakt.seasons().summary(String.format(Locale.ENGLISH, "%d", showEntity.getTrakt_id()), Extended.DEFAULT_MIN).execute().body();
+                List<Season> seasons = trakt.seasons().summary(String.format(Locale.ENGLISH, "%d", showEntity.getTrakt_id()), Extended.FULL).execute().body();
                 showEntity.setSeasons(seasons.size());
                 showEntity.update();
                 for (Season season : seasons) {
+                    if (season.aired_episodes == episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(showEntity.getId()), EpisodeEntityDao.Properties.Season.eq(season.number)).count()) {
+                        continue;
+                    }
                     List<Episode> episodes = trakt.seasons().season(String.format(Locale.ENGLISH, "%d", showEntity.getTrakt_id()), season.number, Extended.FULLIMAGES).execute().body();
                     for (Episode episode : episodes) {
-                        episodeEntityDao.insert(getEpisodeEntity(episode, showEntity.getId()));
+                        long alreadyhave = episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(showEntity.getId()), EpisodeEntityDao.Properties.Season.eq(season.number),
+                                EpisodeEntityDao.Properties.Ep_number.eq(episode.number)).count();
+                        if (alreadyhave != 1) {
+                            episodeEntityDao.insert(getEpisodeEntity(episode, showEntity.getId()));
+                        }
                     }
                 }
             } catch (IOException e) {
@@ -115,6 +136,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 return;
             }
         }
+        Log.d("sync", "sync complete");
         EventBus.getDefault().post(new DatabaseUpdatedEvent());
     }
 
