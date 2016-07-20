@@ -74,7 +74,9 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                     samePos.get(0).setTrending_pos(null);
                     samePos.get(0).update();
                 }
-                showEntityDao.insert(getEntityFromTrendingShow(show.show, show, trendingShows.indexOf(show)));
+                ShowEntity newShow = getEntityFromTrendingShow(show.show, show, trendingShows.indexOf(show));
+                // add oauth needed columns
+                showEntityDao.insert(newShow);
             } else {
                 List<ShowEntity> samePos = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trending_pos.eq(trendingShows.indexOf(show))).list();
                 if (samePos.size() != 0) {
@@ -95,13 +97,17 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 List<ShowEntity> samePos = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Most_popular_pos.eq(popular.indexOf(show))).list();
                 if (samePos.size() != 0) {
                     samePos.get(0).setMost_popular(false);
+                    samePos.get(0).setMost_popular_pos(null);
                     samePos.get(0).update();
                 }
-                showEntityDao.insert(getEntityFromPopularShow(show, popular.indexOf(show)));
+                ShowEntity newShow = getEntityFromPopularShow(show, popular.indexOf(show));
+                // add oauth needed columns
+                showEntityDao.insert(newShow);
             } else {
                 List<ShowEntity> samePos = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Most_popular_pos.eq(popular.indexOf(show))).list();
                 if (samePos.size() != 0) {
                     samePos.get(0).setMost_popular(false);
+                    samePos.get(0).setMost_popular_pos(null);
                     samePos.get(0).update();
                 }
                 ShowEntity showEntity = sameShows.get(0);
@@ -118,15 +124,21 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 showEntity.setSeasons(seasons.size());
                 showEntity.update();
                 for (Season season : seasons) {
-                    if (season.aired_episodes == episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(showEntity.getId()), EpisodeEntityDao.Properties.Season.eq(season.number)).count()) {
+                    // skip the seasons where we have all episodes already
+                    /*if (season.aired_episodes == episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(showEntity.getId()), EpisodeEntityDao.Properties.Season.eq(season.number)).count()) {
                         continue;
-                    }
+                    }*/
                     List<Episode> episodes = trakt.seasons().season(String.format(Locale.ENGLISH, "%d", showEntity.getTrakt_id()), season.number, Extended.FULLIMAGES).execute().body();
                     for (Episode episode : episodes) {
-                        long alreadyhave = episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(showEntity.getId()), EpisodeEntityDao.Properties.Season.eq(season.number),
-                                EpisodeEntityDao.Properties.Ep_number.eq(episode.number)).count();
-                        if (alreadyhave != 1) {
-                            episodeEntityDao.insert(getEpisodeEntity(episode, showEntity.getId()));
+                        List<EpisodeEntity> alreadyHave = episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(showEntity.getId()), EpisodeEntityDao.Properties.Season.eq(season.number),
+                                EpisodeEntityDao.Properties.Ep_number.eq(episode.number)).list();
+                        if (alreadyHave.size() != 1) {
+                            EpisodeEntity newEpisode = getEpisodeEntity(episode, showEntity.getId());
+                            // add oauth needed columns
+                            episodeEntityDao.insert(newEpisode);
+                        } else {
+                            EpisodeEntity existingEpisode = alreadyHave.get(0);
+                            // update existingEpisode with new oauth needed columns
                         }
                     }
                 }
