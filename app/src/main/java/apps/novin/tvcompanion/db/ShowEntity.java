@@ -14,23 +14,21 @@ public class ShowEntity implements java.io.Serializable {
     private long trakt_id;
     /** Not-null value. */
     private String name;
-    /** Not-null value. */
     private String genres;
-    /** Not-null value. */
     private String description;
-    private int seasons;
-    private int percent_heart;
-    /** Not-null value. */
+    private Integer seasons;
+    private Integer percent_heart;
     private String poster_url;
-    /** Not-null value. */
     private String backdrop_url;
-    private int year;
-    private long watchers;
-    private long players;
+    private Integer year;
+    private Long watchers;
+    private Long players;
     private boolean trending;
     private Integer trending_pos;
     private boolean most_popular;
     private Integer most_popular_pos;
+    private boolean recommendation;
+    private Integer recommendation_pos;
     private boolean synced;
     private boolean my_show;
 
@@ -49,7 +47,7 @@ public class ShowEntity implements java.io.Serializable {
         this.id = id;
     }
 
-    public ShowEntity(Long id, long trakt_id, String name, String genres, String description, int seasons, int percent_heart, String poster_url, String backdrop_url, int year, long watchers, long players, boolean trending, Integer trending_pos, boolean most_popular, Integer most_popular_pos, boolean synced, boolean my_show) {
+    public ShowEntity(Long id, long trakt_id, String name, String genres, String description, Integer seasons, Integer percent_heart, String poster_url, String backdrop_url, Integer year, Long watchers, Long players, boolean trending, Integer trending_pos, boolean most_popular, Integer most_popular_pos, boolean recommendation, Integer recommendation_pos, boolean synced, boolean my_show) {
         this.id = id;
         this.trakt_id = trakt_id;
         this.name = name;
@@ -66,6 +64,8 @@ public class ShowEntity implements java.io.Serializable {
         this.trending_pos = trending_pos;
         this.most_popular = most_popular;
         this.most_popular_pos = most_popular_pos;
+        this.recommendation = recommendation;
+        this.recommendation_pos = recommendation_pos;
         this.synced = synced;
         this.my_show = my_show;
     }
@@ -102,83 +102,75 @@ public class ShowEntity implements java.io.Serializable {
         this.name = name;
     }
 
-    /** Not-null value. */
     public String getGenres() {
         return genres;
     }
 
-    /** Not-null value; ensure this value is available before it is saved to the database. */
     public void setGenres(String genres) {
         this.genres = genres;
     }
 
-    /** Not-null value. */
     public String getDescription() {
         return description;
     }
 
-    /** Not-null value; ensure this value is available before it is saved to the database. */
     public void setDescription(String description) {
         this.description = description;
     }
 
-    public int getSeasons() {
+    public Integer getSeasons() {
         return seasons;
     }
 
-    public void setSeasons(int seasons) {
+    public void setSeasons(Integer seasons) {
         this.seasons = seasons;
     }
 
-    public int getPercent_heart() {
+    public Integer getPercent_heart() {
         return percent_heart;
     }
 
-    public void setPercent_heart(int percent_heart) {
+    public void setPercent_heart(Integer percent_heart) {
         this.percent_heart = percent_heart;
     }
 
-    /** Not-null value. */
     public String getPoster_url() {
         return poster_url;
     }
 
-    /** Not-null value; ensure this value is available before it is saved to the database. */
     public void setPoster_url(String poster_url) {
         this.poster_url = poster_url;
     }
 
-    /** Not-null value. */
     public String getBackdrop_url() {
         return backdrop_url;
     }
 
-    /** Not-null value; ensure this value is available before it is saved to the database. */
     public void setBackdrop_url(String backdrop_url) {
         this.backdrop_url = backdrop_url;
     }
 
-    public int getYear() {
+    public Integer getYear() {
         return year;
     }
 
-    public void setYear(int year) {
+    public void setYear(Integer year) {
         this.year = year;
     }
 
-    public long getWatchers() {
+    public Long getWatchers() {
         return watchers;
     }
 
-    public void setWatchers(long watchers) {
+    public void setWatchers(Long watchers) {
         this.watchers = watchers;
     }
 
-    public long getPlayers() {
+    public Long getPlayers() {
         return players;
     }
 
-    public void setPlayers(long players) {
+    public void setPlayers(Long players) {
         this.players = players;
     }
 
@@ -212,6 +204,22 @@ public class ShowEntity implements java.io.Serializable {
 
     public void setMost_popular_pos(Integer most_popular_pos) {
         this.most_popular_pos = most_popular_pos;
+    }
+
+    public boolean getRecommendation() {
+        return recommendation;
+    }
+
+    public void setRecommendation(boolean recommendation) {
+        this.recommendation = recommendation;
+    }
+
+    public Integer getRecommendation_pos() {
+        return recommendation_pos;
+    }
+
+    public void setRecommendation_pos(Integer recommendation_pos) {
+        this.recommendation_pos = recommendation_pos;
     }
 
     public boolean getSynced() {

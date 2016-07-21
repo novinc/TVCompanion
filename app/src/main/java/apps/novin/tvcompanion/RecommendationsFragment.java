@@ -58,7 +58,7 @@ public class RecommendationsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         mLayoutManager = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(mLayoutManager);
-        List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.Percent_heart.ge(85)).build().list();
+        List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.Recommendation.eq(true)).orderAsc(ShowEntityDao.Properties.Recommendation_pos).build().list();
         mAdapter = new MyAdapter(list);
         mRecyclerView.setAdapter(mAdapter);
     }
@@ -83,7 +83,7 @@ public class RecommendationsFragment extends Fragment {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void dataChange(DatabaseUpdatedEvent event) {
-        List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.Percent_heart.ge(85)).build().list();
+        List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.Recommendation.eq(true)).orderAsc(ShowEntityDao.Properties.Recommendation_pos).build().list();
         mAdapter.setData(list);
         mAdapter.notifyDataSetChanged();
     }

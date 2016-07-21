@@ -28,19 +28,21 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
         public final static Property Name = new Property(2, String.class, "name", false, "NAME");
         public final static Property Genres = new Property(3, String.class, "genres", false, "GENRES");
         public final static Property Description = new Property(4, String.class, "description", false, "DESCRIPTION");
-        public final static Property Seasons = new Property(5, int.class, "seasons", false, "SEASONS");
-        public final static Property Percent_heart = new Property(6, int.class, "percent_heart", false, "PERCENT_HEART");
+        public final static Property Seasons = new Property(5, Integer.class, "seasons", false, "SEASONS");
+        public final static Property Percent_heart = new Property(6, Integer.class, "percent_heart", false, "PERCENT_HEART");
         public final static Property Poster_url = new Property(7, String.class, "poster_url", false, "POSTER_URL");
         public final static Property Backdrop_url = new Property(8, String.class, "backdrop_url", false, "BACKDROP_URL");
-        public final static Property Year = new Property(9, int.class, "year", false, "YEAR");
-        public final static Property Watchers = new Property(10, long.class, "watchers", false, "WATCHERS");
-        public final static Property Players = new Property(11, long.class, "players", false, "PLAYERS");
+        public final static Property Year = new Property(9, Integer.class, "year", false, "YEAR");
+        public final static Property Watchers = new Property(10, Long.class, "watchers", false, "WATCHERS");
+        public final static Property Players = new Property(11, Long.class, "players", false, "PLAYERS");
         public final static Property Trending = new Property(12, boolean.class, "trending", false, "TRENDING");
         public final static Property Trending_pos = new Property(13, Integer.class, "trending_pos", false, "TRENDING_POS");
         public final static Property Most_popular = new Property(14, boolean.class, "most_popular", false, "MOST_POPULAR");
         public final static Property Most_popular_pos = new Property(15, Integer.class, "most_popular_pos", false, "MOST_POPULAR_POS");
-        public final static Property Synced = new Property(16, boolean.class, "synced", false, "SYNCED");
-        public final static Property My_show = new Property(17, boolean.class, "my_show", false, "MY_SHOW");
+        public final static Property Recommendation = new Property(16, boolean.class, "recommendation", false, "RECOMMENDATION");
+        public final static Property Recommendation_pos = new Property(17, Integer.class, "recommendation_pos", false, "RECOMMENDATION_POS");
+        public final static Property Synced = new Property(18, boolean.class, "synced", false, "SYNCED");
+        public final static Property My_show = new Property(19, boolean.class, "my_show", false, "MY_SHOW");
     };
 
     private DaoSession daoSession;
@@ -62,21 +64,23 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
                 "\"_id\" INTEGER PRIMARY KEY AUTOINCREMENT ," + // 0: id
                 "\"TRAKT_ID\" INTEGER NOT NULL UNIQUE ," + // 1: trakt_id
                 "\"NAME\" TEXT NOT NULL ," + // 2: name
-                "\"GENRES\" TEXT NOT NULL ," + // 3: genres
-                "\"DESCRIPTION\" TEXT NOT NULL ," + // 4: description
-                "\"SEASONS\" INTEGER NOT NULL ," + // 5: seasons
-                "\"PERCENT_HEART\" INTEGER NOT NULL ," + // 6: percent_heart
-                "\"POSTER_URL\" TEXT NOT NULL ," + // 7: poster_url
-                "\"BACKDROP_URL\" TEXT NOT NULL ," + // 8: backdrop_url
-                "\"YEAR\" INTEGER NOT NULL ," + // 9: year
-                "\"WATCHERS\" INTEGER NOT NULL ," + // 10: watchers
-                "\"PLAYERS\" INTEGER NOT NULL ," + // 11: players
+                "\"GENRES\" TEXT," + // 3: genres
+                "\"DESCRIPTION\" TEXT," + // 4: description
+                "\"SEASONS\" INTEGER," + // 5: seasons
+                "\"PERCENT_HEART\" INTEGER," + // 6: percent_heart
+                "\"POSTER_URL\" TEXT," + // 7: poster_url
+                "\"BACKDROP_URL\" TEXT," + // 8: backdrop_url
+                "\"YEAR\" INTEGER," + // 9: year
+                "\"WATCHERS\" INTEGER," + // 10: watchers
+                "\"PLAYERS\" INTEGER," + // 11: players
                 "\"TRENDING\" INTEGER NOT NULL ," + // 12: trending
                 "\"TRENDING_POS\" INTEGER UNIQUE ," + // 13: trending_pos
                 "\"MOST_POPULAR\" INTEGER NOT NULL ," + // 14: most_popular
                 "\"MOST_POPULAR_POS\" INTEGER UNIQUE ," + // 15: most_popular_pos
-                "\"SYNCED\" INTEGER NOT NULL ," + // 16: synced
-                "\"MY_SHOW\" INTEGER NOT NULL );"); // 17: my_show
+                "\"RECOMMENDATION\" INTEGER NOT NULL ," + // 16: recommendation
+                "\"RECOMMENDATION_POS\" INTEGER UNIQUE ," + // 17: recommendation_pos
+                "\"SYNCED\" INTEGER NOT NULL ," + // 18: synced
+                "\"MY_SHOW\" INTEGER NOT NULL );"); // 19: my_show
     }
 
     /** Drops the underlying database table. */
@@ -96,15 +100,51 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
         }
         stmt.bindLong(2, entity.getTrakt_id());
         stmt.bindString(3, entity.getName());
-        stmt.bindString(4, entity.getGenres());
-        stmt.bindString(5, entity.getDescription());
-        stmt.bindLong(6, entity.getSeasons());
-        stmt.bindLong(7, entity.getPercent_heart());
-        stmt.bindString(8, entity.getPoster_url());
-        stmt.bindString(9, entity.getBackdrop_url());
-        stmt.bindLong(10, entity.getYear());
-        stmt.bindLong(11, entity.getWatchers());
-        stmt.bindLong(12, entity.getPlayers());
+ 
+        String genres = entity.getGenres();
+        if (genres != null) {
+            stmt.bindString(4, genres);
+        }
+ 
+        String description = entity.getDescription();
+        if (description != null) {
+            stmt.bindString(5, description);
+        }
+ 
+        Integer seasons = entity.getSeasons();
+        if (seasons != null) {
+            stmt.bindLong(6, seasons);
+        }
+ 
+        Integer percent_heart = entity.getPercent_heart();
+        if (percent_heart != null) {
+            stmt.bindLong(7, percent_heart);
+        }
+ 
+        String poster_url = entity.getPoster_url();
+        if (poster_url != null) {
+            stmt.bindString(8, poster_url);
+        }
+ 
+        String backdrop_url = entity.getBackdrop_url();
+        if (backdrop_url != null) {
+            stmt.bindString(9, backdrop_url);
+        }
+ 
+        Integer year = entity.getYear();
+        if (year != null) {
+            stmt.bindLong(10, year);
+        }
+ 
+        Long watchers = entity.getWatchers();
+        if (watchers != null) {
+            stmt.bindLong(11, watchers);
+        }
+ 
+        Long players = entity.getPlayers();
+        if (players != null) {
+            stmt.bindLong(12, players);
+        }
         stmt.bindLong(13, entity.getTrending() ? 1L: 0L);
  
         Integer trending_pos = entity.getTrending_pos();
@@ -117,8 +157,14 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
         if (most_popular_pos != null) {
             stmt.bindLong(16, most_popular_pos);
         }
-        stmt.bindLong(17, entity.getSynced() ? 1L: 0L);
-        stmt.bindLong(18, entity.getMy_show() ? 1L: 0L);
+        stmt.bindLong(17, entity.getRecommendation() ? 1L: 0L);
+ 
+        Integer recommendation_pos = entity.getRecommendation_pos();
+        if (recommendation_pos != null) {
+            stmt.bindLong(18, recommendation_pos);
+        }
+        stmt.bindLong(19, entity.getSynced() ? 1L: 0L);
+        stmt.bindLong(20, entity.getMy_show() ? 1L: 0L);
     }
 
     @Override
@@ -140,21 +186,23 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
             cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0), // id
             cursor.getLong(offset + 1), // trakt_id
             cursor.getString(offset + 2), // name
-            cursor.getString(offset + 3), // genres
-            cursor.getString(offset + 4), // description
-            cursor.getInt(offset + 5), // seasons
-            cursor.getInt(offset + 6), // percent_heart
-            cursor.getString(offset + 7), // poster_url
-            cursor.getString(offset + 8), // backdrop_url
-            cursor.getInt(offset + 9), // year
-            cursor.getLong(offset + 10), // watchers
-            cursor.getLong(offset + 11), // players
+            cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3), // genres
+            cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4), // description
+            cursor.isNull(offset + 5) ? null : cursor.getInt(offset + 5), // seasons
+            cursor.isNull(offset + 6) ? null : cursor.getInt(offset + 6), // percent_heart
+            cursor.isNull(offset + 7) ? null : cursor.getString(offset + 7), // poster_url
+            cursor.isNull(offset + 8) ? null : cursor.getString(offset + 8), // backdrop_url
+            cursor.isNull(offset + 9) ? null : cursor.getInt(offset + 9), // year
+            cursor.isNull(offset + 10) ? null : cursor.getLong(offset + 10), // watchers
+            cursor.isNull(offset + 11) ? null : cursor.getLong(offset + 11), // players
             cursor.getShort(offset + 12) != 0, // trending
             cursor.isNull(offset + 13) ? null : cursor.getInt(offset + 13), // trending_pos
             cursor.getShort(offset + 14) != 0, // most_popular
             cursor.isNull(offset + 15) ? null : cursor.getInt(offset + 15), // most_popular_pos
-            cursor.getShort(offset + 16) != 0, // synced
-            cursor.getShort(offset + 17) != 0 // my_show
+            cursor.getShort(offset + 16) != 0, // recommendation
+            cursor.isNull(offset + 17) ? null : cursor.getInt(offset + 17), // recommendation_pos
+            cursor.getShort(offset + 18) != 0, // synced
+            cursor.getShort(offset + 19) != 0 // my_show
         );
         return entity;
     }
@@ -165,21 +213,23 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
         entity.setId(cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0));
         entity.setTrakt_id(cursor.getLong(offset + 1));
         entity.setName(cursor.getString(offset + 2));
-        entity.setGenres(cursor.getString(offset + 3));
-        entity.setDescription(cursor.getString(offset + 4));
-        entity.setSeasons(cursor.getInt(offset + 5));
-        entity.setPercent_heart(cursor.getInt(offset + 6));
-        entity.setPoster_url(cursor.getString(offset + 7));
-        entity.setBackdrop_url(cursor.getString(offset + 8));
-        entity.setYear(cursor.getInt(offset + 9));
-        entity.setWatchers(cursor.getLong(offset + 10));
-        entity.setPlayers(cursor.getLong(offset + 11));
+        entity.setGenres(cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3));
+        entity.setDescription(cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4));
+        entity.setSeasons(cursor.isNull(offset + 5) ? null : cursor.getInt(offset + 5));
+        entity.setPercent_heart(cursor.isNull(offset + 6) ? null : cursor.getInt(offset + 6));
+        entity.setPoster_url(cursor.isNull(offset + 7) ? null : cursor.getString(offset + 7));
+        entity.setBackdrop_url(cursor.isNull(offset + 8) ? null : cursor.getString(offset + 8));
+        entity.setYear(cursor.isNull(offset + 9) ? null : cursor.getInt(offset + 9));
+        entity.setWatchers(cursor.isNull(offset + 10) ? null : cursor.getLong(offset + 10));
+        entity.setPlayers(cursor.isNull(offset + 11) ? null : cursor.getLong(offset + 11));
         entity.setTrending(cursor.getShort(offset + 12) != 0);
         entity.setTrending_pos(cursor.isNull(offset + 13) ? null : cursor.getInt(offset + 13));
         entity.setMost_popular(cursor.getShort(offset + 14) != 0);
         entity.setMost_popular_pos(cursor.isNull(offset + 15) ? null : cursor.getInt(offset + 15));
-        entity.setSynced(cursor.getShort(offset + 16) != 0);
-        entity.setMy_show(cursor.getShort(offset + 17) != 0);
+        entity.setRecommendation(cursor.getShort(offset + 16) != 0);
+        entity.setRecommendation_pos(cursor.isNull(offset + 17) ? null : cursor.getInt(offset + 17));
+        entity.setSynced(cursor.getShort(offset + 18) != 0);
+        entity.setMy_show(cursor.getShort(offset + 19) != 0);
      }
     
     /** @inheritdoc */

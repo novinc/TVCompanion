@@ -5,8 +5,10 @@ import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.SyncResult;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.uwetrottmann.trakt5.TraktV2;
@@ -51,12 +53,24 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     public void onPerformSync(Account account, Bundle bundle, String s, ContentProviderClient contentProviderClient, SyncResult syncResult) {
         Log.d("sync adapter", "onPerformSync called authority: " + s);
 
-        TraktV2 trakt = new TraktV2(BuildConfig.API_KEY);
+        TraktV2 traktV2 = new TraktV2(BuildConfig.API_KEY, BuildConfig.CLIENT_SECRET, "tvcompanion.novin.apps://oauthredirect");
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        String accessToken = preferences.getString("access_token", null);
+        boolean oauth = false;
+        if (accessToken != null) {
+            traktV2.accessToken(accessToken);
+            oauth = true;
+        }
+        Log.d("Sync", "oauth: " + oauth);
+        List<Show> recommendations = null;
         List<TrendingShow> trendingShows;
         List<Show> popular;
         try {
-            trendingShows = trakt.shows().trending(1, 10, Extended.FULLIMAGES).execute().body();
-            popular = trakt.shows().popular(1, 10, Extended.FULLIMAGES).execute().body();
+            if (oauth) {
+                recommendations = traktV2.recommendations().shows(Extended.FULLIMAGES).execute().body();
+            }
+            trendingShows = traktV2.shows().trending(1, 10, Extended.FULLIMAGES).execute().body();
+            popular = traktV2.shows().popular(1, 10, Extended.FULLIMAGES).execute().body();
         } catch (IOException e) {
             e.printStackTrace();
             Log.e("sync", "couldn't get shows");
@@ -64,6 +78,34 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
         ShowEntityDao showEntityDao = mDaoSession.getShowEntityDao();
         EpisodeEntityDao episodeEntityDao = mDaoSession.getEpisodeEntityDao();
+        // recommendation sync
+        if (oauth) {
+            for (Show show : recommendations) {
+                List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(show.ids.trakt)).list();
+                if (sameShows.size() == 0) {
+                    List<ShowEntity> samePos = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Recommendation_pos.eq(recommendations.indexOf(show))).list();
+                    if (samePos.size() != 0) {
+                        samePos.get(0).setRecommendation(false);
+                        samePos.get(0).setRecommendation_pos(null);
+                        samePos.get(0).update();
+                    }
+                    ShowEntity newShow = getEntityFromRecommendedShow(show, recommendations.indexOf(show));
+                    // add oauth needed columns
+                    showEntityDao.insert(newShow);
+                } else {
+                    List<ShowEntity> samePos = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Recommendation_pos.eq(recommendations.indexOf(show))).list();
+                    if (samePos.size() != 0) {
+                        samePos.get(0).setRecommendation(false);
+                        samePos.get(0).setRecommendation_pos(null);
+                        samePos.get(0).update();
+                    }
+                    ShowEntity showEntity = sameShows.get(0);
+                    showEntity.setRecommendation(true);
+                    showEntity.setRecommendation_pos(recommendations.indexOf(show));
+                    showEntity.update();
+                }
+            }
+        }
         // trending sync
         for (TrendingShow show : trendingShows) {
             List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(show.show.ids.trakt)).list();
@@ -74,7 +116,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                     samePos.get(0).setTrending_pos(null);
                     samePos.get(0).update();
                 }
-                ShowEntity newShow = getEntityFromTrendingShow(show.show, show, trendingShows.indexOf(show));
+                ShowEntity newShow = getEntityFromTrendingShow(show.show, trendingShows.indexOf(show));
                 // add oauth needed columns
                 showEntityDao.insert(newShow);
             } else {
@@ -120,7 +162,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         for (ShowEntity showEntity : showEntityDao.loadAll()) {
             // load up all the seasons for show and all episodes for each season
             try {
-                List<Season> seasons = trakt.seasons().summary(String.format(Locale.ENGLISH, "%d", showEntity.getTrakt_id()), Extended.FULL).execute().body();
+                List<Season> seasons = traktV2.seasons().summary(String.format(Locale.ENGLISH, "%d", showEntity.getTrakt_id()), Extended.FULL).execute().body();
                 showEntity.setSeasons(seasons.size());
                 showEntity.update();
                 for (Season season : seasons) {
@@ -128,7 +170,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                     /*if (season.aired_episodes == episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(showEntity.getId()), EpisodeEntityDao.Properties.Season.eq(season.number)).count()) {
                         continue;
                     }*/
-                    List<Episode> episodes = trakt.seasons().season(String.format(Locale.ENGLISH, "%d", showEntity.getTrakt_id()), season.number, Extended.FULLIMAGES).execute().body();
+                    List<Episode> episodes = traktV2.seasons().season(String.format(Locale.ENGLISH, "%d", showEntity.getTrakt_id()), season.number, Extended.FULLIMAGES).execute().body();
                     for (Episode episode : episodes) {
                         List<EpisodeEntity> alreadyHave = episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(showEntity.getId()), EpisodeEntityDao.Properties.Season.eq(season.number),
                                 EpisodeEntityDao.Properties.Ep_number.eq(episode.number)).list();
@@ -152,21 +194,29 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         EventBus.getDefault().post(new DatabaseUpdatedEvent());
     }
 
+    private ShowEntity getEntityFromRecommendedShow(Show show, int i) {
+        return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + show.genres.toString().replace("[", "".replace("]", "")), show.overview,
+                0, ((int) (show.rating * 10)),
+                show.images.poster.thumb, show.images.fanart.medium, show.year, null, null,
+                false, null, false, null, true, i, true, false);
+    }
+
     private static EpisodeEntity getEpisodeEntity(Episode episode, Long id) {
-        return new EpisodeEntity(null, id, episode.season, episode.title, episode.number, episode.overview, false, ((int) (episode.rating * 10)), true, episode.images.screenshot.medium);
+        return new EpisodeEntity(null, id, episode.season, episode.title, episode.number, episode.overview,
+                false, ((int) (episode.rating * 10)), true, episode.images.screenshot.medium);
     }
 
     private static ShowEntity getEntityFromPopularShow(Show show, int i) {
         return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + show.genres.toString().replace("[", "").replace("]", ""), show.overview,
-                2, ((int) (show.rating * 10)),
-                show.images.poster.thumb, show.images.fanart.medium, show.year, 10000, 20000,
-                false, null, true, i, true, false);
+                0, ((int) (show.rating * 10)),
+                show.images.poster.thumb, show.images.fanart.medium, show.year, null, null,
+                false, null, true, i, false, null, true, false);
     }
 
-    private static ShowEntity getEntityFromTrendingShow(Show show, TrendingShow trendingShow, int i) {
+    private static ShowEntity getEntityFromTrendingShow(Show show, int i) {
         return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + show.genres.toString().replace("[", "").replace("]", ""), show.overview,
-                2, ((int) (show.rating * 10)),
-                show.images.poster.thumb, show.images.fanart.medium, show.year, trendingShow.watchers, trendingShow.watchers,
-                true, i, false, null, true, false);
+                0, ((int) (show.rating * 10)),
+                show.images.poster.thumb, show.images.fanart.medium, show.year, null, null,
+                true, i, false, null, false, null, true, false);
     }
 }

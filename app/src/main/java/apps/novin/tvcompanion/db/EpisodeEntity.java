@@ -13,7 +13,7 @@ public class EpisodeEntity implements java.io.Serializable {
     private int ep_number;
     private String ep_description;
     private boolean watched;
-    private int percent_heart;
+    private Integer percent_heart;
     private boolean synced;
     private String poster_url;
 
@@ -24,7 +24,7 @@ public class EpisodeEntity implements java.io.Serializable {
         this.id = id;
     }
 
-    public EpisodeEntity(Long id, long show_id, int season, String ep_name, int ep_number, String ep_description, boolean watched, int percent_heart, boolean synced, String poster_url) {
+    public EpisodeEntity(Long id, long show_id, int season, String ep_name, int ep_number, String ep_description, boolean watched, Integer percent_heart, boolean synced, String poster_url) {
         this.id = id;
         this.show_id = show_id;
         this.season = season;
@@ -93,11 +93,11 @@ public class EpisodeEntity implements java.io.Serializable {
         this.watched = watched;
     }
 
-    public int getPercent_heart() {
+    public Integer getPercent_heart() {
         return percent_heart;
     }
 
-    public void setPercent_heart(int percent_heart) {
+    public void setPercent_heart(Integer percent_heart) {
         this.percent_heart = percent_heart;
     }
 

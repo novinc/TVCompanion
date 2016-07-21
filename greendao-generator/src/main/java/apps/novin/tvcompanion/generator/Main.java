@@ -16,19 +16,21 @@ public class Main {
         show.addIdProperty().autoincrement();
         show.addLongProperty("trakt_id").notNull().unique();
         show.addStringProperty("name").notNull();
-        show.addStringProperty("genres").notNull();
-        show.addStringProperty("description").notNull();
-        show.addIntProperty("seasons").notNull();
-        show.addIntProperty("percent_heart").notNull();
-        show.addStringProperty("poster_url").notNull();
-        show.addStringProperty("backdrop_url").notNull();
-        show.addIntProperty("year").notNull();
-        show.addLongProperty("watchers").notNull();
-        show.addLongProperty("players").notNull();
+        show.addStringProperty("genres");
+        show.addStringProperty("description");
+        show.addIntProperty("seasons");
+        show.addIntProperty("percent_heart");
+        show.addStringProperty("poster_url");
+        show.addStringProperty("backdrop_url");
+        show.addIntProperty("year");
+        show.addLongProperty("watchers");
+        show.addLongProperty("players");
         show.addBooleanProperty("trending").notNull();
         show.addIntProperty("trending_pos").unique();
         show.addBooleanProperty("most_popular").notNull();
         show.addIntProperty("most_popular_pos").unique();
+        show.addBooleanProperty("recommendation").notNull();
+        show.addIntProperty("recommendation_pos").unique();
         show.addBooleanProperty("synced").notNull();
         show.addBooleanProperty("my_show").notNull();
 
@@ -42,7 +44,7 @@ public class Main {
         episode.addIntProperty("ep_number").notNull();
         episode.addStringProperty("ep_description");
         episode.addBooleanProperty("watched").notNull();
-        episode.addIntProperty("percent_heart").notNull();
+        episode.addIntProperty("percent_heart");
         episode.addBooleanProperty("synced").notNull();
         episode.addStringProperty("poster_url");
 

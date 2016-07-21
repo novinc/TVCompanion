@@ -5,9 +5,11 @@ import android.accounts.AccountManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.DialogFragment;
@@ -70,6 +72,12 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean loggedIn = preferences.getBoolean("loggedIn", false);
+        if (!loggedIn) {
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
+        }
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         String screen = getString(R.string.screen_type);
