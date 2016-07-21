@@ -2,6 +2,7 @@ package apps.novin.tvcompanion;
 
 import android.annotation.TargetApi;
 import android.content.res.Resources;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
@@ -96,71 +97,80 @@ public class ShowDetailActivity extends AppCompatActivity {
         ButterKnife.bind(this);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             postponeEnterTransition();
+            scheduleStartPostponedTransition(poster);
         }
         if (getIntent() != null) {
             id = getIntent().getLongExtra(ID_KEY, 0);
         }
-        ShowEntityDao dao = ((App) getApplication()).getDaoSession().getShowEntityDao();
-        ShowEntity showEntity = dao.loadByRowId(id);
-        mLayoutManager = new LinearLayoutManager(this);
-        mLayoutManager.setAutoMeasureEnabled(true);
-        mRecyclerView.setLayoutManager(mLayoutManager);
-        mRecyclerView.setNestedScrollingEnabled(false);
-        final EpisodeEntityDao episodeEntityDao = ((App) getApplication()).getDaoSession().getEpisodeEntityDao();
-        mAdapter = new MyAdapter(new ArrayList<EpisodeEntity>(0));
-        mRecyclerView.setAdapter(mAdapter);
-        mRecyclerView.setFocusable(false);
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                ShowEntityDao dao = ((App) getApplication()).getDaoSession().getShowEntityDao();
+                final ShowEntity showEntity = dao.loadByRowId(id);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Glide.with(ShowDetailActivity.this).load(showEntity.getPoster_url())
+                                .placeholder(R.drawable.show_background)
+                                .error(R.drawable.ic_close_black)
+                                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                .into(poster);
+                        Glide.with(ShowDetailActivity.this).load(showEntity.getBackdrop_url())
+                                .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                                .into(backdropImage);
+                        title.setText(showEntity.getName());
+                        genres.setText(showEntity.getGenres());
+                        description.setText(showEntity.getDescription());
+                        year.setText(String.format(Locale.ENGLISH, "%d", showEntity.getYear()));
+                        percentage.setText(String.format(Locale.ENGLISH, "%d", showEntity.getPercent_heart()));
+                    }
+                });
+                Resources r = getResources();
+                px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 75, r.getDisplayMetrics());
+                mLayoutManager = new LinearLayoutManager(ShowDetailActivity.this);
+                mLayoutManager.setAutoMeasureEnabled(true);
+                mRecyclerView.setLayoutManager(mLayoutManager);
+                mRecyclerView.setNestedScrollingEnabled(false);
+                final EpisodeEntityDao episodeEntityDao = ((App) getApplication()).getDaoSession().getEpisodeEntityDao();
+                mAdapter = new MyAdapter(new ArrayList<EpisodeEntity>(0));
+                mRecyclerView.setAdapter(mAdapter);
+                mRecyclerView.setFocusable(false);
 
-        List<EpisodeEntity> all = episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(id)).orderAsc(EpisodeEntityDao.Properties.Season).list();
-        if (all.size() > 0) {
-            final int seasonStart = all.get(0).getSeason();
-            int numSeasons = showEntity.getSeasons();
-            Log.d("details", "start " + seasonStart + " num " + numSeasons);
-            List<String> seasons = new ArrayList<>(numSeasons);
-            for (int i = seasonStart; i < numSeasons + seasonStart; i++) {
-                seasons.add("season " + i);
+                List<EpisodeEntity> all = episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(id)).orderAsc(EpisodeEntityDao.Properties.Season).list();
+                if (all.size() > 0) {
+                    final int seasonStart = all.get(0).getSeason();
+                    int numSeasons = showEntity.getSeasons();
+                    Log.d("details", "start " + seasonStart + " num " + numSeasons);
+                    List<String> seasons = new ArrayList<>(numSeasons);
+                    for (int i = seasonStart; i < numSeasons + seasonStart; i++) {
+                        seasons.add("season " + i);
+                    }
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(ShowDetailActivity.this, android.R.layout.simple_spinner_item, seasons);
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    spinner.setAdapter(adapter);
+                    spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                            List<EpisodeEntity> list = episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(id), EpisodeEntityDao.Properties.Season.eq(i + seasonStart)).orderAsc(EpisodeEntityDao.Properties.Ep_number).list();
+                            mAdapter.setData(list);
+                        }
+
+                        @Override
+                        public void onNothingSelected(AdapterView<?> adapterView) {
+
+                        }
+                    });
+                } else {
+                    spinner.setEnabled(false);
+                }
             }
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, seasons);
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            spinner.setAdapter(adapter);
-            spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                    List<EpisodeEntity> list = episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(id), EpisodeEntityDao.Properties.Season.eq(i + seasonStart)).orderAsc(EpisodeEntityDao.Properties.Ep_number).list();
-                    mAdapter.setData(list);
-                }
+        });
 
-                @Override
-                public void onNothingSelected(AdapterView<?> adapterView) {
-
-                }
-            });
-        } else {
-            spinner.setEnabled(false);
-        }
-        Glide.with(this).load(showEntity.getPoster_url())
-                .placeholder(R.drawable.show_background)
-                .error(R.drawable.ic_close_black)
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                .into(poster);
-        Glide.with(this).load(showEntity.getBackdrop_url())
-                .diskCacheStrategy(DiskCacheStrategy.SOURCE)
-                .into(backdropImage);
-        title.setText(showEntity.getName());
-        genres.setText(showEntity.getGenres());
-        description.setText(showEntity.getDescription());
-        year.setText(String.format(Locale.ENGLISH, "%d", showEntity.getYear()));
-        percentage.setText(String.format(Locale.ENGLISH, "%d", showEntity.getPercent_heart()));
-        Resources r = getResources();
-        px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 75, r.getDisplayMetrics());
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            scheduleStartPostponedTransition(poster);
-        }
         mAppBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
 
             private State state;
