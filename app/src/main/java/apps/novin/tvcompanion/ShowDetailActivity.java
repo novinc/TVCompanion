@@ -1,6 +1,7 @@
 package apps.novin.tvcompanion;
 
 import android.annotation.TargetApi;
+import android.content.res.Resources;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.AppBarLayout;
@@ -13,6 +14,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.test.mock.MockApplication;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,6 +30,10 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -73,6 +79,8 @@ public class ShowDetailActivity extends AppCompatActivity {
 
     private RecyclerView.LayoutManager mLayoutManager;
     private MyAdapter mAdapter;
+    // used for poster shrinking
+    private float px;
 
     private enum State {
         EXPANDED,
@@ -105,8 +113,7 @@ public class ShowDetailActivity extends AppCompatActivity {
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setNestedScrollingEnabled(false);
         final EpisodeEntityDao episodeEntityDao = ((App) getApplication()).getDaoSession().getEpisodeEntityDao();
-        List<EpisodeEntity> list = episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(id), EpisodeEntityDao.Properties.Season.eq(1)).orderAsc(EpisodeEntityDao.Properties.Ep_number).list();
-        mAdapter = new MyAdapter(list);
+        mAdapter = new MyAdapter(new ArrayList<EpisodeEntity>(0));
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setFocusable(false);
 
@@ -150,8 +157,9 @@ public class ShowDetailActivity extends AppCompatActivity {
         description.setText(showEntity.getDescription());
         year.setText(String.format(Locale.ENGLISH, "%d", showEntity.getYear()));
         percentage.setText(String.format(Locale.ENGLISH, "%d", showEntity.getPercent_heart()));
+        Resources r = getResources();
+        px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 75, r.getDisplayMetrics());
     }
-
 
     @Override
     protected void onResume() {
@@ -177,7 +185,7 @@ public class ShowDetailActivity extends AppCompatActivity {
                     }
                     state = State.EXPANDED;
 
-                } else if (Math.abs(verticalOffset) >= appBarLayout.getTotalScrollRange()) {
+                } else if (Math.abs(verticalOffset) >= appBarLayout.getTotalScrollRange() - px) {
                     if (state != State.COLLAPSED) {
                         ViewCompat.animate(cardViewPoster)
                                 .setInterpolator(new OvershootInterpolator())
@@ -219,10 +227,9 @@ public class ShowDetailActivity extends AppCompatActivity {
     }
     public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         private List<EpisodeEntity> mDataset;
-        private List<EpisodeEntity> data;
 
         public void setData(List<EpisodeEntity> data) {
-            this.data = data;
+            this.mDataset = data;
             notifyDataSetChanged();
         }
 
