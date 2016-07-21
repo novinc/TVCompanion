@@ -151,7 +151,7 @@ public class RecommendationsFragment extends Fragment {
             holder.genres.setText(showEntity.getGenres());
             holder.description.setText(showEntity.getDescription());
             holder.seasons.setText(getString(R.string.seasons_format, showEntity.getSeasons()));
-            holder.percentage.setText(String.format(Locale.ENGLISH, "%d", showEntity.getPercent_heart()));
+            holder.percentage.setText(String.format(Locale.ENGLISH, "%d%%", showEntity.getPercent_heart()));
             holder.id = showEntity.getId();
         }
 

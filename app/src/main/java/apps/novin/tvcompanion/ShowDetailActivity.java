@@ -122,7 +122,7 @@ public class ShowDetailActivity extends AppCompatActivity {
                         genres.setText(showEntity.getGenres());
                         description.setText(showEntity.getDescription());
                         year.setText(String.format(Locale.ENGLISH, "%d", showEntity.getYear()));
-                        percentage.setText(String.format(Locale.ENGLISH, "%d", showEntity.getPercent_heart()));
+                        percentage.setText(String.format(Locale.ENGLISH, "%d%%", showEntity.getPercent_heart()));
                     }
                 });
                 Resources r = getResources();
@@ -283,6 +283,7 @@ public class ShowDetailActivity extends AppCompatActivity {
             EpisodeEntity episode = mDataset.get(position);
             holder.title.setText(String.format(Locale.ENGLISH, "%s %s", episode.getEp_name(), String.format(Locale.ENGLISH, "%dx%s", episode.getSeason(), episode.getEp_number())));
             holder.description.setText(episode.getEp_description());
+            holder.heartButton.setText(String.format(Locale.ENGLISH, "%d%%", episode.getPercent_heart()));
             Glide.with(ShowDetailActivity.this)
                     .load(episode.getPoster_url())
                     .placeholder(R.drawable.show_background)

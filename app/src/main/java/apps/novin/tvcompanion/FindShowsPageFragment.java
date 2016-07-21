@@ -189,7 +189,7 @@ public class FindShowsPageFragment extends Fragment {
             holder.title.setText(showEntity.getName());
             holder.genres.setText(showEntity.getGenres());
             holder.year.setText(String.format(Locale.ENGLISH, "%d", showEntity.getYear()));
-            holder.percentage.setText(String.format(Locale.ENGLISH, "%d", showEntity.getPercent_heart()));
+            holder.percentage.setText(String.format(Locale.ENGLISH, "%d%%", showEntity.getPercent_heart()));
             holder.id = showEntity.getId();
         }
 
