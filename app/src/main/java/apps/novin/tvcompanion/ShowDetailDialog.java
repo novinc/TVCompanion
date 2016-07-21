@@ -1,5 +1,6 @@
 package apps.novin.tvcompanion;
 
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
@@ -9,10 +10,13 @@ import android.support.v4.widget.NestedScrollView;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.OvershootInterpolator;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -22,6 +26,7 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -68,7 +73,9 @@ public class ShowDetailDialog extends DialogFragment {
     RecyclerView mRecyclerView;
 
     private RecyclerView.LayoutManager mLayoutManager;
-    private RecyclerView.Adapter mAdapter;
+    private ShowDetailDialog.MyAdapter mAdapter;
+    // used for poster shrinking
+    private float px;
 
     private enum State {
         EXPANDED,
@@ -97,34 +104,57 @@ public class ShowDetailDialog extends DialogFragment {
         mLayoutManager.setAutoMeasureEnabled(true);
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setNestedScrollingEnabled(false);
-        EpisodeEntityDao episodeEntityDao = ((App) getActivity().getApplication()).getDaoSession().getEpisodeEntityDao();
-        List<EpisodeEntity> list = episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(id), EpisodeEntityDao.Properties.Season.eq(1)).orderAsc(EpisodeEntityDao.Properties.Ep_number).list();
-        mAdapter = new MyAdapter(list);
+        final EpisodeEntityDao episodeEntityDao = ((App) getActivity().getApplication()).getDaoSession().getEpisodeEntityDao();
+        mAdapter = new MyAdapter(new ArrayList<EpisodeEntity>(0));
         mRecyclerView.setFocusable(false);
         mRecyclerView.setAdapter(mAdapter);
+        mRecyclerView.setFocusable(false);
 
         ShowEntityDao dao = ((App) getActivity().getApplication()).getDaoSession().getShowEntityDao();
         ShowEntity showEntity = dao.loadByRowId(id);
 
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getContext(),
-                R.array.find_shows_tabs, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(adapter);
-        if (showEntity != null) {
-            Glide.with(this).load(showEntity.getPoster_url())
-                    .placeholder(R.drawable.show_background)
-                    .error(R.drawable.ic_close_black)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .into(poster);
-            Glide.with(this).load(showEntity.getBackdrop_url())
-                    .diskCacheStrategy(DiskCacheStrategy.SOURCE)
-                    .into(backdropImage);
-            title.setText(showEntity.getName());
-            genres.setText(showEntity.getGenres());
-            description.setText(showEntity.getDescription());
-            year.setText(String.format(Locale.ENGLISH, "%d", showEntity.getYear()));
-            percentage.setText(String.format(Locale.ENGLISH, "%d", showEntity.getPercent_heart()));
+        List<EpisodeEntity> all = episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(id)).orderAsc(EpisodeEntityDao.Properties.Season).list();
+        if (all.size() > 0) {
+            final int seasonStart = all.get(0).getSeason();
+            int numSeasons = showEntity.getSeasons();
+            Log.d("details", "start " + seasonStart + " num " + numSeasons);
+            List<String> seasons = new ArrayList<>(numSeasons);
+            for (int i = seasonStart; i < numSeasons + seasonStart; i++) {
+                seasons.add("season " + i);
+            }
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, seasons);
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinner.setAdapter(adapter);
+            spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                    List<EpisodeEntity> list = episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(id), EpisodeEntityDao.Properties.Season.eq(i + seasonStart)).orderAsc(EpisodeEntityDao.Properties.Ep_number).list();
+                    mAdapter.setData(list);
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> adapterView) {
+
+                }
+            });
+        } else {
+            spinner.setEnabled(false);
         }
+        Glide.with(this).load(showEntity.getPoster_url())
+                .placeholder(R.drawable.show_background)
+                .error(R.drawable.ic_close_black)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .into(poster);
+        Glide.with(this).load(showEntity.getBackdrop_url())
+                .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                .into(backdropImage);
+        title.setText(showEntity.getName());
+        genres.setText(showEntity.getGenres());
+        description.setText(showEntity.getDescription());
+        year.setText(String.format(Locale.ENGLISH, "%d", showEntity.getYear()));
+        percentage.setText(String.format(Locale.ENGLISH, "%d", showEntity.getPercent_heart()));
+        Resources r = getResources();
+        px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 75, r.getDisplayMetrics());
         return view;
     }
 
@@ -149,7 +179,7 @@ public class ShowDetailDialog extends DialogFragment {
                     }
                     state = ShowDetailDialog.State.EXPANDED;
 
-                } else if (Math.abs(verticalOffset) >= appBarLayout.getTotalScrollRange()) {
+                } else if (Math.abs(verticalOffset) >= appBarLayout.getTotalScrollRange() - px) {
                     if (state != ShowDetailDialog.State.COLLAPSED) {
                         ViewCompat.animate(cardViewPoster)
                                 .setInterpolator(new OvershootInterpolator())
@@ -197,6 +227,11 @@ public class ShowDetailDialog extends DialogFragment {
                 super(view);
                 ButterKnife.bind(this, view);
             }
+        }
+
+        public void setData(List<EpisodeEntity> mDataset) {
+            this.mDataset = mDataset;
+            notifyDataSetChanged();
         }
 
         // Provide a suitable constructor (depends on the kind of dataset)
