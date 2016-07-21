@@ -21,6 +21,7 @@ import com.uwetrottmann.trakt5.enums.Extended;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -80,6 +81,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         EpisodeEntityDao episodeEntityDao = mDaoSession.getEpisodeEntityDao();
         // recommendation sync
         if (oauth) {
+            List<ShowEntity> recommendationsToInsert = new ArrayList<>();
             for (Show show : recommendations) {
                 List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(show.ids.trakt)).list();
                 if (sameShows.size() == 0) {
@@ -91,7 +93,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                     }
                     ShowEntity newShow = getEntityFromRecommendedShow(show, recommendations.indexOf(show));
                     // add oauth needed columns
-                    showEntityDao.insert(newShow);
+                    recommendationsToInsert.add(newShow);
                 } else {
                     List<ShowEntity> samePos = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Recommendation_pos.eq(recommendations.indexOf(show))).list();
                     if (samePos.size() != 0) {
@@ -105,8 +107,10 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                     showEntity.update();
                 }
             }
+            showEntityDao.insertInTx(recommendationsToInsert);
         }
         // trending sync
+        List<ShowEntity> trendingToInsert = new ArrayList<>();
         for (TrendingShow show : trendingShows) {
             List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(show.show.ids.trakt)).list();
             if (sameShows.size() == 0) {
@@ -118,7 +122,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 }
                 ShowEntity newShow = getEntityFromTrendingShow(show.show, trendingShows.indexOf(show));
                 // add oauth needed columns
-                showEntityDao.insert(newShow);
+                trendingToInsert.add(newShow);
             } else {
                 List<ShowEntity> samePos = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trending_pos.eq(trendingShows.indexOf(show))).list();
                 if (samePos.size() != 0) {
@@ -132,7 +136,9 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 showEntity.update();
             }
         }
+        showEntityDao.insertInTx(trendingToInsert);
         // most popular sync
+        List<ShowEntity> mostPopularToInsert = new ArrayList<>();
         for (Show show : popular) {
             List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(show.ids.trakt)).list();
             if (sameShows.size() == 0) {
@@ -144,7 +150,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 }
                 ShowEntity newShow = getEntityFromPopularShow(show, popular.indexOf(show));
                 // add oauth needed columns
-                showEntityDao.insert(newShow);
+                mostPopularToInsert.add(newShow);
             } else {
                 List<ShowEntity> samePos = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Most_popular_pos.eq(popular.indexOf(show))).list();
                 if (samePos.size() != 0) {
@@ -158,7 +164,19 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 showEntity.update();
             }
         }
+        showEntityDao.insertInTx(mostPopularToInsert);
+        // remove unused shows
+        List<ShowEntity> toDelete = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trending.eq(false),
+                ShowEntityDao.Properties.Most_popular.eq(false),
+                ShowEntityDao.Properties.Recommendation.eq(false),
+                ShowEntityDao.Properties.My_show.eq(false)).list();
+        for(ShowEntity deletingShow : toDelete) {
+            List<EpisodeEntity> deletingShowEpisodeEntityList = deletingShow.getEpisodeEntityList();
+            episodeEntityDao.deleteInTx(deletingShowEpisodeEntityList);
+        }
+        showEntityDao.deleteInTx(toDelete);
         // episodes sync
+        List<EpisodeEntity> episodesToInsert = new ArrayList<>();
         for (ShowEntity showEntity : showEntityDao.loadAll()) {
             // load up all the seasons for show and all episodes for each season
             try {
@@ -177,7 +195,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                         if (alreadyHave.size() != 1) {
                             EpisodeEntity newEpisode = getEpisodeEntity(episode, showEntity.getId());
                             // add oauth needed columns
-                            episodeEntityDao.insert(newEpisode);
+                            episodesToInsert.add(newEpisode);
                         } else {
                             EpisodeEntity existingEpisode = alreadyHave.get(0);
                             // update existingEpisode with new oauth needed columns
@@ -190,12 +208,13 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 return;
             }
         }
+        episodeEntityDao.insertInTx(episodesToInsert);
         Log.d("sync", "sync complete");
         EventBus.getDefault().post(new DatabaseUpdatedEvent());
     }
 
-    private ShowEntity getEntityFromRecommendedShow(Show show, int i) {
-        return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + show.genres.toString().replace("[", "".replace("]", "")), show.overview,
+    private static ShowEntity getEntityFromRecommendedShow(Show show, int i) {
+        return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + show.genres.toString().replace("[", "").replace("]", ""), show.overview,
                 0, ((int) (show.rating * 10)),
                 show.images.poster.thumb, show.images.fanart.medium, show.year, null, null,
                 false, null, false, null, true, i, true, false);

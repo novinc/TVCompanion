@@ -35,7 +35,6 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d("Login", "trying to auth");
         if (getIntent() != null) {
             AsyncTask.execute(new Runnable() {
                 @Override
@@ -62,12 +61,13 @@ public class LoginActivity extends AppCompatActivity {
                             editor.putString("refresh_token", accessToken.refresh_token);
                             editor.apply();
                             Log.d("Login", "logged in successfully");
-                            startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
+                            finish();
                         } else {
                             Log.d("Login", "FORGED. This shouldn't happen");
                         }
-                    } else {
-                        Log.d("Login", "uri was null or wasnt correct");
                     }
                 }
             });

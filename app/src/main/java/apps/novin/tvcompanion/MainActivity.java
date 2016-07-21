@@ -72,12 +72,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean loggedIn = preferences.getBoolean("loggedIn", false);
-        if (!loggedIn) {
-            Intent intent = new Intent(this, LoginActivity.class);
-            startActivity(intent);
-        }
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         String screen = getString(R.string.screen_type);
@@ -115,6 +109,19 @@ public class MainActivity extends AppCompatActivity
                 AUTHORITY,
                 Bundle.EMPTY,
                 SYNC_INTERVAL);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // launch login if not logged in
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean loggedIn = preferences.getBoolean("loggedIn", false);
+        if (!loggedIn) {
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
+            finish();
+        }
     }
 
     private static Account createSyncAccount(Context context) {
