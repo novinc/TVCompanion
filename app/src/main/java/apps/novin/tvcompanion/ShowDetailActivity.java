@@ -154,6 +154,8 @@ public class ShowDetailActivity extends AppCompatActivity {
                 fab.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(final View view) {
+                        final Snackbar make = Snackbar.make(view, "One second", Snackbar.LENGTH_INDEFINITE);
+                        make.show();
                         AsyncTask.execute(new Runnable() {
                             @Override
                             public void run() {
@@ -192,8 +194,9 @@ public class ShowDetailActivity extends AppCompatActivity {
                                     runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
+                                            make.dismiss();
                                             fab.setImageResource(R.drawable.ic_add_black);
-                                            Snackbar.make(view, "Removed show and all episodes from history successfully: " + finalSuccess, Snackbar.LENGTH_LONG).show();
+                                            Snackbar.make(view, "Removed show and all episodes from watched history", Snackbar.LENGTH_LONG).show();
                                         }
                                     });
                                 } else {
@@ -228,8 +231,9 @@ public class ShowDetailActivity extends AppCompatActivity {
                                     runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
+                                            make.dismiss();
                                             fab.setImageResource(R.drawable.ic_close_black);
-                                            Snackbar.make(view, "added to my shows and all eps watched successfully: " + finalSuccess, Snackbar.LENGTH_LONG).show();
+                                            Snackbar.make(view, "Added show and all episodes to watched history", Snackbar.LENGTH_LONG).show();
                                         }
                                     });
                                     EventBus.getDefault().postSticky(new DatabaseUpdatedEvent());

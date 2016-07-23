@@ -19,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -74,6 +75,9 @@ public class FindShowsPageFragment extends Fragment {
 
     @BindView(R.id.find_shows_list_view)
     RecyclerView mRecyclerView;
+
+    @BindView(R.id.loading)
+    @Nullable ProgressBar progressBar;
 
     private RecyclerView.LayoutManager mLayoutManager;
     private FindShowsPageFragment.MyAdapter mAdapter;
@@ -133,6 +137,9 @@ public class FindShowsPageFragment extends Fragment {
                 @Override
                 public void onClick(View view) {
                     if (searchText != null) {
+                        if (progressBar != null) {
+                            progressBar.setVisibility(View.VISIBLE);
+                        }
                         final String query = searchText.getText().toString();
                         AsyncTask.execute(new Runnable() {
                             @Override
@@ -156,26 +163,43 @@ public class FindShowsPageFragment extends Fragment {
                                     }
                                 }
                                 if (searchResults != null) {
-                                    List<ShowEntity> showEntities = new ArrayList<>(searchResults.size());
+                                    final List<ShowEntity> showEntities = new ArrayList<>(searchResults.size());
+                                    final EpisodeEntityDao episodeEntityDao = ((App) getActivity().getApplication()).getDaoSession().getEpisodeEntityDao();
                                     for (SearchResult result : searchResults) {
                                         ShowEntityDao showEntityDao = ((App) getActivity().getApplication()).getDaoSession().getShowEntityDao();
-                                        final EpisodeEntityDao episodeEntityDao = ((App) getActivity().getApplication()).getDaoSession().getEpisodeEntityDao();
                                         List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(result.show.ids.trakt)).list();
                                         if (sameShows.size() == 0) {
                                             final ShowEntity showEntity;
                                             if (result.show.genres == null) {
                                                 showEntity = new ShowEntity(null, result.show.ids.trakt, result.show.title, "genres:", result.show.overview,
-                                                        0, (int)(result.show.rating * 10), result.show.images.poster.thumb, result.show.images.fanart.medium, // // TODO: NPE doubleValue
+                                                        0, result.show.rating != null ? (int)(result.show.rating * 10) : 0, result.show.images.poster.thumb, result.show.images.fanart.medium,
                                                         result.show.year, null, null,
                                                         false, null, false, null, false, null, false, false);
                                             } else {
                                                 showEntity = new ShowEntity(null, result.show.ids.trakt, result.show.title, "genres: " + result.show.genres.toString(), result.show.overview,
-                                                        0, (int)(result.show.rating * 10), result.show.images.poster.thumb, result.show.images.fanart.medium,
+                                                        0, result.show.rating != null ? (int)(result.show.rating * 10) : 0, result.show.images.poster.thumb, result.show.images.fanart.medium,
                                                         result.show.year, null, null,
                                                         false, null, false, null, false, null, false, false);
                                             }
                                             showEntities.add(showEntity);
-                                            List<EpisodeEntity> episodesToInsert = new ArrayList<>();
+                                            showEntityDao.insert(showEntity);
+                                        } else {
+                                            showEntities.add(sameShows.get(0));
+                                        }
+
+                                    }
+                                    getActivity().runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            if (progressBar != null) {
+                                                progressBar.setVisibility(View.GONE);
+                                            }
+                                            mAdapter.setData(showEntities);
+                                        }
+                                    });
+                                    List<EpisodeEntity> episodesToInsert = new ArrayList<>();
+                                    for (ShowEntity showEntity : showEntities) {
+                                        if (showEntity.getEpisodeEntityList().size() == 0) {
                                             int count = 0;
                                             int maxTries = 3;
                                             List<Season> seasons;
@@ -195,7 +219,6 @@ public class FindShowsPageFragment extends Fragment {
                                             }
                                             if (seasons != null) {
                                                 showEntity.setSeasons(seasons.size());
-                                                showEntity.update();
                                                 for (Season season : seasons) {
                                                     // skip the seasons where we have all episodes already
                                                     /*if (season.aired_episodes == episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(showEntity.getId()), EpisodeEntityDao.Properties.Season.eq(season.number)).count()) {
@@ -220,27 +243,16 @@ public class FindShowsPageFragment extends Fragment {
                                                     }
                                                     if (episodes != null) {
                                                         for (Episode episode : episodes) {
-                                                            List<EpisodeEntity> alreadyHave = episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(showEntity.getId()), EpisodeEntityDao.Properties.Season.eq(season.number),
-                                                                    EpisodeEntityDao.Properties.Ep_number.eq(episode.number)).list();
-                                                            if (alreadyHave.size() != 1) {
-                                                                EpisodeEntity newEpisode = SyncAdapter.getEpisodeEntity(episode, showEntity.getId());
-                                                                // add oauth needed columns
-                                                                episodesToInsert.add(newEpisode);
-                                                            } else {
-                                                                EpisodeEntity existingEpisode = alreadyHave.get(0);
-                                                                // update existingEpisode with new oauth needed columns
-                                                            }
+                                                            EpisodeEntity newEpisode = SyncAdapter.getEpisodeEntity(episode, showEntity.getId());
+                                                            // add oauth needed columns
+                                                            episodesToInsert.add(newEpisode);
                                                         }
                                                     }
                                                 }
                                             }
-                                            episodeEntityDao.insertInTx(episodesToInsert);
-                                        } else {
-                                            showEntities.add(sameShows.get(0));
                                         }
-
                                     }
-                                    mAdapter.setData(showEntities);
+                                    episodeEntityDao.insertInTx(episodesToInsert);
                                 }
                             }
                         });
@@ -274,7 +286,7 @@ public class FindShowsPageFragment extends Fragment {
         super.onStop();
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
+    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void dataChange(DatabaseUpdatedEvent event) {
         if (tabMode == TRENDING) {
             List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.Trending.eq(true)).orderAsc(ShowEntityDao.Properties.Trending_pos).build().list();

@@ -29,6 +29,15 @@
 
     </LinearLayout>
 
+    <ProgressBar
+        android:id="@+id/loading"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_gravity="center_horizontal"
+        android:indeterminate="true"
+        android:visibility="gone" />
+
     <include layout="@layout/fragment_find_shows_page"
         android:layout_height="match_parent"
         android:layout_width="match_parent"/>

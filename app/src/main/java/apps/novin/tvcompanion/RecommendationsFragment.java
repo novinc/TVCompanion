@@ -81,7 +81,7 @@ public class RecommendationsFragment extends Fragment {
         super.onStop();
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
+    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void dataChange(DatabaseUpdatedEvent event) {
         List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.Recommendation.eq(true)).orderAsc(ShowEntityDao.Properties.Recommendation_pos).build().list();
         mAdapter.setData(list);

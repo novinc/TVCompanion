@@ -12,11 +12,13 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.Pair;
 import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.ContentLoadingProgressBar;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
@@ -27,7 +29,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -43,6 +50,10 @@ public class MainActivity extends AppCompatActivity
     Toolbar mToolbar;
     @BindView(R.id.nav_view)
     NavigationView mNavigationView;
+    @BindView(R.id.loading)
+    ProgressBar progressBar;
+
+    Snackbar make;
 
     // The authority for the sync adapter's content provider
     public static final String AUTHORITY = "apps.novin.tvcompanion.db.provider";
@@ -123,6 +134,20 @@ public class MainActivity extends AppCompatActivity
             startActivity(intent);
             finish();
         }
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    protected void onStop() {
+        EventBus.getDefault().unregister(this);
+        super.onStop();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void dataChanged(DatabaseUpdatedEvent e) {
+        progressBar.setVisibility(View.INVISIBLE);
+        make.dismiss();
+        Snackbar.make(contentFragment, "Sync complete", Snackbar.LENGTH_LONG).show();
     }
 
     private static Account createSyncAccount(Context context) {
@@ -228,6 +253,9 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.action_refresh) {
             ContentResolver.requestSync(mAccount, AUTHORITY, Bundle.EMPTY);
+            progressBar.setVisibility(View.VISIBLE);
+            make = Snackbar.make(contentFragment, "Sync in progress, this may take a minute", Snackbar.LENGTH_INDEFINITE);
+            make.show();
             return true;
         }
 
