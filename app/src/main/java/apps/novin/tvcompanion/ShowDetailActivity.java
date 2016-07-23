@@ -123,6 +123,8 @@ public class ShowDetailActivity extends AppCompatActivity {
                         description.setText(showEntity.getDescription());
                         year.setText(String.format(Locale.ENGLISH, "%d", showEntity.getYear()));
                         percentage.setText(String.format(Locale.ENGLISH, "%d%%", showEntity.getPercent_heart()));
+                        watchers.setText(String.format(Locale.ENGLISH, "%s watchers", statFormat(showEntity.getWatchers())));
+                        plays.setText(String.format(Locale.ENGLISH, "%s plays", statFormat(showEntity.getPlayers())));
                     }
                 });
                 Resources r = getResources();
@@ -166,6 +168,18 @@ public class ShowDetailActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    private String statFormat(Long stat) {
+        String suffix = "";
+        if (stat > 1000 * 1000) {
+            suffix = "m";
+            stat /= 1000 * 1000;
+        } else if (stat > 1000) {
+            suffix = "k";
+            stat /= 1000;
+        }
+        return stat + suffix;
     }
 
     @Override

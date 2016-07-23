@@ -7,9 +7,4 @@
         app:showAsAction="ifRoom"
         android:title="@string/action_search" />
 
-    <item android:icon="@drawable/ic_refresh_white"
-        android:id="@+id/action_refresh"
-        app:showAsAction="ifRoom"
-        android:title="@string/action_refresh"/>
-
 </menu>

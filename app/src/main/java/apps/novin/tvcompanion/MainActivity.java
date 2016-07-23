@@ -2,6 +2,7 @@ package apps.novin.tvcompanion;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -54,7 +55,7 @@ public class MainActivity extends AppCompatActivity
 
     // Sync interval constants
     public static final long SECONDS_PER_MINUTE = 60L;
-    public static final long SYNC_INTERVAL_IN_MINUTES = 60L;
+    public static final long SYNC_INTERVAL_IN_MINUTES = 15L;
     public static final long SYNC_INTERVAL =
             SYNC_INTERVAL_IN_MINUTES *
                     SECONDS_PER_MINUTE;
@@ -225,9 +226,15 @@ public class MainActivity extends AppCompatActivity
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
+        if (id == R.id.action_refresh) {
+            ContentResolver.requestSync(mAccount, AUTHORITY, Bundle.EMPTY);
+            return true;
+        }
+
         return super.onOptionsItemSelected(item);
     }
 
+    @SuppressLint("CommitTransaction")
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
@@ -236,12 +243,17 @@ public class MainActivity extends AppCompatActivity
 
         Fragment fragment = null;
 
+        String title = null;
+
         if (id == R.id.nav_recommendation) {
             fragment = new RecommendationsFragment();
+            title = getString(R.string.nav_recommendations);
         } else if (id == R.id.nav_find_shows) {
             fragment = new FindShowsFragment();
+            title = getString(R.string.nav_find_shows);
         } else if (id == R.id.nav_my_shows) {
             fragment = new MyShowsFragment();
+            title = getString(R.string.nav_my_shows);
         } else if (id == R.id.nav_settings) {
 
         } else if (id == R.id.nav_about) {
@@ -253,6 +265,10 @@ public class MainActivity extends AppCompatActivity
                 .commitNow();
 
         invalidateOptionsMenu();
+
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle(title);
+        }
 
         if (!isDrawerLocked) {
             DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

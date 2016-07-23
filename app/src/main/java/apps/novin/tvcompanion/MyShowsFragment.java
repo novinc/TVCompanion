@@ -15,6 +15,10 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 import java.util.List;
 
 import apps.novin.tvcompanion.db.ShowEntity;
@@ -32,7 +36,7 @@ public class MyShowsFragment extends Fragment {
     RecyclerView mRecyclerView;
 
     private RecyclerView.LayoutManager mLayoutManager;
-    private RecyclerView.Adapter mAdapter;
+    private MyShowsFragment.MyAdapter mAdapter;
 
 
     public MyShowsFragment() {
@@ -59,8 +63,31 @@ public class MyShowsFragment extends Fragment {
         mRecyclerView.setAdapter(mAdapter);
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    public void onStop() {
+        EventBus.getDefault().unregister(this);
+        super.onStop();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void dataChange(DatabaseUpdatedEvent event) {
+        List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.My_show.eq(true)).list();
+        mAdapter.setData(list);
+    }
+
     public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         private List<ShowEntity> mDataset;
+
+        public void setData(List<ShowEntity> list) {
+            mDataset = list;
+            notifyDataSetChanged();
+        }
 
         // Provide a reference to the views for each data item
         // Complex data items may need more than one view per item, and
@@ -105,6 +132,7 @@ public class MyShowsFragment extends Fragment {
                     .placeholder(R.drawable.show_background)
                     .error(R.drawable.ic_close_black)
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .centerCrop()
                     .into(holder.poster);
             holder.id = showEntity.getId();
 

@@ -19,6 +19,10 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.List;
@@ -57,7 +61,7 @@ public class FindShowsPageFragment extends Fragment {
     RecyclerView mRecyclerView;
 
     private RecyclerView.LayoutManager mLayoutManager;
-    private RecyclerView.Adapter mAdapter;
+    private FindShowsPageFragment.MyAdapter mAdapter;
 
 
     public FindShowsPageFragment() {
@@ -131,8 +135,39 @@ public class FindShowsPageFragment extends Fragment {
         mRecyclerView.setAdapter(mAdapter);
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    public void onStop() {
+        EventBus.getDefault().unregister(this);
+        super.onStop();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void dataChange(DatabaseUpdatedEvent event) {
+        if (tabMode == TRENDING) {
+            List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.Trending.eq(true)).orderAsc(ShowEntityDao.Properties.Trending_pos).build().list();
+            mAdapter.setData(list);
+        } else if (tabMode == MOST_POPULAR) {
+            List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.Most_popular.eq(true)).orderAsc(ShowEntityDao.Properties.Most_popular_pos).build().list();
+            mAdapter.setData(list);
+        } else { // search
+
+        }
+
+    }
+
     public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         private List<ShowEntity> mDataset;
+
+        public void setData(List<ShowEntity> list) {
+            mDataset = list;
+            notifyDataSetChanged();
+        }
 
         // Provide a reference to the views for each data item
         // Complex data items may need more than one view per item, and
@@ -185,6 +220,7 @@ public class FindShowsPageFragment extends Fragment {
                     .placeholder(R.drawable.show_background)
                     .error(R.drawable.ic_close_black)
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .centerCrop()
                     .into(holder.poster);
             holder.title.setText(showEntity.getName());
             holder.genres.setText(showEntity.getGenres());
