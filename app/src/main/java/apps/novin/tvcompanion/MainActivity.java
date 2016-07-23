@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity
 
     // Sync interval constants
     public static final long SECONDS_PER_MINUTE = 60L;
-    public static final long SYNC_INTERVAL_IN_MINUTES = 15L;
+    public static final long SYNC_INTERVAL_IN_MINUTES = 120L;
     public static final long SYNC_INTERVAL =
             SYNC_INTERVAL_IN_MINUTES *
                     SECONDS_PER_MINUTE;

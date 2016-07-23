@@ -2,12 +2,17 @@ package apps.novin.tvcompanion;
 
 
 import android.annotation.SuppressLint;
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.test.mock.MockApplication;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,16 +23,26 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.uwetrottmann.trakt5.TraktV2;
+import com.uwetrottmann.trakt5.entities.Episode;
+import com.uwetrottmann.trakt5.entities.SearchResult;
+import com.uwetrottmann.trakt5.entities.Season;
+import com.uwetrottmann.trakt5.enums.Extended;
+import com.uwetrottmann.trakt5.enums.Type;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import apps.novin.tvcompanion.db.EpisodeEntity;
+import apps.novin.tvcompanion.db.EpisodeEntityDao;
 import apps.novin.tvcompanion.db.ShowEntity;
 import apps.novin.tvcompanion.db.ShowEntityDao;
 import butterknife.BindView;
@@ -117,7 +132,119 @@ public class FindShowsPageFragment extends Fragment {
             searchButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    if (searchText != null) {
+                        final String query = searchText.getText().toString();
+                        AsyncTask.execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                final TraktV2 traktV2 = new TraktV2(BuildConfig.API_KEY, BuildConfig.CLIENT_SECRET, "tvcompanion.novin.apps://oauthredirect");
+                                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+                                String accessToken = preferences.getString("access_token", null);
+                                traktV2.accessToken(accessToken);
+                                List<SearchResult> searchResults = null;
+                                try {
+                                    searchResults = traktV2.search().textQuery(query, Type.SHOW, null, 1, 10).execute().body();
+                                } catch (IOException e) {
+                                    try {
+                                        searchResults = traktV2.search().textQuery(query, Type.SHOW, null, 1, 10).execute().body();
+                                    } catch (IOException e1) {
+                                        try {
+                                            searchResults = traktV2.search().textQuery(query, Type.SHOW, null, 1, 10).execute().body();
+                                        } catch (IOException e2) {
+                                            e2.printStackTrace();
+                                        }
+                                    }
+                                }
+                                if (searchResults != null) {
+                                    List<ShowEntity> showEntities = new ArrayList<>(searchResults.size());
+                                    for (SearchResult result : searchResults) {
+                                        ShowEntityDao showEntityDao = ((App) getActivity().getApplication()).getDaoSession().getShowEntityDao();
+                                        final EpisodeEntityDao episodeEntityDao = ((App) getActivity().getApplication()).getDaoSession().getEpisodeEntityDao();
+                                        List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(result.show.ids.trakt)).list();
+                                        if (sameShows.size() == 0) {
+                                            final ShowEntity showEntity;
+                                            if (result.show.genres == null) {
+                                                showEntity = new ShowEntity(null, result.show.ids.trakt, result.show.title, "genres:", result.show.overview,
+                                                        0, (int)(result.show.rating * 10), result.show.images.poster.thumb, result.show.images.fanart.medium, // // TODO: NPE doubleValue
+                                                        result.show.year, null, null,
+                                                        false, null, false, null, false, null, false, false);
+                                            } else {
+                                                showEntity = new ShowEntity(null, result.show.ids.trakt, result.show.title, "genres: " + result.show.genres.toString(), result.show.overview,
+                                                        0, (int)(result.show.rating * 10), result.show.images.poster.thumb, result.show.images.fanart.medium,
+                                                        result.show.year, null, null,
+                                                        false, null, false, null, false, null, false, false);
+                                            }
+                                            showEntities.add(showEntity);
+                                            List<EpisodeEntity> episodesToInsert = new ArrayList<>();
+                                            int count = 0;
+                                            int maxTries = 3;
+                                            List<Season> seasons;
+                                            while (true) {
+                                                try {
+                                                    seasons = traktV2.seasons().summary(String.format(Locale.ENGLISH, "%d", showEntity.getTrakt_id()), Extended.FULL).execute().body();
+                                                    break;
+                                                } catch (IOException e) {
+                                                    // handle exception
+                                                    if (++count == maxTries) try {
+                                                        throw e;
+                                                    } catch (IOException e1) {
+                                                        e1.printStackTrace();
+                                                        Log.e("search", "couldn't get seasons");
+                                                    }
+                                                }
+                                            }
+                                            if (seasons != null) {
+                                                showEntity.setSeasons(seasons.size());
+                                                showEntity.update();
+                                                for (Season season : seasons) {
+                                                    // skip the seasons where we have all episodes already
+                                                    /*if (season.aired_episodes == episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(showEntity.getId()), EpisodeEntityDao.Properties.Season.eq(season.number)).count()) {
+                                                        continue;
+                                                    }*/
+                                                    count = 0;
+                                                    maxTries = 3;
+                                                    List<Episode> episodes;
+                                                    while (true) {
+                                                        try {
+                                                            episodes = traktV2.seasons().season(String.format(Locale.ENGLISH, "%d", showEntity.getTrakt_id()), season.number, Extended.FULLIMAGES).execute().body();
+                                                            break;
+                                                        } catch (IOException e) {
+                                                            // handle exception
+                                                            if (++count == maxTries) try {
+                                                                throw e;
+                                                            } catch (IOException e1) {
+                                                                e1.printStackTrace();
+                                                                Log.e("search", "couldn't get episodes");
+                                                            }
+                                                        }
+                                                    }
+                                                    if (episodes != null) {
+                                                        for (Episode episode : episodes) {
+                                                            List<EpisodeEntity> alreadyHave = episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(showEntity.getId()), EpisodeEntityDao.Properties.Season.eq(season.number),
+                                                                    EpisodeEntityDao.Properties.Ep_number.eq(episode.number)).list();
+                                                            if (alreadyHave.size() != 1) {
+                                                                EpisodeEntity newEpisode = SyncAdapter.getEpisodeEntity(episode, showEntity.getId());
+                                                                // add oauth needed columns
+                                                                episodesToInsert.add(newEpisode);
+                                                            } else {
+                                                                EpisodeEntity existingEpisode = alreadyHave.get(0);
+                                                                // update existingEpisode with new oauth needed columns
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            episodeEntityDao.insertInTx(episodesToInsert);
+                                        } else {
+                                            showEntities.add(sameShows.get(0));
+                                        }
 
+                                    }
+                                    mAdapter.setData(showEntities);
+                                }
+                            }
+                        });
+                    }
                 }
             });
         }
@@ -130,7 +257,7 @@ public class FindShowsPageFragment extends Fragment {
             List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.Most_popular.eq(true)).orderAsc(ShowEntityDao.Properties.Most_popular_pos).build().list();
             mAdapter = new MyAdapter(list);
         } else { // search
-
+            mAdapter = new MyAdapter(new ArrayList<ShowEntity>());
         }
         mRecyclerView.setAdapter(mAdapter);
     }

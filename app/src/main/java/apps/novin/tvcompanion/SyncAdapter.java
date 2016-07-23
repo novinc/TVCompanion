@@ -357,35 +357,63 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     private static ShowEntity getEntityFromMyShow(BaseShow baseShow, Stats stats) {
         Show show = baseShow.show;
-        return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + show.genres.toString().replace("[", "").replace("]", ""), show.overview,
-                0, ((int) (show.rating * 10)),
-                show.images.poster.thumb, show.images.fanart.medium, show.year, stats.watchers.longValue(), stats.plays.longValue(),
-                false, null, false, null, false, null, true, true);
+        if (show.genres == null) {
+            return new ShowEntity(null, show.ids.trakt, show.title, "genres: ", show.overview,
+                    0, ((int) (show.rating * 10)),
+                    show.images.poster.thumb, show.images.fanart.medium, show.year, stats.watchers.longValue(), stats.plays.longValue(),
+                    false, null, false, null, false, null, true, true);
+        } else {
+            return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + show.genres.toString().replace("[", "").replace("]", ""), show.overview,
+                    0, ((int) (show.rating * 10)),
+                    show.images.poster.thumb, show.images.fanart.medium, show.year, stats.watchers.longValue(), stats.plays.longValue(),
+                    false, null, false, null, false, null, true, true);
+        }
     }
 
     private static ShowEntity getEntityFromRecommendedShow(Show show, int i, Stats stats) {
-        return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + show.genres.toString().replace("[", "").replace("]", ""), show.overview,
-                0, ((int) (show.rating * 10)),
-                show.images.poster.thumb, show.images.fanart.medium, show.year, stats.watchers.longValue(), stats.plays.longValue(),
-                false, null, false, null, true, i, true, false);
+        if (show.genres == null) {
+            return new ShowEntity(null, show.ids.trakt, show.title, "genres: ", show.overview,
+                    0, ((int) (show.rating * 10)),
+                    show.images.poster.thumb, show.images.fanart.medium, show.year, stats.watchers.longValue(), stats.plays.longValue(),
+                    false, null, false, null, true, i, true, false);
+        } else {
+            return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + show.genres.toString().replace("[", "").replace("]", ""), show.overview,
+                    0, ((int) (show.rating * 10)),
+                    show.images.poster.thumb, show.images.fanart.medium, show.year, stats.watchers.longValue(), stats.plays.longValue(),
+                    false, null, false, null, true, i, true, false);
+        }
     }
 
-    private static EpisodeEntity getEpisodeEntity(Episode episode, Long id) {
+    static EpisodeEntity getEpisodeEntity(Episode episode, Long id) {
         return new EpisodeEntity(null, id, episode.season, episode.title, episode.number, episode.overview,
                 false, ((int) (episode.rating * 10)), true, episode.images.screenshot.medium);
     }
 
     private static ShowEntity getEntityFromPopularShow(Show show, int i, Stats stats) {
-        return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + show.genres.toString().replace("[", "").replace("]", ""), show.overview,
-                0, ((int) (show.rating * 10)),
-                show.images.poster.thumb, show.images.fanart.medium, show.year, stats.watchers.longValue(), stats.plays.longValue(),
-                false, null, true, i, false, null, true, false);
+        if (show.genres == null) {
+            return new ShowEntity(null, show.ids.trakt, show.title, "genres: ", show.overview,
+                    0, ((int) (show.rating * 10)),
+                    show.images.poster.thumb, show.images.fanart.medium, show.year, stats.watchers.longValue(), stats.plays.longValue(),
+                    false, null, true, i, false, null, true, false);
+        } else {
+            return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + show.genres.toString().replace("[", "").replace("]", ""), show.overview,
+                    0, ((int) (show.rating * 10)),
+                    show.images.poster.thumb, show.images.fanart.medium, show.year, stats.watchers.longValue(), stats.plays.longValue(),
+                    false, null, true, i, false, null, true, false);
+        }
     }
 
     private static ShowEntity getEntityFromTrendingShow(Show show, int i, Stats stats) {
-        return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + show.genres.toString().replace("[", "").replace("]", ""), show.overview,
-                0, ((int) (show.rating * 10)),
-                show.images.poster.thumb, show.images.fanart.medium, show.year, stats.watchers.longValue(), stats.plays.longValue(),
-                true, i, false, null, false, null, true, false);
+        if (show.genres == null) {
+            return new ShowEntity(null, show.ids.trakt, show.title, "genres: ", show.overview,
+                    0, ((int) (show.rating * 10)),
+                    show.images.poster.thumb, show.images.fanart.medium, show.year, stats.watchers.longValue(), stats.plays.longValue(),
+                    true, i, false, null, false, null, true, false);
+        } else {
+            return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + show.genres.toString().replace("[", "").replace("]", ""), show.overview,
+                    0, ((int) (show.rating * 10)),
+                    show.images.poster.thumb, show.images.fanart.medium, show.year, stats.watchers.longValue(), stats.plays.longValue(),
+                    true, i, false, null, false, null, true, false);
+        }
     }
 }
