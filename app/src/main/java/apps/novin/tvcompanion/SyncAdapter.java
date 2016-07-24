@@ -385,12 +385,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     static EpisodeEntity getEpisodeEntity(Episode episode, Long id) {
-        try {
-            return new EpisodeEntity(null, id, episode.season, episode.title, episode.number, episode.overview,
-                    false, episode.rating != null ? (int)(episode.rating * 10) : 0, true, episode.images.screenshot.medium);
-        } catch (NullPointerException e) {
-            return null;
-        }
+        return new EpisodeEntity(null, id, episode.season, episode.title, episode.number, episode.overview,
+                false, episode.rating != null ? (int)(episode.rating * 10) : 0, true, episode.images.screenshot.medium);
     }
 
     private static ShowEntity getEntityFromPopularShow(Show show, int i, Stats stats) {

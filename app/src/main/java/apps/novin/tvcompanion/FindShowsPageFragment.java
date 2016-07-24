@@ -28,6 +28,8 @@ import com.uwetrottmann.trakt5.TraktV2;
 import com.uwetrottmann.trakt5.entities.Episode;
 import com.uwetrottmann.trakt5.entities.SearchResult;
 import com.uwetrottmann.trakt5.entities.Season;
+import com.uwetrottmann.trakt5.entities.Show;
+import com.uwetrottmann.trakt5.entities.Stats;
 import com.uwetrottmann.trakt5.enums.Extended;
 import com.uwetrottmann.trakt5.enums.Type;
 
@@ -172,12 +174,12 @@ public class FindShowsPageFragment extends Fragment {
                                             final ShowEntity showEntity;
                                             if (result.show.genres == null) {
                                                 showEntity = new ShowEntity(null, result.show.ids.trakt, result.show.title, "genres:", result.show.overview,
-                                                        0, result.show.rating != null ? (int)(result.show.rating * 10) : 0, result.show.images.poster.thumb, result.show.images.fanart.medium,
+                                                        0, 0, result.show.images.poster.thumb, result.show.images.fanart.medium,
                                                         result.show.year, null, null,
                                                         false, null, false, null, false, null, false, false);
                                             } else {
                                                 showEntity = new ShowEntity(null, result.show.ids.trakt, result.show.title, "genres: " + result.show.genres.toString(), result.show.overview,
-                                                        0, result.show.rating != null ? (int)(result.show.rating * 10) : 0, result.show.images.poster.thumb, result.show.images.fanart.medium,
+                                                        0, 0, result.show.images.poster.thumb, result.show.images.fanart.medium,
                                                         result.show.year, null, null,
                                                         false, null, false, null, false, null, false, false);
                                             }
@@ -197,62 +199,6 @@ public class FindShowsPageFragment extends Fragment {
                                             mAdapter.setData(showEntities);
                                         }
                                     });
-                                    List<EpisodeEntity> episodesToInsert = new ArrayList<>();
-                                    for (ShowEntity showEntity : showEntities) {
-                                        if (showEntity.getEpisodeEntityList().size() == 0) {
-                                            int count = 0;
-                                            int maxTries = 3;
-                                            List<Season> seasons;
-                                            while (true) {
-                                                try {
-                                                    seasons = traktV2.seasons().summary(String.format(Locale.ENGLISH, "%d", showEntity.getTrakt_id()), Extended.FULL).execute().body();
-                                                    break;
-                                                } catch (IOException e) {
-                                                    // handle exception
-                                                    if (++count == maxTries) try {
-                                                        throw e;
-                                                    } catch (IOException e1) {
-                                                        e1.printStackTrace();
-                                                        Log.e("search", "couldn't get seasons");
-                                                    }
-                                                }
-                                            }
-                                            if (seasons != null) {
-                                                showEntity.setSeasons(seasons.size());
-                                                for (Season season : seasons) {
-                                                    // skip the seasons where we have all episodes already
-                                                    /*if (season.aired_episodes == episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(showEntity.getId()), EpisodeEntityDao.Properties.Season.eq(season.number)).count()) {
-                                                        continue;
-                                                    }*/
-                                                    count = 0;
-                                                    maxTries = 3;
-                                                    List<Episode> episodes;
-                                                    while (true) {
-                                                        try {
-                                                            episodes = traktV2.seasons().season(String.format(Locale.ENGLISH, "%d", showEntity.getTrakt_id()), season.number, Extended.FULLIMAGES).execute().body();
-                                                            break;
-                                                        } catch (IOException e) {
-                                                            // handle exception
-                                                            if (++count == maxTries) try {
-                                                                throw e;
-                                                            } catch (IOException e1) {
-                                                                e1.printStackTrace();
-                                                                Log.e("search", "couldn't get episodes");
-                                                            }
-                                                        }
-                                                    }
-                                                    if (episodes != null) {
-                                                        for (Episode episode : episodes) {
-                                                            EpisodeEntity newEpisode = SyncAdapter.getEpisodeEntity(episode, showEntity.getId());
-                                                            // add oauth needed columns
-                                                            episodesToInsert.add(newEpisode);
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                    episodeEntityDao.insertInTx(episodesToInsert);
                                 }
                             }
                         });
@@ -322,7 +268,8 @@ public class FindShowsPageFragment extends Fragment {
             TextView percentage;
             @BindView(R.id.poster)
             ImageView poster;
-
+            @BindView(R.id.heart_icon)
+            ImageView heartIcon;
             long id;
 
             public ViewHolder(View view) {
@@ -364,7 +311,13 @@ public class FindShowsPageFragment extends Fragment {
             holder.title.setText(showEntity.getName());
             holder.genres.setText(showEntity.getGenres());
             holder.year.setText(String.format(Locale.ENGLISH, "%d", showEntity.getYear()));
-            holder.percentage.setText(String.format(Locale.ENGLISH, "%d%%", showEntity.getPercent_heart()));
+            if (showEntity.getPercent_heart() != 0) {
+                holder.percentage.setText(String.format(Locale.ENGLISH, "%d%%", showEntity.getPercent_heart()));
+            } else {
+                holder.percentage.setVisibility(View.INVISIBLE);
+                holder.heartIcon.setVisibility(View.INVISIBLE);
+                holder.genres.setVisibility(View.INVISIBLE);
+            }
             holder.id = showEntity.getId();
         }
 

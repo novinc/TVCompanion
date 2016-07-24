@@ -34,9 +34,12 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.uwetrottmann.trakt5.TraktV2;
+import com.uwetrottmann.trakt5.entities.Show;
 import com.uwetrottmann.trakt5.entities.ShowIds;
+import com.uwetrottmann.trakt5.entities.Stats;
 import com.uwetrottmann.trakt5.entities.SyncItems;
 import com.uwetrottmann.trakt5.entities.SyncShow;
+import com.uwetrottmann.trakt5.enums.Extended;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -84,6 +87,10 @@ public class ShowDetailActivity extends AppCompatActivity {
     Spinner spinner;
     @BindView(R.id.episodes_list)
     RecyclerView mRecyclerView;
+    @BindView(R.id.heart_icon)
+    ImageView heartIcon;
+    @BindView(R.id.eye_icon)
+    ImageView eyeIcon;
 
     private RecyclerView.LayoutManager mLayoutManager;
     private MyAdapter mAdapter;
@@ -135,9 +142,18 @@ public class ShowDetailActivity extends AppCompatActivity {
                         genres.setText(showEntity.getGenres());
                         description.setText(showEntity.getDescription());
                         year.setText(String.format(Locale.ENGLISH, "%d", showEntity.getYear()));
-                        percentage.setText(String.format(Locale.ENGLISH, "%d%%", showEntity.getPercent_heart()));
-                        watchers.setText(String.format(Locale.ENGLISH, "%s watchers", statFormat(showEntity.getWatchers())));
-                        plays.setText(String.format(Locale.ENGLISH, "%s plays", statFormat(showEntity.getPlayers())));
+                        if ((showEntity.getWatchers() != null && showEntity.getPlayers() != null) || showEntity.getPercent_heart() != 0) {
+                            percentage.setText(String.format(Locale.ENGLISH, "%d%%", showEntity.getPercent_heart()));
+                            watchers.setText(String.format(Locale.ENGLISH, "%s watchers", statFormat(showEntity.getWatchers())));
+                            plays.setText(String.format(Locale.ENGLISH, "%s plays", statFormat(showEntity.getPlayers())));
+                        } else {
+                            heartIcon.setVisibility(View.INVISIBLE);
+                            eyeIcon.setVisibility(View.INVISIBLE);
+                            percentage.setVisibility(View.INVISIBLE);
+                            watchers.setVisibility(View.INVISIBLE);
+                            plays.setVisibility(View.INVISIBLE);
+                            genres.setText(R.string.text_more_info);
+                        }
                         fab.setImageResource(showEntity.getMy_show() ? R.drawable.ic_check_black : R.drawable.ic_add_black);
                     }
                 });
@@ -277,14 +293,18 @@ public class ShowDetailActivity extends AppCompatActivity {
 
     private String statFormat(Long stat) {
         String suffix = "";
-        if (stat > 1000 * 1000) {
-            suffix = "m";
-            stat /= 1000 * 1000;
-        } else if (stat > 1000) {
-            suffix = "k";
-            stat /= 1000;
+        try {
+            if (stat > 1000 * 1000) {
+                suffix = "m";
+                stat /= 1000 * 1000;
+            } else if (stat > 1000) {
+                suffix = "k";
+                stat /= 1000;
+            }
+            return stat + suffix;
+        } catch (NullPointerException e) {
+            return "0";
         }
-        return stat + suffix;
     }
 
     @Override
