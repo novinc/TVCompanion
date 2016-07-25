@@ -63,7 +63,7 @@ public class LoginActivity extends AppCompatActivity {
                             editor.apply();
                             Log.d("Login", "logged in successfully");
                             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            intent.putExtra("from_login", true);
                             startActivity(intent);
                             finish();
                         } else {

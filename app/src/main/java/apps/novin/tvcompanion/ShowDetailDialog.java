@@ -266,7 +266,7 @@ public class ShowDetailDialog extends DialogFragment {
                                             }
                                         }
                                     }
-                                    if (!success) {
+                                    if (success) {
                                         if (show != null) {
                                             showEntity.setPercent_heart((int)(10 * show.rating));
                                             showEntity.setGenres("genres: " + show.genres.toString().replace("[", "").replace("]", ""));

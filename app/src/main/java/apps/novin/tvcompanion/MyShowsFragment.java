@@ -79,6 +79,7 @@ public class MyShowsFragment extends Fragment {
     public void dataChange(DatabaseUpdatedEvent event) {
         List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.My_show.eq(true)).list();
         mAdapter.setData(list);
+        EventBus.getDefault().removeAllStickyEvents();
     }
 
     public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {

@@ -152,6 +152,7 @@ public class MainActivity extends AppCompatActivity
             make.dismiss();
         }
         Snackbar.make(contentFragment, "Sync complete", Snackbar.LENGTH_LONG).show();
+        EventBus.getDefault().removeAllStickyEvents();
     }
 
     private static Account createSyncAccount(Context context) {
@@ -202,6 +203,17 @@ public class MainActivity extends AppCompatActivity
             ((CustomDrawerLayout) mDrawerLayout).setDrawerViewWithoutIntercepting(null);
             isDrawerLocked = false;
             mDrawerToggle.syncState();
+        }
+        if (getIntent() != null) {
+            boolean fromLogin = getIntent().getBooleanExtra("from_login", false);
+            if (fromLogin) {
+                ContentResolver.cancelSync(mAccount, AUTHORITY);
+                ContentResolver.requestSync(mAccount, AUTHORITY, Bundle.EMPTY);
+                progressBar.setVisibility(View.VISIBLE);
+                make = Snackbar.make(contentFragment, "Full sync in progress, this may take a long time. Feel free to close the app and come back later", Snackbar.LENGTH_INDEFINITE);
+                make.show();
+                getIntent().removeExtra("from_login");
+            }
         }
     }
 

@@ -243,7 +243,7 @@ public class FindShowsPageFragment extends Fragment {
         } else { // search
 
         }
-
+        EventBus.getDefault().removeAllStickyEvents();
     }
 
     public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {

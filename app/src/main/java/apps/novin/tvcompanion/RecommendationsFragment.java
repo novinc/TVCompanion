@@ -86,6 +86,7 @@ public class RecommendationsFragment extends Fragment {
         List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.Recommendation.eq(true)).orderAsc(ShowEntityDao.Properties.Recommendation_pos).build().list();
         mAdapter.setData(list);
         mAdapter.notifyDataSetChanged();
+        EventBus.getDefault().removeAllStickyEvents();
     }
 
     public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
