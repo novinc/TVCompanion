@@ -199,21 +199,30 @@ public class ShowDetailDialog extends DialogFragment {
                                             }
                                         }
                                     }
-                                    showEntity.setMy_show(false);
-                                    for (EpisodeEntity episodeEntity : showEntity.getEpisodeEntityList()) {
-                                        episodeEntity.setWatched(false);
-                                        episodeEntityDao.update(episodeEntity);
-                                    }
-                                    showEntity.update();
-                                    final boolean finalSuccess = success;
-                                    getActivity().runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            make.dismiss();
-                                            fab.setImageResource(R.drawable.ic_add_black);
-                                            Snackbar.make(view, "Removed show and all episodes from watched history", Snackbar.LENGTH_LONG).show();
+                                    if (success) {
+                                        showEntity.setMy_show(false);
+                                        for (EpisodeEntity episodeEntity : showEntity.getEpisodeEntityList()) {
+                                            episodeEntityDao.update(episodeEntity);
                                         }
-                                    });
+                                        showEntity.update();
+                                        getActivity().runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                make.dismiss();
+                                                fab.setImageResource(R.drawable.ic_add_black);
+                                                Snackbar.make(view, "Removed show and all episodes from watched history", Snackbar.LENGTH_LONG).show();
+                                            }
+                                        });
+                                        EventBus.getDefault().postSticky(new DatabaseUpdatedEvent());
+                                    } else {
+                                        getActivity().runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                make.dismiss();
+                                                Snackbar.make(view, "Could not remove from trakt, try again later. Most likely due to connectivity issues", Snackbar.LENGTH_LONG).show();
+                                            }
+                                        });
+                                    }
                                 } else {
                                     SyncItems syncItems = new SyncItems();
                                     SyncShow syncShow = new SyncShow();
@@ -222,36 +231,93 @@ public class ShowDetailDialog extends DialogFragment {
                                     syncShow.id(showIds);
                                     syncItems.shows(syncShow);
                                     boolean success = false;
+                                    Show show = null;
+                                    Stats stats = null;
                                     try {
-                                        success = traktV2.sync().addItemsToCollection(syncItems).execute().isSuccessful();
+                                        success = traktV2.sync().addItemsToWatchedHistory(syncItems).execute().isSuccessful();
+                                        if (heartIcon.getVisibility() == View.INVISIBLE) {
+                                            show = traktV2.shows().summary("" + showEntity.getTrakt_id(), Extended.FULLIMAGES).execute().body();
+                                            stats = traktV2.shows().stats("" + showEntity.getTrakt_id()).execute().body();
+                                        }
                                     } catch (IOException e) {
                                         try {
-                                            success = traktV2.sync().addItemsToCollection(syncItems).execute().isSuccessful();
+                                            if (!success) {
+                                                success = traktV2.sync().addItemsToWatchedHistory(syncItems).execute().isSuccessful();
+                                            }
+                                            if (heartIcon.getVisibility() == View.INVISIBLE) {
+                                                if (show == null) {
+                                                    show = traktV2.shows().summary("" + showEntity.getTrakt_id(), Extended.FULLIMAGES).execute().body();
+                                                }
+                                                stats = traktV2.shows().stats("" + showEntity.getTrakt_id()).execute().body();
+                                            }
                                         } catch (IOException e1) {
                                             try {
-                                                success = traktV2.sync().addItemsToCollection(syncItems).execute().isSuccessful();
+                                                if (!success) {
+                                                    success = traktV2.sync().addItemsToWatchedHistory(syncItems).execute().isSuccessful();
+                                                }
+                                                if (heartIcon.getVisibility() == View.INVISIBLE) {
+                                                    if (show == null) {
+                                                        show = traktV2.shows().summary("" + showEntity.getTrakt_id(), Extended.FULLIMAGES).execute().body();
+                                                    }
+                                                    stats = traktV2.shows().stats("" + showEntity.getTrakt_id()).execute().body();
+                                                }
                                             } catch (IOException e2) {
                                                 e2.printStackTrace();
                                             }
                                         }
                                     }
-                                    showEntity.setMy_show(true);
-                                    for (EpisodeEntity episodeEntity : showEntity.getEpisodeEntityList()) {
-                                        episodeEntity.setWatched(true);
-                                        episodeEntity.setSynced(false);
-                                        episodeEntityDao.update(episodeEntity);
-                                    }
-                                    showEntity.update();
-                                    final boolean finalSuccess = success;
-                                    getActivity().runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            make.dismiss();
-                                            fab.setImageResource(R.drawable.ic_close_black);
-                                            Snackbar.make(view, "Added show and all episodes to watched history", Snackbar.LENGTH_LONG).show();
+                                    if (!success) {
+                                        if (show != null) {
+                                            showEntity.setPercent_heart((int)(10 * show.rating));
+                                            showEntity.setGenres("genres: " + show.genres.toString().replace("[", "").replace("]", ""));
+                                            if (stats != null) {
+                                                showEntity.setWatchers(stats.watchers.longValue());
+                                                showEntity.setPlayers(stats.plays.longValue());
+                                            }
+                                            final Stats finalStats = stats;
+                                            getActivity().runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    percentage.setVisibility(View.VISIBLE);
+                                                    watchers.setVisibility(View.VISIBLE);
+                                                    plays.setVisibility(View.VISIBLE);
+                                                    genres.setText(showEntity.getGenres());
+                                                    percentage.setText(String.format(Locale.ENGLISH, "%d%%", showEntity.getPercent_heart()));
+                                                    heartIcon.setVisibility(View.VISIBLE);
+                                                    if (finalStats != null) {
+                                                        watchers.setText(String.format(Locale.ENGLISH, "%s watchers", statFormat(showEntity.getWatchers())));
+                                                        plays.setText(String.format(Locale.ENGLISH, "%s plays", statFormat(showEntity.getPlayers())));
+                                                        eyeIcon.setVisibility(View.VISIBLE);
+                                                    }
+                                                }
+                                            });
+                                            List<EpisodeEntity> episodesToInsert = new ArrayList<>();
+                                            SyncAdapter.getEpisodesFor(showEntity, traktV2, episodeEntityDao, episodesToInsert);
+                                            episodeEntityDao.insertInTx(episodesToInsert);
                                         }
-                                    });
-                                    EventBus.getDefault().postSticky(new DatabaseUpdatedEvent());
+                                        showEntity.setMy_show(true);
+                                        for (EpisodeEntity episodeEntity : showEntity.getEpisodeEntityList()) {
+                                            episodeEntityDao.update(episodeEntity);
+                                        }
+                                        showEntity.update();
+                                        getActivity().runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                make.dismiss();
+                                                fab.setImageResource(R.drawable.ic_close_black);
+                                                Snackbar.make(view, "Added show and all episodes to watched history", Snackbar.LENGTH_LONG).show();
+                                            }
+                                        });
+                                        EventBus.getDefault().postSticky(new DatabaseUpdatedEvent());
+                                    } else {
+                                        getActivity().runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                make.dismiss();
+                                                Snackbar.make(view, "Could not add to trakt, try again later. Most likely due to connectivity issues", Snackbar.LENGTH_LONG).show();
+                                            }
+                                        });
+                                    }
                                 }
                             }
                         });
@@ -362,8 +428,6 @@ public class ShowDetailDialog extends DialogFragment {
             TextView description;
             @BindView(R.id.episode_poster)
             ImageView poster;
-            @BindView(R.id.watched_button)
-            Button watchedButton;
             @BindView(R.id.heart_button)
             Button heartButton;
 
@@ -406,7 +470,7 @@ public class ShowDetailDialog extends DialogFragment {
             holder.heartButton.setText(String.format(Locale.ENGLISH, "%d%%", episode.getPercent_heart()));
             Glide.with(ShowDetailDialog.this)
                     .load(episode.getPoster_url())
-                    .placeholder(R.drawable.show_background)
+                    .placeholder(R.color.colorAccent)
                     .error(R.drawable.ic_close_black)
                     .centerCrop()
                     .diskCacheStrategy(DiskCacheStrategy.ALL)

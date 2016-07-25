@@ -29,7 +29,6 @@ public class ShowEntity implements java.io.Serializable {
     private Integer most_popular_pos;
     private boolean recommendation;
     private Integer recommendation_pos;
-    private boolean synced;
     private boolean my_show;
 
     /** Used to resolve relations */
@@ -47,7 +46,7 @@ public class ShowEntity implements java.io.Serializable {
         this.id = id;
     }
 
-    public ShowEntity(Long id, long trakt_id, String name, String genres, String description, Integer seasons, Integer percent_heart, String poster_url, String backdrop_url, Integer year, Long watchers, Long players, boolean trending, Integer trending_pos, boolean most_popular, Integer most_popular_pos, boolean recommendation, Integer recommendation_pos, boolean synced, boolean my_show) {
+    public ShowEntity(Long id, long trakt_id, String name, String genres, String description, Integer seasons, Integer percent_heart, String poster_url, String backdrop_url, Integer year, Long watchers, Long players, boolean trending, Integer trending_pos, boolean most_popular, Integer most_popular_pos, boolean recommendation, Integer recommendation_pos, boolean my_show) {
         this.id = id;
         this.trakt_id = trakt_id;
         this.name = name;
@@ -66,7 +65,6 @@ public class ShowEntity implements java.io.Serializable {
         this.most_popular_pos = most_popular_pos;
         this.recommendation = recommendation;
         this.recommendation_pos = recommendation_pos;
-        this.synced = synced;
         this.my_show = my_show;
     }
 
@@ -220,14 +218,6 @@ public class ShowEntity implements java.io.Serializable {
 
     public void setRecommendation_pos(Integer recommendation_pos) {
         this.recommendation_pos = recommendation_pos;
-    }
-
-    public boolean getSynced() {
-        return synced;
-    }
-
-    public void setSynced(boolean synced) {
-        this.synced = synced;
     }
 
     public boolean getMy_show() {

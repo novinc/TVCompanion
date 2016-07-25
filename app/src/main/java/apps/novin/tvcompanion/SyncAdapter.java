@@ -16,7 +16,10 @@ import com.uwetrottmann.trakt5.entities.BaseShow;
 import com.uwetrottmann.trakt5.entities.Episode;
 import com.uwetrottmann.trakt5.entities.Season;
 import com.uwetrottmann.trakt5.entities.Show;
+import com.uwetrottmann.trakt5.entities.ShowIds;
 import com.uwetrottmann.trakt5.entities.Stats;
+import com.uwetrottmann.trakt5.entities.SyncItems;
+import com.uwetrottmann.trakt5.entities.SyncShow;
 import com.uwetrottmann.trakt5.entities.TrendingShow;
 import com.uwetrottmann.trakt5.enums.Extended;
 
@@ -38,18 +41,15 @@ import apps.novin.tvcompanion.db.ShowEntityDao;
  */
 public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
-    private final ContentResolver mContentResolver;
     private DaoSession mDaoSession;
 
     public SyncAdapter(Context context, boolean autoInitialize, DaoSession session) {
         super(context, autoInitialize);
         mDaoSession = session;
-        mContentResolver = context.getContentResolver();
     }
 
     public SyncAdapter(Context context, boolean autoInitialize, boolean allowParallelSyncs) {
         super(context, autoInitialize, allowParallelSyncs);
-        mContentResolver = context.getContentResolver();
     }
 
     @Override
@@ -57,7 +57,29 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         Log.d("sync adapter", "onPerformSync called authority: " + s);
 
         TraktV2 traktV2 = new TraktV2(BuildConfig.API_KEY, BuildConfig.CLIENT_SECRET, "tvcompanion.novin.apps://oauthredirect");
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        ShowEntityDao showEntityDao = mDaoSession.getShowEntityDao();
+        EpisodeEntityDao episodeEntityDao = mDaoSession.getEpisodeEntityDao();
+
+        // gets trending and popular shows, along with recommendations and my shows if oauth
+        syncShows(traktV2, showEntityDao, getContext(), true);
+
+        // remove unused shows
+        removeUnusedShows(showEntityDao, episodeEntityDao);
+        // episodes sync
+        List<EpisodeEntity> episodesToInsert = new ArrayList<>();
+        for (ShowEntity showEntity : showEntityDao.loadAll()) {
+            getEpisodesFor(showEntity, traktV2, episodeEntityDao, episodesToInsert);
+        }
+        episodeEntityDao.insertInTx(episodesToInsert);
+        Log.d("sync", "episodes sync complete");
+        EventBus.getDefault().postSticky(new DatabaseUpdatedEvent());
+    }
+
+    public static void syncShows(TraktV2 traktV2, ShowEntityDao showEntityDao, Context context, boolean fromSync) {
+        if (traktV2 == null) {
+            traktV2 = new TraktV2(BuildConfig.API_KEY, BuildConfig.CLIENT_SECRET, "tvcompanion.novin.apps://oauthredirect");
+        }
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
         String accessToken = preferences.getString("access_token", null);
         boolean oauth = false;
         if (accessToken != null) {
@@ -92,192 +114,40 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 }
             }
         }
-        ShowEntityDao showEntityDao = mDaoSession.getShowEntityDao();
-        EpisodeEntityDao episodeEntityDao = mDaoSession.getEpisodeEntityDao();
-        // recommendation sync
+        // recommendation and my shows sync
         if (oauth) {
+            // my shows
             List<ShowEntity> myShowsToInsert = new ArrayList<>();
             for (BaseShow show : myShows) {
-                Stats stats = null;
-                count = 0;
-                maxTries = 3;
-                while(true) {
-                    try {
-                        stats = traktV2.shows().stats(show.show.ids.trakt.toString()).execute().body();
-                        break;
-                    } catch (IOException e) {
-                        // handle exception
-                        if (++count == maxTries) try {
-                            throw e;
-                        } catch (IOException e1) {
-                            e1.printStackTrace();
-                            Log.e("Sync", "couldn't get show stats");
-                        }
-                    }
-                }
-                List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(show.show.ids.trakt)).list();
-                if (sameShows.size() == 0) { // newly watched show not in app's database
-                    ShowEntity newShow = getEntityFromMyShow(show, stats);
-                    myShowsToInsert.add(newShow);
-                } else {
-                    sameShows.get(0).setMy_show(true);
-                    if (stats != null) {
-                        sameShows.get(0).setWatchers(stats.watchers.longValue());
-                        sameShows.get(0).setPlayers(stats.plays.longValue());
-                    }
-                    sameShows.get(0).setSynced(true);
-                    sameShows.get(0).update();
-                }
+                getStatsForMyShow(show, myShowsToInsert, traktV2, showEntityDao);
             }
             showEntityDao.insertInTx(myShowsToInsert);
+            // recommendations
             List<ShowEntity> recommendationsToInsert = new ArrayList<>();
             for (Show show : recommendations) {
-                Stats stats = null;
-                count = 0;
-                maxTries = 3;
-                while(true) {
-                    try {
-                        stats = traktV2.shows().stats(show.ids.trakt.toString()).execute().body();
-                        break;
-                    } catch (IOException e) {
-                        // handle exception
-                        if (++count == maxTries) try {
-                            throw e;
-                        } catch (IOException e1) {
-                            e1.printStackTrace();
-                            Log.e("Sync", "couldn't get show stats");
-                        }
-                    }
-                }
-                List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(show.ids.trakt)).list();
-                if (sameShows.size() == 0) {
-                    List<ShowEntity> samePos = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Recommendation_pos.eq(recommendations.indexOf(show))).list();
-                    if (samePos.size() != 0) {
-                        samePos.get(0).setRecommendation(false);
-                        samePos.get(0).setRecommendation_pos(null);
-                        samePos.get(0).update();
-                    }
-                    ShowEntity newShow = getEntityFromRecommendedShow(show, recommendations.indexOf(show), stats);
-                    // add oauth needed columns
-                    recommendationsToInsert.add(newShow);
-                } else {
-                    List<ShowEntity> samePos = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Recommendation_pos.eq(recommendations.indexOf(show))).list();
-                    if (samePos.size() != 0) {
-                        samePos.get(0).setRecommendation(false);
-                        samePos.get(0).setRecommendation_pos(null);
-                        samePos.get(0).update();
-                    }
-                    ShowEntity showEntity = sameShows.get(0);
-                    showEntity.setRecommendation(true);
-                    showEntity.setRecommendation_pos(recommendations.indexOf(show));
-                    if (stats != null) {
-                        showEntity.setWatchers(stats.watchers.longValue());
-                        showEntity.setPlayers(stats.plays.longValue());
-                    }
-                    showEntity.update();
-                }
+                getStatsForRecommendationAndUpdatePositions(show, recommendationsToInsert, recommendations, traktV2, showEntityDao);
             }
             showEntityDao.insertInTx(recommendationsToInsert);
         }
         // trending sync
         List<ShowEntity> trendingToInsert = new ArrayList<>();
         for (TrendingShow show : trendingShows) {
-            Stats stats = null;
-            count = 0;
-            maxTries = 3;
-            while(true) {
-                try {
-                    stats = traktV2.shows().stats(show.show.ids.trakt.toString()).execute().body();
-                    break;
-                } catch (IOException e) {
-                    // handle exception
-                    if (++count == maxTries) try {
-                        throw e;
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
-                        Log.e("Sync", "couldn't get show stats");
-                    }
-                }
-            }
-            List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(show.show.ids.trakt)).list();
-            if (sameShows.size() == 0) {
-                List<ShowEntity> samePos = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trending_pos.eq(trendingShows.indexOf(show))).list();
-                if (samePos.size() != 0) {
-                    samePos.get(0).setTrending(false);
-                    samePos.get(0).setTrending_pos(null);
-                    samePos.get(0).update();
-                }
-                ShowEntity newShow = getEntityFromTrendingShow(show.show, trendingShows.indexOf(show), stats);
-                // add oauth needed columns
-                trendingToInsert.add(newShow);
-            } else {
-                List<ShowEntity> samePos = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trending_pos.eq(trendingShows.indexOf(show))).list();
-                if (samePos.size() != 0) {
-                    samePos.get(0).setTrending(false);
-                    samePos.get(0).setTrending_pos(null);
-                    samePos.get(0).update();
-                }
-                ShowEntity showEntity = sameShows.get(0);
-                showEntity.setTrending(true);
-                showEntity.setTrending_pos(trendingShows.indexOf(show));
-                if (stats != null) {
-                    showEntity.setWatchers(stats.watchers.longValue());
-                    showEntity.setPlayers(stats.plays.longValue());
-                }
-                showEntity.update();
-            }
+            getStatsForTrendingAndUpdatePositions(show, trendingShows, trendingToInsert, traktV2, showEntityDao);
         }
         showEntityDao.insertInTx(trendingToInsert);
         // most popular sync
         List<ShowEntity> mostPopularToInsert = new ArrayList<>();
         for (Show show : popular) {
-            Stats stats = null;
-            count = 0;
-            maxTries = 3;
-            while(true) {
-                try {
-                    stats = traktV2.shows().stats(show.ids.trakt.toString()).execute().body();
-                    break;
-                } catch (IOException e) {
-                    // handle exception
-                    if (++count == maxTries) try {
-                        throw e;
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
-                        Log.e("Sync", "couldn't get show stats");
-                    }
-                }
-            }
-            List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(show.ids.trakt)).list();
-            if (sameShows.size() == 0) {
-                List<ShowEntity> samePos = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Most_popular_pos.eq(popular.indexOf(show))).list();
-                if (samePos.size() != 0) {
-                    samePos.get(0).setMost_popular(false);
-                    samePos.get(0).setMost_popular_pos(null);
-                    samePos.get(0).update();
-                }
-                ShowEntity newShow = getEntityFromPopularShow(show, popular.indexOf(show), stats);
-                // add oauth needed columns
-                mostPopularToInsert.add(newShow);
-            } else {
-                List<ShowEntity> samePos = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Most_popular_pos.eq(popular.indexOf(show))).list();
-                if (samePos.size() != 0) {
-                    samePos.get(0).setMost_popular(false);
-                    samePos.get(0).setMost_popular_pos(null);
-                    samePos.get(0).update();
-                }
-                ShowEntity showEntity = sameShows.get(0);
-                showEntity.setMost_popular(true);
-                showEntity.setMost_popular_pos(popular.indexOf(show));
-                if (stats != null) {
-                    showEntity.setWatchers(stats.watchers.longValue());
-                    showEntity.setPlayers(stats.plays.longValue());
-                }
-                showEntity.update();
-            }
+            getStatsForMostPopularAndUpdatePositions(show, popular, mostPopularToInsert, traktV2, showEntityDao);
         }
         showEntityDao.insertInTx(mostPopularToInsert);
-        // remove unused shows
+        Log.d("sync", "shows sync complete");
+        if (!fromSync) {
+            EventBus.getDefault().postSticky(new DatabaseUpdatedEvent());
+        }
+    }
+
+    private static void removeUnusedShows(ShowEntityDao showEntityDao, EpisodeEntityDao episodeEntityDao) {
         List<ShowEntity> toDelete = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trending.eq(false),
                 ShowEntityDao.Properties.Most_popular.eq(false),
                 ShowEntityDao.Properties.Recommendation.eq(false),
@@ -287,72 +157,259 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             episodeEntityDao.deleteInTx(deletingShowEpisodeEntityList);
         }
         showEntityDao.deleteInTx(toDelete);
-        // episodes sync
-        List<EpisodeEntity> episodesToInsert = new ArrayList<>();
-        for (ShowEntity showEntity : showEntityDao.loadAll()) {
-            // load up all the seasons for show and all episodes for each season
-            count = 0;
-            maxTries = 3;
-            List<Season> seasons;
-            while (true) {
-                try {
-                    seasons = traktV2.seasons().summary(String.format(Locale.ENGLISH, "%d", showEntity.getTrakt_id()), Extended.FULL).execute().body();
-                    break;
-                } catch (IOException e) {
-                    // handle exception
-                    if (++count == maxTries) try {
-                        throw e;
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
-                        Log.e("sync", "couldn't get seasons");
-                    }
-                }
-            }
-            if (seasons != null) {
-                showEntity.setSeasons(seasons.size());
-                showEntity.update();
-                for (Season season : seasons) {
-                    // skip the seasons where we have all episodes already
-                    /*if (season.aired_episodes == episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(showEntity.getId()), EpisodeEntityDao.Properties.Season.eq(season.number)).count()) {
-                        continue;
-                    }*/
-                    count = 0;
-                    maxTries = 3;
-                    List<Episode> episodes;
-                    while (true) {
-                        try {
-                            episodes = traktV2.seasons().season(String.format(Locale.ENGLISH, "%d", showEntity.getTrakt_id()), season.number, Extended.FULLIMAGES).execute().body();
-                            break;
-                        } catch (IOException e) {
-                            // handle exception
-                            if (++count == maxTries) try {
-                                throw e;
-                            } catch (IOException e1) {
-                                e1.printStackTrace();
-                                Log.e("sync", "couldn't get episodes");
-                            }
-                        }
-                    }
-                    if (episodes != null) {
-                        for (Episode episode : episodes) {
-                            List<EpisodeEntity> alreadyHave = episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(showEntity.getId()), EpisodeEntityDao.Properties.Season.eq(season.number),
-                                    EpisodeEntityDao.Properties.Ep_number.eq(episode.number)).list();
-                            if (alreadyHave.size() != 1) {
-                                EpisodeEntity newEpisode = getEpisodeEntity(episode, showEntity.getId());
-                                // add oauth needed columns
-                                episodesToInsert.add(newEpisode);
-                            } else {
-                                EpisodeEntity existingEpisode = alreadyHave.get(0);
-                                // update existingEpisode with new oauth needed columns
-                            }
-                        }
-                    }
+    }
+
+    private static void getStatsForMostPopularAndUpdatePositions(Show show, List<Show> popular, List<ShowEntity> mostPopularToInsert, TraktV2 traktV2, ShowEntityDao showEntityDao) {
+        int count;
+        int maxTries;Stats stats = null;
+        count = 0;
+        maxTries = 3;
+        while(true) {
+            try {
+                stats = traktV2.shows().stats(show.ids.trakt.toString()).execute().body();
+                break;
+            } catch (IOException e) {
+                // handle exception
+                if (++count == maxTries) try {
+                    throw e;
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                    Log.e("Sync", "couldn't get show stats");
                 }
             }
         }
-        episodeEntityDao.insertInTx(episodesToInsert);
-        Log.d("sync", "sync complete");
-        EventBus.getDefault().postSticky(new DatabaseUpdatedEvent());
+        List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(show.ids.trakt)).list();
+        if (sameShows.size() == 0) {
+            List<ShowEntity> samePos = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Most_popular_pos.eq(popular.indexOf(show))).list();
+            if (samePos.size() != 0) {
+                samePos.get(0).setMost_popular(false);
+                samePos.get(0).setMost_popular_pos(null);
+                samePos.get(0).update();
+            }
+            ShowEntity newShow = getEntityFromPopularShow(show, popular.indexOf(show), stats);
+            // add oauth needed columns
+            mostPopularToInsert.add(newShow);
+        } else {
+            List<ShowEntity> samePos = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Most_popular_pos.eq(popular.indexOf(show))).list();
+            if (samePos.size() != 0) {
+                samePos.get(0).setMost_popular(false);
+                samePos.get(0).setMost_popular_pos(null);
+                samePos.get(0).update();
+            }
+            ShowEntity showEntity = sameShows.get(0);
+            showEntity.setMost_popular(true);
+            showEntity.setMost_popular_pos(popular.indexOf(show));
+            if (stats != null) {
+                showEntity.setWatchers(stats.watchers.longValue());
+                showEntity.setPlayers(stats.plays.longValue());
+            }
+            showEntity.update();
+        }
+    }
+
+    private static void getStatsForTrendingAndUpdatePositions(TrendingShow show, List<TrendingShow> trendingShows, List<ShowEntity> trendingToInsert, TraktV2 traktV2, ShowEntityDao showEntityDao) {
+        int count;
+        int maxTries;Stats stats = null;
+        count = 0;
+        maxTries = 3;
+        while(true) {
+            try {
+                stats = traktV2.shows().stats(show.show.ids.trakt.toString()).execute().body();
+                break;
+            } catch (IOException e) {
+                // handle exception
+                if (++count == maxTries) try {
+                    throw e;
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                    Log.e("Sync", "couldn't get show stats");
+                }
+            }
+        }
+        List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(show.show.ids.trakt)).list();
+        if (sameShows.size() == 0) {
+            List<ShowEntity> samePos = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trending_pos.eq(trendingShows.indexOf(show))).list();
+            if (samePos.size() != 0) {
+                samePos.get(0).setTrending(false);
+                samePos.get(0).setTrending_pos(null);
+                samePos.get(0).update();
+            }
+            ShowEntity newShow = getEntityFromTrendingShow(show.show, trendingShows.indexOf(show), stats);
+            // add oauth needed columns
+            trendingToInsert.add(newShow);
+        } else {
+            List<ShowEntity> samePos = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trending_pos.eq(trendingShows.indexOf(show))).list();
+            if (samePos.size() != 0) {
+                samePos.get(0).setTrending(false);
+                samePos.get(0).setTrending_pos(null);
+                samePos.get(0).update();
+            }
+            ShowEntity showEntity = sameShows.get(0);
+            showEntity.setTrending(true);
+            showEntity.setTrending_pos(trendingShows.indexOf(show));
+            if (stats != null) {
+                showEntity.setWatchers(stats.watchers.longValue());
+                showEntity.setPlayers(stats.plays.longValue());
+            }
+            showEntity.update();
+        }
+    }
+
+    private static void getStatsForRecommendationAndUpdatePositions(Show show, List<ShowEntity> recommendationsToInsert, List<Show> recommendations, TraktV2 traktV2, ShowEntityDao showEntityDao) {
+        int count;
+        int maxTries;Stats stats = null;
+        count = 0;
+        maxTries = 3;
+        while(true) {
+            try {
+                stats = traktV2.shows().stats(show.ids.trakt.toString()).execute().body();
+                break;
+            } catch (IOException e) {
+                // handle exception
+                if (++count == maxTries) try {
+                    throw e;
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                    Log.e("Sync", "couldn't get show stats");
+                }
+            }
+        }
+        List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(show.ids.trakt)).list();
+        if (sameShows.size() == 0) {
+            List<ShowEntity> samePos = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Recommendation_pos.eq(recommendations.indexOf(show))).list();
+            if (samePos.size() != 0) {
+                samePos.get(0).setRecommendation(false);
+                samePos.get(0).setRecommendation_pos(null);
+                samePos.get(0).update();
+            }
+            ShowEntity newShow = getEntityFromRecommendedShow(show, recommendations.indexOf(show), stats);
+            // add oauth needed columns
+            recommendationsToInsert.add(newShow);
+        } else {
+            List<ShowEntity> samePos = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Recommendation_pos.eq(recommendations.indexOf(show))).list();
+            if (samePos.size() != 0) {
+                samePos.get(0).setRecommendation(false);
+                samePos.get(0).setRecommendation_pos(null);
+                samePos.get(0).update();
+            }
+            ShowEntity showEntity = sameShows.get(0);
+            showEntity.setRecommendation(true);
+            showEntity.setRecommendation_pos(recommendations.indexOf(show));
+            if (stats != null) {
+                showEntity.setWatchers(stats.watchers.longValue());
+                showEntity.setPlayers(stats.plays.longValue());
+            }
+            showEntity.update();
+        }
+    }
+
+    private static void getStatsForMyShow(BaseShow show, List<ShowEntity> myShowsToInsert, TraktV2 traktV2, ShowEntityDao showEntityDao) {
+        int count;
+        int maxTries;Stats stats = null;
+        count = 0;
+        maxTries = 3;
+        while(true) {
+            try {
+                stats = traktV2.shows().stats(show.show.ids.trakt.toString()).execute().body();
+                break;
+            } catch (IOException e) {
+                // handle exception
+                if (++count == maxTries) try {
+                    throw e;
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                    Log.e("Sync", "couldn't get show stats");
+                }
+            }
+        }
+        List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(show.show.ids.trakt)).list();
+        if (sameShows.size() == 0) { // newly watched show not in app's database
+            ShowEntity newShow = getEntityFromMyShow(show, stats);
+            myShowsToInsert.add(newShow);
+        } else {
+            sameShows.get(0).setMy_show(true);
+            if (stats != null) {
+                sameShows.get(0).setWatchers(stats.watchers.longValue());
+                sameShows.get(0).setPlayers(stats.plays.longValue());
+            }
+            sameShows.get(0).update();
+        }
+    }
+
+   public static void getEpisodesFor(ShowEntity showEntity, TraktV2 traktV2, EpisodeEntityDao episodeEntityDao, List<EpisodeEntity> episodesToInsert) {
+        // load up all the seasons for show and all episodes for each season
+        int count = 0;
+        int maxTries = 3;
+        List<Season> seasons;
+        while (true) {
+            try {
+                seasons = traktV2.seasons().summary(String.format(Locale.ENGLISH, "%d", showEntity.getTrakt_id()), Extended.FULL).execute().body();
+                break;
+            } catch (IOException e) {
+                // handle exception
+                if (++count == maxTries) try {
+                    throw e;
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                    Log.e("sync", "couldn't get seasons");
+                }
+            }
+        }
+        if (seasons != null) {
+            int skipped = 0;
+            for (Season season : seasons) {
+                // skip the seasons where we have all episodes already
+                    /*if (season.aired_episodes == episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(showEntity.getId()), EpisodeEntityDao.Properties.Season.eq(season.number)).count()) {
+                        continue;
+                    }*/
+                // skip specials
+                if (season.number == 0) {
+                    skipped = 1;
+                    continue;
+                }
+                count = 0;
+                maxTries = 3;
+                List<Episode> episodes;
+                while (true) {
+                    try {
+                        episodes = traktV2.seasons().season(String.format(Locale.ENGLISH, "%d", showEntity.getTrakt_id()), season.number, Extended.FULLIMAGES).execute().body();
+                        break;
+                    } catch (IOException e) {
+                        // handle exception
+                        if (++count == maxTries) try {
+                            throw e;
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                            Log.e("sync", "couldn't get episodes");
+                        }
+                    }
+                }
+                if (episodes != null) {
+                    for (Episode episode : episodes) {
+                        List<EpisodeEntity> alreadyHave = episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(showEntity.getId()), EpisodeEntityDao.Properties.Season.eq(season.number),
+                                EpisodeEntityDao.Properties.Ep_number.eq(episode.number)).list();
+                        if (alreadyHave.size() != 1) {
+                            EpisodeEntity newEpisode = getEpisodeEntity(episode, showEntity.getId());
+                            // add oauth needed columns
+                            episodesToInsert.add(newEpisode);
+                        } else {
+                            EpisodeEntity existingEpisode = alreadyHave.get(0);
+                            // update existingEpisode with new oauth needed columns
+                            if (existingEpisode.getEp_name() == null || existingEpisode.getEp_description() == null || existingEpisode.getPercent_heart() == null) {
+                                EpisodeEntity episodeEntity = getEpisodeEntity(episode, showEntity.getId());
+                                existingEpisode.setEp_name(episodeEntity.getEp_name());
+                                existingEpisode.setEp_description(episodeEntity.getEp_description());
+                                existingEpisode.setPercent_heart(episodeEntity.getPercent_heart());
+                                existingEpisode.setPoster_url(episodeEntity.getPoster_url());
+                                episodeEntityDao.update(existingEpisode);
+                            }
+                        }
+                    }
+                }
+            }
+            showEntity.setSeasons(seasons.size() - skipped);
+            showEntity.update();
+        }
     }
 
     private static ShowEntity getEntityFromMyShow(BaseShow baseShow, Stats stats) {
@@ -361,12 +418,12 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             return new ShowEntity(null, show.ids.trakt, show.title, "genres: ", show.overview,
                     0, show.rating != null ? (int)(show.rating * 10) : 0,
                     show.images.poster.thumb, show.images.fanart.medium, show.year, stats.watchers.longValue(), stats.plays.longValue(),
-                    false, null, false, null, false, null, true, true);
+                    false, null, false, null, false, null, true);
         } else {
             return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + show.genres.toString().replace("[", "").replace("]", ""), show.overview,
                     0, show.rating != null ? (int)(show.rating * 10) : 0,
                     show.images.poster.thumb, show.images.fanart.medium, show.year, stats.watchers.longValue(), stats.plays.longValue(),
-                    false, null, false, null, false, null, true, true);
+                    false, null, false, null, false, null, true);
         }
     }
 
@@ -375,18 +432,18 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             return new ShowEntity(null, show.ids.trakt, show.title, "genres: ", show.overview,
                     0, show.rating != null ? (int)(show.rating * 10) : 0,
                     show.images.poster.thumb, show.images.fanart.medium, show.year, stats.watchers.longValue(), stats.plays.longValue(),
-                    false, null, false, null, true, i, true, false);
+                    false, null, false, null, true, i, false);
         } else {
             return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + show.genres.toString().replace("[", "").replace("]", ""), show.overview,
                     0, show.rating != null ? (int)(show.rating * 10) : 0,
                     show.images.poster.thumb, show.images.fanart.medium, show.year, stats.watchers.longValue(), stats.plays.longValue(),
-                    false, null, false, null, true, i, true, false);
+                    false, null, false, null, true, i, false);
         }
     }
 
     static EpisodeEntity getEpisodeEntity(Episode episode, Long id) {
         return new EpisodeEntity(null, id, episode.season, episode.title, episode.number, episode.overview,
-                false, episode.rating != null ? (int)(episode.rating * 10) : 0, true, episode.images.screenshot.medium);
+                episode.rating != null ? (int)(episode.rating * 10) : 0, episode.images.screenshot.medium);
     }
 
     private static ShowEntity getEntityFromPopularShow(Show show, int i, Stats stats) {
@@ -394,12 +451,12 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             return new ShowEntity(null, show.ids.trakt, show.title, "genres: ", show.overview,
                     0, show.rating != null ? (int)(show.rating * 10) : 0,
                     show.images.poster.thumb, show.images.fanart.medium, show.year, stats.watchers.longValue(), stats.plays.longValue(),
-                    false, null, true, i, false, null, true, false);
+                    false, null, true, i, false, null, false);
         } else {
             return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + show.genres.toString().replace("[", "").replace("]", ""), show.overview,
                     0, show.rating != null ? (int)(show.rating * 10) : 0,
                     show.images.poster.thumb, show.images.fanart.medium, show.year, stats.watchers.longValue(), stats.plays.longValue(),
-                    false, null, true, i, false, null, true, false);
+                    false, null, true, i, false, null, false);
         }
     }
 
@@ -408,12 +465,12 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             return new ShowEntity(null, show.ids.trakt, show.title, "genres: ", show.overview,
                     0, show.rating != null ? (int)(show.rating * 10) : 0,
                     show.images.poster.thumb, show.images.fanart.medium, show.year, stats.watchers.longValue(), stats.plays.longValue(),
-                    true, i, false, null, false, null, true, false);
+                    true, i, false, null, false, null, false);
         } else {
             return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + show.genres.toString().replace("[", "").replace("]", ""), show.overview,
                     0, show.rating != null ? (int)(show.rating * 10) : 0,
                     show.images.poster.thumb, show.images.fanart.medium, show.year, stats.watchers.longValue(), stats.plays.longValue(),
-                    true, i, false, null, false, null, true, false);
+                    true, i, false, null, false, null, false);
         }
     }
 }

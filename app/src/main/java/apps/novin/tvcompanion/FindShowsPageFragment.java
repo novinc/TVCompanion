@@ -176,12 +176,12 @@ public class FindShowsPageFragment extends Fragment {
                                                 showEntity = new ShowEntity(null, result.show.ids.trakt, result.show.title, "genres:", result.show.overview,
                                                         0, 0, result.show.images.poster.thumb, result.show.images.fanart.medium,
                                                         result.show.year, null, null,
-                                                        false, null, false, null, false, null, false, false);
+                                                        false, null, false, null, false, null, false);
                                             } else {
                                                 showEntity = new ShowEntity(null, result.show.ids.trakt, result.show.title, "genres: " + result.show.genres.toString(), result.show.overview,
                                                         0, 0, result.show.images.poster.thumb, result.show.images.fanart.medium,
                                                         result.show.year, null, null,
-                                                        false, null, false, null, false, null, false, false);
+                                                        false, null, false, null, false, null, false);
                                             }
                                             showEntities.add(showEntity);
                                             showEntityDao.insert(showEntity);

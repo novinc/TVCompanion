@@ -12,9 +12,7 @@ public class EpisodeEntity implements java.io.Serializable {
     private String ep_name;
     private int ep_number;
     private String ep_description;
-    private boolean watched;
     private Integer percent_heart;
-    private boolean synced;
     private String poster_url;
 
     public EpisodeEntity() {
@@ -24,16 +22,14 @@ public class EpisodeEntity implements java.io.Serializable {
         this.id = id;
     }
 
-    public EpisodeEntity(Long id, long show_id, int season, String ep_name, int ep_number, String ep_description, boolean watched, Integer percent_heart, boolean synced, String poster_url) {
+    public EpisodeEntity(Long id, long show_id, int season, String ep_name, int ep_number, String ep_description, Integer percent_heart, String poster_url) {
         this.id = id;
         this.show_id = show_id;
         this.season = season;
         this.ep_name = ep_name;
         this.ep_number = ep_number;
         this.ep_description = ep_description;
-        this.watched = watched;
         this.percent_heart = percent_heart;
-        this.synced = synced;
         this.poster_url = poster_url;
     }
 
@@ -85,28 +81,12 @@ public class EpisodeEntity implements java.io.Serializable {
         this.ep_description = ep_description;
     }
 
-    public boolean getWatched() {
-        return watched;
-    }
-
-    public void setWatched(boolean watched) {
-        this.watched = watched;
-    }
-
     public Integer getPercent_heart() {
         return percent_heart;
     }
 
     public void setPercent_heart(Integer percent_heart) {
         this.percent_heart = percent_heart;
-    }
-
-    public boolean getSynced() {
-        return synced;
-    }
-
-    public void setSynced(boolean synced) {
-        this.synced = synced;
     }
 
     public String getPoster_url() {

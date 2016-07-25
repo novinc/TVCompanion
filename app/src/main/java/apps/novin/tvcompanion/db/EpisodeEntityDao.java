@@ -32,10 +32,8 @@ public class EpisodeEntityDao extends AbstractDao<EpisodeEntity, Long> {
         public final static Property Ep_name = new Property(3, String.class, "ep_name", false, "EP_NAME");
         public final static Property Ep_number = new Property(4, int.class, "ep_number", false, "EP_NUMBER");
         public final static Property Ep_description = new Property(5, String.class, "ep_description", false, "EP_DESCRIPTION");
-        public final static Property Watched = new Property(6, boolean.class, "watched", false, "WATCHED");
-        public final static Property Percent_heart = new Property(7, Integer.class, "percent_heart", false, "PERCENT_HEART");
-        public final static Property Synced = new Property(8, boolean.class, "synced", false, "SYNCED");
-        public final static Property Poster_url = new Property(9, String.class, "poster_url", false, "POSTER_URL");
+        public final static Property Percent_heart = new Property(6, Integer.class, "percent_heart", false, "PERCENT_HEART");
+        public final static Property Poster_url = new Property(7, String.class, "poster_url", false, "POSTER_URL");
     };
 
     private Query<EpisodeEntity> showEntity_EpisodeEntityListQuery;
@@ -58,10 +56,8 @@ public class EpisodeEntityDao extends AbstractDao<EpisodeEntity, Long> {
                 "\"EP_NAME\" TEXT," + // 3: ep_name
                 "\"EP_NUMBER\" INTEGER NOT NULL ," + // 4: ep_number
                 "\"EP_DESCRIPTION\" TEXT," + // 5: ep_description
-                "\"WATCHED\" INTEGER NOT NULL ," + // 6: watched
-                "\"PERCENT_HEART\" INTEGER," + // 7: percent_heart
-                "\"SYNCED\" INTEGER NOT NULL ," + // 8: synced
-                "\"POSTER_URL\" TEXT);"); // 9: poster_url
+                "\"PERCENT_HEART\" INTEGER," + // 6: percent_heart
+                "\"POSTER_URL\" TEXT);"); // 7: poster_url
     }
 
     /** Drops the underlying database table. */
@@ -92,17 +88,15 @@ public class EpisodeEntityDao extends AbstractDao<EpisodeEntity, Long> {
         if (ep_description != null) {
             stmt.bindString(6, ep_description);
         }
-        stmt.bindLong(7, entity.getWatched() ? 1L: 0L);
  
         Integer percent_heart = entity.getPercent_heart();
         if (percent_heart != null) {
-            stmt.bindLong(8, percent_heart);
+            stmt.bindLong(7, percent_heart);
         }
-        stmt.bindLong(9, entity.getSynced() ? 1L: 0L);
  
         String poster_url = entity.getPoster_url();
         if (poster_url != null) {
-            stmt.bindString(10, poster_url);
+            stmt.bindString(8, poster_url);
         }
     }
 
@@ -122,10 +116,8 @@ public class EpisodeEntityDao extends AbstractDao<EpisodeEntity, Long> {
             cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3), // ep_name
             cursor.getInt(offset + 4), // ep_number
             cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5), // ep_description
-            cursor.getShort(offset + 6) != 0, // watched
-            cursor.isNull(offset + 7) ? null : cursor.getInt(offset + 7), // percent_heart
-            cursor.getShort(offset + 8) != 0, // synced
-            cursor.isNull(offset + 9) ? null : cursor.getString(offset + 9) // poster_url
+            cursor.isNull(offset + 6) ? null : cursor.getInt(offset + 6), // percent_heart
+            cursor.isNull(offset + 7) ? null : cursor.getString(offset + 7) // poster_url
         );
         return entity;
     }
@@ -139,10 +131,8 @@ public class EpisodeEntityDao extends AbstractDao<EpisodeEntity, Long> {
         entity.setEp_name(cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3));
         entity.setEp_number(cursor.getInt(offset + 4));
         entity.setEp_description(cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5));
-        entity.setWatched(cursor.getShort(offset + 6) != 0);
-        entity.setPercent_heart(cursor.isNull(offset + 7) ? null : cursor.getInt(offset + 7));
-        entity.setSynced(cursor.getShort(offset + 8) != 0);
-        entity.setPoster_url(cursor.isNull(offset + 9) ? null : cursor.getString(offset + 9));
+        entity.setPercent_heart(cursor.isNull(offset + 6) ? null : cursor.getInt(offset + 6));
+        entity.setPoster_url(cursor.isNull(offset + 7) ? null : cursor.getString(offset + 7));
      }
     
     /** @inheritdoc */

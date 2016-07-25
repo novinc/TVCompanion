@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -24,6 +25,7 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.AppCompatDialogFragment;
 import android.support.v7.widget.Toolbar;
+import android.test.mock.MockApplication;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -143,10 +145,12 @@ public class MainActivity extends AppCompatActivity
         super.onStop();
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
+    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void dataChanged(DatabaseUpdatedEvent e) {
         progressBar.setVisibility(View.INVISIBLE);
-        make.dismiss();
+        if (make != null) {
+            make.dismiss();
+        }
         Snackbar.make(contentFragment, "Sync complete", Snackbar.LENGTH_LONG).show();
     }
 
@@ -252,7 +256,12 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.action_refresh) {
-            ContentResolver.requestSync(mAccount, AUTHORITY, Bundle.EMPTY);
+            AsyncTask.execute(new Runnable() {
+                @Override
+                public void run() {
+                    SyncAdapter.syncShows(null, ((App) getApplication()).getDaoSession().getShowEntityDao(), getApplicationContext(), false);
+                }
+            });
             progressBar.setVisibility(View.VISIBLE);
             make = Snackbar.make(contentFragment, "Sync in progress, this may take a minute", Snackbar.LENGTH_INDEFINITE);
             make.show();
@@ -282,10 +291,20 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_my_shows) {
             fragment = new MyShowsFragment();
             title = getString(R.string.nav_my_shows);
+        } else if (id == R.id.action_refresh) {
+            ContentResolver.requestSync(mAccount, AUTHORITY, Bundle.EMPTY);
+            progressBar.setVisibility(View.VISIBLE);
+            make = Snackbar.make(contentFragment, "Full sync in progress, this may take a long time. Feel free to close the app and come back later", Snackbar.LENGTH_INDEFINITE);
+            make.show();
+            if (!isDrawerLocked) {
+                DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+                drawer.closeDrawer(GravityCompat.START);
+            }
+            return true;
         } else if (id == R.id.nav_settings) {
-
+            return false;
         } else if (id == R.id.nav_about) {
-
+            return false;
         }
 
         getSupportFragmentManager().beginTransaction()

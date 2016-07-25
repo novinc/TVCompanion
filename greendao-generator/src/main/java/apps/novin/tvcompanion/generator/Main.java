@@ -31,7 +31,6 @@ public class Main {
         show.addIntProperty("most_popular_pos").unique();
         show.addBooleanProperty("recommendation").notNull();
         show.addIntProperty("recommendation_pos").unique();
-        show.addBooleanProperty("synced").notNull();
         show.addBooleanProperty("my_show").notNull();
 
         Entity episode = schema.addEntity("EpisodeEntity");
@@ -43,9 +42,7 @@ public class Main {
         episode.addStringProperty("ep_name");
         episode.addIntProperty("ep_number").notNull();
         episode.addStringProperty("ep_description");
-        episode.addBooleanProperty("watched").notNull();
         episode.addIntProperty("percent_heart");
-        episode.addBooleanProperty("synced").notNull();
         episode.addStringProperty("poster_url");
 
         show.addToMany(episode, epShowId);

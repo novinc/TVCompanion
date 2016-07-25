@@ -52,7 +52,8 @@
     <string name="genre_transition">genre transition</string>
     <string name="seasons_format">"%1$d seasons"</string>
     <string name="log_in">Log In</string>
-    <string name="text_more_info">To see episodes, rating, genres, and view stats click the add button and come back after a sync. You can then remove the show if desired by clicking the check mark</string>
+    <string name="text_more_info">To see episodes, rating, genres, and view stats click the add button. You can click the chackmark to remove the show afterwards if desired</string>
+    <string name="full_sync">Full Sync</string>
 
 
 </resources>
