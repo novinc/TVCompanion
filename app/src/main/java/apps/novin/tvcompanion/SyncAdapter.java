@@ -3,7 +3,6 @@ package apps.novin.tvcompanion;
 import android.accounts.Account;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SyncResult;
@@ -16,10 +15,7 @@ import com.uwetrottmann.trakt5.entities.BaseShow;
 import com.uwetrottmann.trakt5.entities.Episode;
 import com.uwetrottmann.trakt5.entities.Season;
 import com.uwetrottmann.trakt5.entities.Show;
-import com.uwetrottmann.trakt5.entities.ShowIds;
 import com.uwetrottmann.trakt5.entities.Stats;
-import com.uwetrottmann.trakt5.entities.SyncItems;
-import com.uwetrottmann.trakt5.entities.SyncShow;
 import com.uwetrottmann.trakt5.entities.TrendingShow;
 import com.uwetrottmann.trakt5.enums.Extended;
 
@@ -37,7 +33,7 @@ import apps.novin.tvcompanion.db.ShowEntity;
 import apps.novin.tvcompanion.db.ShowEntityDao;
 
 /**
- * Created by ncnov on 7/17/2016.
+ * Syncs shows then episodes, also provides static helper methods
  */
 public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
@@ -55,13 +51,15 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     @Override
     public void onPerformSync(Account account, Bundle bundle, String s, ContentProviderClient contentProviderClient, SyncResult syncResult) {
         Log.d("sync adapter", "onPerformSync called authority: " + s);
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        preferences.edit().putBoolean("syncing", true).apply();
 
         TraktV2 traktV2 = new TraktV2(BuildConfig.API_KEY, BuildConfig.CLIENT_SECRET, "tvcompanion.novin.apps://oauthredirect");
         ShowEntityDao showEntityDao = mDaoSession.getShowEntityDao();
         EpisodeEntityDao episodeEntityDao = mDaoSession.getEpisodeEntityDao();
 
         // gets trending and popular shows, along with recommendations and my shows if oauth
-        syncShows(traktV2, showEntityDao, getContext(), true);
+        syncShows(preferences, traktV2, showEntityDao, getContext(), true);
 
         // remove unused shows
         removeUnusedShows(showEntityDao, episodeEntityDao);
@@ -73,13 +71,19 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         episodeEntityDao.insertInTx(episodesToInsert);
         Log.d("sync", "episodes sync complete");
         EventBus.getDefault().postSticky(new DatabaseUpdatedEvent());
+        preferences.edit().putBoolean("syncing", false).apply();
     }
 
-    public static void syncShows(TraktV2 traktV2, ShowEntityDao showEntityDao, Context context, boolean fromSync) {
+    public static void syncShows(SharedPreferences preferences, TraktV2 traktV2, ShowEntityDao showEntityDao, Context context, boolean fromSync) {
         if (traktV2 == null) {
             traktV2 = new TraktV2(BuildConfig.API_KEY, BuildConfig.CLIENT_SECRET, "tvcompanion.novin.apps://oauthredirect");
         }
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        if (preferences == null) {
+            preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        }
+        if (!fromSync) {
+            preferences.edit().putBoolean("syncing", true).apply();
+        }
         String accessToken = preferences.getString("access_token", null);
         boolean oauth = false;
         if (accessToken != null) {
@@ -144,6 +148,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         Log.d("sync", "shows sync complete");
         if (!fromSync) {
             EventBus.getDefault().postSticky(new DatabaseUpdatedEvent());
+            preferences.edit().putBoolean("syncing", false).apply();
         }
     }
 
@@ -443,7 +448,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     static EpisodeEntity getEpisodeEntity(Episode episode, Long id) {
         return new EpisodeEntity(null, id, episode.season, episode.title, episode.number, episode.overview,
-                episode.rating != null ? (int)(episode.rating * 10) : 0, episode.images.screenshot.medium);
+                episode.rating != null ? (int)(episode.rating * 10) : 0, episode.images.screenshot.full);
     }
 
     private static ShowEntity getEntityFromPopularShow(Show show, int i, Stats stats) {

@@ -2,14 +2,23 @@ package apps.novin.tvcompanion;
 
 
 import android.os.Bundle;
+import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -19,6 +28,8 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.List;
 
 import apps.novin.tvcompanion.db.ShowEntity;
@@ -31,6 +42,17 @@ import butterknife.ButterKnife;
  * A simple {@link Fragment} subclass.
  */
 public class MyShowsFragment extends Fragment {
+
+    static final int AZ = 0;
+    static final int RATING = 1;
+    static final int NEW_OLD = 2;
+    static final int OLD_NEW = 3;
+
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({AZ, RATING, NEW_OLD, OLD_NEW})
+    @interface SortMode {}
+    private static final String SORT_MODE = "tab";
+    private @SortMode int sortMode;
 
     @BindView(R.id.my_shows_list_view)
     RecyclerView mRecyclerView;
@@ -54,11 +76,41 @@ public class MyShowsFragment extends Fragment {
     }
 
     @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.my_shows_menu, menu);
+        MenuItem item = menu.findItem(R.id.sort_by);
+        Spinner spinner = (Spinner) MenuItemCompat.getActionView(item);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(((AppCompatActivity) getActivity()).getSupportActionBar().getThemedContext(), R.array.sort_options, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter); // set the adapter to provide layout of rows and content
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                if (i == 0) { // A-Z
+                    sortMode = AZ;
+                } else if (i == 1) { // rating
+                    sortMode = RATING;
+                } else if (i == 2) { // new - old
+                    sortMode = NEW_OLD;
+                } else if (i == 3) { // old - new
+                    sortMode = OLD_NEW;
+                }
+                dataChange(null);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+    }
+
+    @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         mLayoutManager = new GridLayoutManager(getContext(), getContext().getResources().getInteger(R.integer.my_shows_span));
         mRecyclerView.setLayoutManager(mLayoutManager);
-        List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.My_show.eq(true)).list();
+        List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.My_show.eq(true)).orderAsc(ShowEntityDao.Properties.Name).list();
         mAdapter = new MyAdapter(list);
         mRecyclerView.setAdapter(mAdapter);
     }
@@ -77,7 +129,16 @@ public class MyShowsFragment extends Fragment {
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void dataChange(DatabaseUpdatedEvent event) {
-        List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.My_show.eq(true)).list();
+        List<ShowEntity> list = null;
+        if (sortMode == AZ) {
+            list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.My_show.eq(true)).orderAsc(ShowEntityDao.Properties.Name).list();
+        } else if (sortMode == RATING) {
+            list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.My_show.eq(true)).orderDesc(ShowEntityDao.Properties.Percent_heart).list();
+        } else if (sortMode == NEW_OLD) {
+            list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.My_show.eq(true)).orderDesc(ShowEntityDao.Properties.Year).list();
+        } else if (sortMode == OLD_NEW) {
+            list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.My_show.eq(true)).orderAsc(ShowEntityDao.Properties.Year).list();
+        }
         mAdapter.setData(list);
         EventBus.getDefault().removeAllStickyEvents();
     }

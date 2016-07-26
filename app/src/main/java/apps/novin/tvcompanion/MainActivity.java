@@ -11,6 +11,7 @@ import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -57,6 +58,8 @@ public class MainActivity extends AppCompatActivity
 
     Snackbar make;
 
+    boolean syncing = false;
+
     // The authority for the sync adapter's content provider
     public static final String AUTHORITY = "apps.novin.tvcompanion.db.provider";
     // An account type, in the form of a domain name
@@ -68,7 +71,7 @@ public class MainActivity extends AppCompatActivity
 
     // Sync interval constants
     public static final long SECONDS_PER_MINUTE = 60L;
-    public static final long SYNC_INTERVAL_IN_MINUTES = 120L;
+    public static final long SYNC_INTERVAL_IN_MINUTES = 1440L; // once a day
     public static final long SYNC_INTERVAL =
             SYNC_INTERVAL_IN_MINUTES *
                     SECONDS_PER_MINUTE;
@@ -148,9 +151,10 @@ public class MainActivity extends AppCompatActivity
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void dataChanged(DatabaseUpdatedEvent e) {
         progressBar.setVisibility(View.INVISIBLE);
-        if (make != null) {
+        if (make != null && make.isShown()) {
             make.dismiss();
         }
+        syncing = false;
         Snackbar.make(contentFragment, "Sync complete", Snackbar.LENGTH_LONG).show();
         EventBus.getDefault().removeAllStickyEvents();
     }
@@ -212,9 +216,30 @@ public class MainActivity extends AppCompatActivity
                 progressBar.setVisibility(View.VISIBLE);
                 make = Snackbar.make(contentFragment, "Full sync in progress, this may take a long time. Feel free to close the app and come back later", Snackbar.LENGTH_INDEFINITE);
                 make.show();
+                syncing = true;
                 getIntent().removeExtra("from_login");
             }
         }
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        syncing = preferences.getBoolean("syncing", false);
+        if (!syncing && make != null && make.isShown()) {
+            progressBar.setVisibility(View.INVISIBLE);
+            make.dismiss();
+            Snackbar.make(contentFragment, "Sync complete", Snackbar.LENGTH_LONG).show();
+            EventBus.getDefault().removeAllStickyEvents();
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+        super.onSaveInstanceState(outState, outPersistentState);
+        outState.putBoolean("syncing", syncing);
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState, PersistableBundle persistentState) {
+        super.onRestoreInstanceState(savedInstanceState, persistentState);
+        syncing = savedInstanceState.getBoolean("syncing", false);
     }
 
     @Override
@@ -271,13 +296,16 @@ public class MainActivity extends AppCompatActivity
             AsyncTask.execute(new Runnable() {
                 @Override
                 public void run() {
-                    SyncAdapter.syncShows(null, ((App) getApplication()).getDaoSession().getShowEntityDao(), getApplicationContext(), false);
+                    SyncAdapter.syncShows(null, null, ((App) getApplication()).getDaoSession().getShowEntityDao(), getApplicationContext(), false);
                 }
             });
             progressBar.setVisibility(View.VISIBLE);
             make = Snackbar.make(contentFragment, "Sync in progress, this may take a minute", Snackbar.LENGTH_INDEFINITE);
             make.show();
+            syncing = true;
             return true;
+        } else if (id == R.id.action_search) {
+            return false;
         }
 
         return super.onOptionsItemSelected(item);
@@ -308,6 +336,7 @@ public class MainActivity extends AppCompatActivity
             progressBar.setVisibility(View.VISIBLE);
             make = Snackbar.make(contentFragment, "Full sync in progress, this may take a long time. Feel free to close the app and come back later", Snackbar.LENGTH_INDEFINITE);
             make.show();
+            syncing = true;
             if (!isDrawerLocked) {
                 DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
                 drawer.closeDrawer(GravityCompat.START);

@@ -292,10 +292,10 @@ public class ShowDetailActivity extends AppCompatActivity {
                                                     }
                                                 }
                                             });
-                                            List<EpisodeEntity> episodesToInsert = new ArrayList<>();
-                                            SyncAdapter.getEpisodesFor(showEntity, traktV2, episodeEntityDao, episodesToInsert);
-                                            episodeEntityDao.insertInTx(episodesToInsert);
                                         }
+                                        List<EpisodeEntity> episodesToInsert = new ArrayList<>();
+                                        SyncAdapter.getEpisodesFor(showEntity, traktV2, episodeEntityDao, episodesToInsert);
+                                        episodeEntityDao.insertInTx(episodesToInsert);
                                         showEntity.setMy_show(true);
                                         for (EpisodeEntity episodeEntity : showEntity.getEpisodeEntityList()) {
                                             episodeEntityDao.update(episodeEntity);
