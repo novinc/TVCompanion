@@ -1,18 +1,16 @@
 package apps.novin.tvcompanion;
 
-import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
 import com.uwetrottmann.trakt5.TraktV2;
-import com.uwetrottmann.trakt5.TraktV2Authenticator;
 import com.uwetrottmann.trakt5.entities.AccessToken;
 
 import org.apache.oltu.oauth2.client.request.OAuthClientRequest;

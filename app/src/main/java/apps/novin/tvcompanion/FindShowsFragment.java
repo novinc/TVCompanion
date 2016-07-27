@@ -1,6 +1,8 @@
 package apps.novin.tvcompanion;
 
 
+import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
@@ -8,6 +10,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -34,6 +37,8 @@ public class FindShowsFragment extends Fragment {
     @BindView(R.id.view_pager)
     ViewPager mViewPager;
 
+    private float elevation;
+
     public FindShowsFragment() {
         // Required empty public constructor
     }
@@ -45,6 +50,23 @@ public class FindShowsFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_find_shows, container, false);
         ButterKnife.bind(this, view);
         return view;
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            elevation = getActivity().findViewById(R.id.appbar).getElevation();
+            getActivity().findViewById(R.id.appbar).setElevation(0);
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getActivity().findViewById(R.id.appbar).setElevation(elevation);
+        }
+        super.onDetach();
     }
 
     @Override

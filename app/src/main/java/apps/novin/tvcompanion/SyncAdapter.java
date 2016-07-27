@@ -17,6 +17,8 @@ import com.uwetrottmann.trakt5.entities.Season;
 import com.uwetrottmann.trakt5.entities.Show;
 import com.uwetrottmann.trakt5.entities.Stats;
 import com.uwetrottmann.trakt5.entities.TrendingShow;
+import com.uwetrottmann.trakt5.entities.User;
+import com.uwetrottmann.trakt5.entities.Username;
 import com.uwetrottmann.trakt5.enums.Extended;
 
 import org.greenrobot.eventbus.EventBus;
@@ -53,6 +55,10 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         Log.d("sync adapter", "onPerformSync called authority: " + s);
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
         preferences.edit().putBoolean("syncing", true).apply();
+        boolean firstTime = preferences.getBoolean("first_sync", true);
+        if (firstTime) {
+            preferences.edit().putBoolean("first_sync", false).apply();
+        }
 
         TraktV2 traktV2 = new TraktV2(BuildConfig.API_KEY, BuildConfig.CLIENT_SECRET, "tvcompanion.novin.apps://oauthredirect");
         ShowEntityDao showEntityDao = mDaoSession.getShowEntityDao();
@@ -60,6 +66,9 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
         // gets trending and popular shows, along with recommendations and my shows if oauth
         syncShows(preferences, traktV2, showEntityDao, getContext(), true);
+
+        // sync user
+        syncUser(traktV2, preferences);
 
         // remove unused shows
         removeUnusedShows(showEntityDao, episodeEntityDao);
@@ -70,8 +79,26 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
         episodeEntityDao.insertInTx(episodesToInsert);
         Log.d("sync", "episodes sync complete");
-        EventBus.getDefault().postSticky(new DatabaseUpdatedEvent());
         preferences.edit().putBoolean("syncing", false).apply();
+        if (!firstTime) {
+            EventBus.getDefault().postSticky(new DatabaseUpdatedEvent());
+        }
+    }
+
+    private void syncUser(TraktV2 traktV2, SharedPreferences preferences) {
+        User user = null;
+        try {
+            user = traktV2.users().profile(Username.ME, Extended.FULLIMAGES).execute().body();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (user != null) {
+            SharedPreferences.Editor edit = preferences.edit();
+            edit.putString("user_photo", user.images.avatar.full);
+            edit.putString("user_name", user.username);
+            edit.apply();
+        }
     }
 
     public static void syncShows(SharedPreferences preferences, TraktV2 traktV2, ShowEntityDao showEntityDao, Context context, boolean fromSync) {
@@ -90,7 +117,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             traktV2.accessToken(accessToken);
             oauth = true;
         }
-        Log.d("Sync", "oauth: " + oauth);
+        Log.d("sync", "oauth: " + oauth);
         List<BaseShow> myShows = null;
         List<Show> recommendations = null;
         List<TrendingShow> trendingShows;

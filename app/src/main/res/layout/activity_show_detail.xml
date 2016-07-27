@@ -20,7 +20,6 @@
             android:layout_height="match_parent"
             app:layout_scrollFlags="scroll|enterAlwaysCollapsed"
             android:fitsSystemWindows="true"
-            app:contentScrim="?attr/colorPrimary"
             app:expandedTitleMarginStart="48dp"
             app:expandedTitleMarginEnd="64dp">
 

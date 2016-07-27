@@ -27,6 +27,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.AppCompatDialogFragment;
 import android.support.v7.widget.Toolbar;
 import android.test.mock.MockApplication;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -34,6 +36,8 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -115,17 +119,6 @@ public class MainActivity extends AppCompatActivity
             mNavigationView.getMenu().performIdentifierAction(R.id.nav_recommendation, 0);
         }
         mAccount = createSyncAccount(this);
-        /*
-         * Turn on periodic syncing
-         */
-        ContentResolver.setIsSyncable(mAccount, AUTHORITY, 1);
-        ContentResolver.setSyncAutomatically(mAccount, AUTHORITY, true);
-
-        ContentResolver.addPeriodicSync(
-                mAccount,
-                AUTHORITY,
-                Bundle.EMPTY,
-                SYNC_INTERVAL);
     }
 
     @Override
@@ -139,6 +132,17 @@ public class MainActivity extends AppCompatActivity
             startActivity(intent);
             finish();
         }
+        /*
+         * Turn on periodic syncing
+         */
+        ContentResolver.setIsSyncable(mAccount, AUTHORITY, 1);
+        ContentResolver.setSyncAutomatically(mAccount, AUTHORITY, true);
+
+        ContentResolver.addPeriodicSync(
+                mAccount,
+                AUTHORITY,
+                Bundle.EMPTY,
+                SYNC_INTERVAL);
         EventBus.getDefault().register(this);
     }
 
@@ -155,6 +159,15 @@ public class MainActivity extends AppCompatActivity
             make.dismiss();
         }
         syncing = false;
+
+        ImageView profile = (ImageView) mNavigationView.getHeaderView(0).findViewById(R.id.profile);
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        String userPhoto = preferences.getString("user_photo", null);
+        Log.d("main", userPhoto);
+        Glide.with(this).load(userPhoto).centerCrop().error(R.drawable.ic_close_black).into(profile);
+        ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.user_name)).setText(preferences.getString("user_name", null));
+        ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.last_synced)).setText("last synced now");
+
         Snackbar.make(contentFragment, "Sync complete", Snackbar.LENGTH_LONG).show();
         EventBus.getDefault().removeAllStickyEvents();
     }
@@ -191,6 +204,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         if (screenType.equals(ScreenType.BIG_TABLET) || screenType.equals(ScreenType.SMALL_TABLET_LAND)) {
             mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_OPEN);
             mDrawerLayout.setScrimColor(0x00000000);
@@ -208,6 +222,23 @@ public class MainActivity extends AppCompatActivity
             isDrawerLocked = false;
             mDrawerToggle.syncState();
         }
+        if (mNavigationView.getHeaderCount() == 0) {
+            View header = mNavigationView.inflateHeaderView(R.layout.nav_header_main);
+            ImageView imageView = (ImageView) header.findViewById(R.id.profile);
+            if (imageView != null) {
+                Glide.with(this).load(preferences.getString("user_photo", null)).centerCrop().error(R.drawable.ic_close_black).into(imageView);
+            }
+            ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.user_name)).setText(preferences.getString("user_name", null));
+            ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.last_synced)).setText("last synced now");
+        } else {
+            View header = mNavigationView.getHeaderView(0);
+            ImageView imageView = (ImageView) header.findViewById(R.id.profile);
+            if (imageView != null) {
+                Glide.with(this).load(preferences.getString("user_photo", null)).centerCrop().error(R.drawable.ic_close_black).into(imageView);
+            }
+            ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.user_name)).setText(preferences.getString("user_name", null));
+            ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.last_synced)).setText("last synced now");
+        }
         if (getIntent() != null) {
             boolean fromLogin = getIntent().getBooleanExtra("from_login", false);
             if (fromLogin) {
@@ -220,7 +251,6 @@ public class MainActivity extends AppCompatActivity
                 getIntent().removeExtra("from_login");
             }
         }
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         syncing = preferences.getBoolean("syncing", false);
         if (!syncing && make != null && make.isShown()) {
             progressBar.setVisibility(View.INVISIBLE);
@@ -304,8 +334,6 @@ public class MainActivity extends AppCompatActivity
             make.show();
             syncing = true;
             return true;
-        } else if (id == R.id.action_search) {
-            return false;
         }
 
         return super.onOptionsItemSelected(item);
@@ -332,6 +360,7 @@ public class MainActivity extends AppCompatActivity
             fragment = new MyShowsFragment();
             title = getString(R.string.nav_my_shows);
         } else if (id == R.id.action_refresh) {
+            ContentResolver.cancelSync(mAccount, AUTHORITY);
             ContentResolver.requestSync(mAccount, AUTHORITY, Bundle.EMPTY);
             progressBar.setVisibility(View.VISIBLE);
             make = Snackbar.make(contentFragment, "Full sync in progress, this may take a long time. Feel free to close the app and come back later", Snackbar.LENGTH_INDEFINITE);
