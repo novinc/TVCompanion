@@ -2,6 +2,7 @@ package apps.novin.tvcompanion;
 
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -12,6 +13,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -56,8 +58,13 @@ public class FindShowsFragment extends Fragment {
     public void onAttach(Context context) {
         super.onAttach(context);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            elevation = getActivity().findViewById(R.id.appbar).getElevation();
-            getActivity().findViewById(R.id.appbar).setElevation(0);
+            if (getActivity().findViewById(R.id.appbar) != null) {
+                elevation = getActivity().findViewById(R.id.appbar).getElevation();
+                getActivity().findViewById(R.id.appbar).setElevation(0);
+            } else {
+                Resources r = getResources();
+                elevation = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, r.getDisplayMetrics());
+            }
         }
     }
 

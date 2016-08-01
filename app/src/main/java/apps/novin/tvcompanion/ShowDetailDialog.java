@@ -291,10 +291,10 @@ public class ShowDetailDialog extends DialogFragment {
                                                     }
                                                 }
                                             });
-                                            List<EpisodeEntity> episodesToInsert = new ArrayList<>();
-                                            SyncAdapter.getEpisodesFor(showEntity, traktV2, episodeEntityDao, episodesToInsert, true);
-                                            episodeEntityDao.insertInTx(episodesToInsert);
                                         }
+                                        List<EpisodeEntity> episodesToInsert = new ArrayList<>();
+                                        SyncAdapter.getEpisodesFor(showEntity, traktV2, episodeEntityDao, episodesToInsert, true);
+                                        episodeEntityDao.insertInTx(episodesToInsert);
                                         showEntity.setMy_show(true);
                                         for (EpisodeEntity episodeEntity : showEntity.getEpisodeEntityList()) {
                                             episodeEntityDao.update(episodeEntity);
@@ -304,8 +304,9 @@ public class ShowDetailDialog extends DialogFragment {
                                             @Override
                                             public void run() {
                                                 make.dismiss();
-                                                fab.setImageResource(R.drawable.ic_close_black);
+                                                fab.setImageResource(R.drawable.ic_check_black);
                                                 Snackbar.make(view, "Added show and all episodes to watched history", Snackbar.LENGTH_LONG).show();
+                                                updateSpinnerAndEpisodes(showEntity, episodeEntityDao);
                                             }
                                         });
                                         EventBus.getDefault().postSticky(new DatabaseUpdatedEvent());
@@ -323,37 +324,41 @@ public class ShowDetailDialog extends DialogFragment {
                         });
                     }
                 });
-
-                List<EpisodeEntity> all = episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(id)).orderAsc(EpisodeEntityDao.Properties.Season).list();
-                if (all.size() > 0) {
-                    final int seasonStart = all.get(0).getSeason();
-                    int numSeasons = showEntity.getSeasons();
-                    Log.d("details", "start " + seasonStart + " num " + numSeasons);
-                    List<String> seasons = new ArrayList<>(numSeasons);
-                    for (int i = seasonStart; i < numSeasons + seasonStart; i++) {
-                        seasons.add("season " + i);
-                    }
-                    ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, seasons);
-                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                    spinner.setAdapter(adapter);
-                    spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                        @Override
-                        public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                            List<EpisodeEntity> list = episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(id), EpisodeEntityDao.Properties.Season.eq(i + seasonStart)).orderAsc(EpisodeEntityDao.Properties.Ep_number).list();
-                            mAdapter.setData(list);
-                        }
-
-                        @Override
-                        public void onNothingSelected(AdapterView<?> adapterView) {
-
-                        }
-                    });
-                } else {
-                    spinner.setEnabled(false);
-                }
+                updateSpinnerAndEpisodes(showEntity, episodeEntityDao);
             }
         });
         return view;
+    }
+
+    public void updateSpinnerAndEpisodes(ShowEntity showEntity, final EpisodeEntityDao episodeEntityDao) {
+        List<EpisodeEntity> all = episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(id)).orderAsc(EpisodeEntityDao.Properties.Season).list();
+        if (all.size() > 0) {
+            final int seasonStart = all.get(0).getSeason();
+            int numSeasons = showEntity.getSeasons();
+            Log.d("details", "start " + seasonStart + " num " + numSeasons);
+            List<String> seasons = new ArrayList<>(numSeasons);
+            for (int i = seasonStart; i < numSeasons + seasonStart; i++) {
+                seasons.add("season " + i);
+            }
+            spinner.setEnabled(true);
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, seasons);
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinner.setAdapter(adapter);
+            spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                    List<EpisodeEntity> list = episodeEntityDao.queryBuilder().where(EpisodeEntityDao.Properties.Show_id.eq(id), EpisodeEntityDao.Properties.Season.eq(i + seasonStart)).orderAsc(EpisodeEntityDao.Properties.Ep_number).list();
+                    mAdapter.setData(list);
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> adapterView) {
+
+                }
+            });
+        } else {
+            spinner.setEnabled(false);
+        }
     }
 
     private String statFormat(Long stat) {
