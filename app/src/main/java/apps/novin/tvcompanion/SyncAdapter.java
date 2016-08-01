@@ -156,8 +156,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                     myShows = traktV2.sync().watchedShows(Extended.FULLIMAGES).execute().body();
                     recommendations = traktV2.recommendations().shows(Extended.FULLIMAGES).execute().body();
                 }
-                trendingShows = traktV2.shows().trending(1, 10, Extended.FULLIMAGES).execute().body();
-                popular = traktV2.shows().popular(1, 10, Extended.FULLIMAGES).execute().body();
+                trendingShows = traktV2.shows().trending(1, 40, Extended.FULLIMAGES).execute().body();
+                popular = traktV2.shows().popular(1, 40, Extended.FULLIMAGES).execute().body();
                 break;
             } catch (IOException e) {
                 // handle exception
