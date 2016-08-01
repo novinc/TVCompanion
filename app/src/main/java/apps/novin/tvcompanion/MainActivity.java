@@ -240,7 +240,6 @@ public class MainActivity extends AppCompatActivity
         if (getIntent() != null) {
             boolean fromLogin = getIntent().getBooleanExtra("from_login", false);
             if (fromLogin) {
-                ContentResolver.cancelSync(mAccount, AUTHORITY);
                 Bundle bundle = new Bundle();
                 bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
                 ContentResolver.requestSync(mAccount, AUTHORITY, bundle);

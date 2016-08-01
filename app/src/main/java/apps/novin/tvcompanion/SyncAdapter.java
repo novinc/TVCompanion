@@ -51,18 +51,36 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     @Override
+    public void onSyncCanceled() {
+        super.onSyncCanceled();
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        preferences.edit().putBoolean("syncing", false).apply();
+    }
+
+    @Override
     public void onPerformSync(Account account, Bundle bundle, String s, ContentProviderClient contentProviderClient, SyncResult syncResult) {
         Log.d("sync adapter", "onPerformSync called authority: " + s);
+
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-        boolean firstTime = preferences.getBoolean("first_sync", true);
-        if (firstTime) {
-            preferences.edit().putBoolean("first_sync", false).apply();
-        }
-        if (!firstTime) {
-            preferences.edit().putBoolean("syncing", true).apply();
-        }
 
         TraktV2 traktV2 = new TraktV2(BuildConfig.API_KEY, BuildConfig.CLIENT_SECRET, "tvcompanion.novin.apps://oauthredirect");
+
+        String accessToken = preferences.getString("access_token", null);
+        boolean oauth = false;
+        if (accessToken != null) {
+            traktV2.accessToken(accessToken);
+            oauth = true;
+        }
+
+        if (!oauth) {
+            Log.d("sync", "no oauth, cancelling");
+            return;
+        }
+
+        Log.d("sync", "oauth true, starting");
+
+        preferences.edit().putBoolean("syncing", true).apply();
+
         ShowEntityDao showEntityDao = mDaoSession.getShowEntityDao();
         EpisodeEntityDao episodeEntityDao = mDaoSession.getEpisodeEntityDao();
 
@@ -80,14 +98,10 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             getEpisodesFor(showEntity, traktV2, episodeEntityDao, episodesToInsert, false);
         }
         episodeEntityDao.insertInTx(episodesToInsert);
+
         Log.d("sync", "episodes sync complete");
-        if (!firstTime) {
-            Log.d("sync", "not first time, updating flags");
-            preferences.edit().putBoolean("syncing", false).apply();
-            EventBus.getDefault().postSticky(new DatabaseUpdatedEvent());
-        } else {
-            Log.d("sync", "first time");
-        }
+        preferences.edit().putBoolean("syncing", false).apply();
+        EventBus.getDefault().postSticky(new DatabaseUpdatedEvent());
     }
 
     private void syncUser(TraktV2 traktV2, SharedPreferences preferences) {
@@ -107,22 +121,26 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     public static void syncShows(SharedPreferences preferences, TraktV2 traktV2, ShowEntityDao showEntityDao, Context context, boolean fromSync) {
-        if (traktV2 == null) {
-            traktV2 = new TraktV2(BuildConfig.API_KEY, BuildConfig.CLIENT_SECRET, "tvcompanion.novin.apps://oauthredirect");
-        }
+        boolean oauth = false;
         if (preferences == null) {
             preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        }
+        if (traktV2 == null) {
+            traktV2 = new TraktV2(BuildConfig.API_KEY, BuildConfig.CLIENT_SECRET, "tvcompanion.novin.apps://oauthredirect");
+            String accessToken = preferences.getString("access_token", null);
+            if (accessToken != null) {
+                traktV2.accessToken(accessToken);
+                oauth = true;
+            }
+            Log.d("sync", "oauth: " + oauth);
+        } else {
+            if (traktV2.accessToken() != null) {
+                oauth = true;
+            }
         }
         if (!fromSync) {
             preferences.edit().putBoolean("syncing", true).apply();
         }
-        String accessToken = preferences.getString("access_token", null);
-        boolean oauth = false;
-        if (accessToken != null) {
-            traktV2.accessToken(accessToken);
-            oauth = true;
-        }
-        Log.d("sync", "oauth: " + oauth);
         List<BaseShow> myShows = null;
         List<Show> recommendations = null;
         List<TrendingShow> trendingShows;
