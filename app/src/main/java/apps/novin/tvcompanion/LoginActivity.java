@@ -62,8 +62,9 @@ public class LoginActivity extends AppCompatActivity {
                             Log.d("Login", "logged in successfully");
                             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                             intent.putExtra("from_login", true);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            setResult(RESULT_OK);
                             startActivity(intent);
-                            finish();
                         } else {
                             Log.d("Login", "FORGED. This shouldn't happen");
                         }
@@ -77,6 +78,6 @@ public class LoginActivity extends AppCompatActivity {
         OAuthClientRequest request = traktV2.buildAuthorizationRequest("Logged Out");
         Intent intent = new Intent(Intent.ACTION_VIEW,
                 Uri.parse(request.getLocationUri()));
-        startActivity(intent);
+        startActivityForResult(intent, 0);
     }
 }

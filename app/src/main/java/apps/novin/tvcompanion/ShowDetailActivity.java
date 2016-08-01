@@ -294,7 +294,7 @@ public class ShowDetailActivity extends AppCompatActivity {
                                             });
                                         }
                                         List<EpisodeEntity> episodesToInsert = new ArrayList<>();
-                                        SyncAdapter.getEpisodesFor(showEntity, traktV2, episodeEntityDao, episodesToInsert);
+                                        SyncAdapter.getEpisodesFor(showEntity, traktV2, episodeEntityDao, episodesToInsert, true);
                                         episodeEntityDao.insertInTx(episodesToInsert);
                                         showEntity.setMy_show(true);
                                         for (EpisodeEntity episodeEntity : showEntity.getEpisodeEntityList()) {

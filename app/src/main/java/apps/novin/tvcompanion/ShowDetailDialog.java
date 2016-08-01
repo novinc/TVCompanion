@@ -292,7 +292,7 @@ public class ShowDetailDialog extends DialogFragment {
                                                 }
                                             });
                                             List<EpisodeEntity> episodesToInsert = new ArrayList<>();
-                                            SyncAdapter.getEpisodesFor(showEntity, traktV2, episodeEntityDao, episodesToInsert);
+                                            SyncAdapter.getEpisodesFor(showEntity, traktV2, episodeEntityDao, episodesToInsert, true);
                                             episodeEntityDao.insertInTx(episodesToInsert);
                                         }
                                         showEntity.setMy_show(true);

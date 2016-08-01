@@ -129,8 +129,7 @@ public class MainActivity extends AppCompatActivity
         boolean loggedIn = preferences.getBoolean("loggedIn", false);
         if (!loggedIn) {
             Intent intent = new Intent(this, LoginActivity.class);
-            startActivity(intent);
-            finish();
+            startActivityForResult(intent, 1);
         }
         /*
          * Turn on periodic syncing
@@ -163,7 +162,6 @@ public class MainActivity extends AppCompatActivity
         ImageView profile = (ImageView) mNavigationView.getHeaderView(0).findViewById(R.id.profile);
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         String userPhoto = preferences.getString("user_photo", null);
-        Log.d("main", userPhoto);
         Glide.with(this).load(userPhoto).centerCrop().error(R.drawable.ic_close_black).into(profile);
         ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.user_name)).setText(preferences.getString("user_name", null));
         ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.last_synced)).setText("last synced now");
@@ -243,7 +241,10 @@ public class MainActivity extends AppCompatActivity
             boolean fromLogin = getIntent().getBooleanExtra("from_login", false);
             if (fromLogin) {
                 ContentResolver.cancelSync(mAccount, AUTHORITY);
-                ContentResolver.requestSync(mAccount, AUTHORITY, Bundle.EMPTY);
+                Bundle bundle = new Bundle();
+                bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+                ContentResolver.requestSync(mAccount, AUTHORITY, bundle);
+                preferences.edit().putBoolean("syncing", true).apply();
                 progressBar.setVisibility(View.VISIBLE);
                 make = Snackbar.make(contentFragment, "Full sync in progress, this may take a long time. Feel free to close the app and come back later", Snackbar.LENGTH_INDEFINITE);
                 make.show();
@@ -257,6 +258,10 @@ public class MainActivity extends AppCompatActivity
             make.dismiss();
             Snackbar.make(contentFragment, "Sync complete", Snackbar.LENGTH_LONG).show();
             EventBus.getDefault().removeAllStickyEvents();
+        } else if (syncing && make == null){
+            progressBar.setVisibility(View.VISIBLE);
+            make = Snackbar.make(contentFragment, "Still syncing, one second", Snackbar.LENGTH_INDEFINITE);
+            make.show();
         }
     }
 
