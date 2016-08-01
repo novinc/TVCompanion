@@ -200,6 +200,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         if (!fromSync) {
             EventBus.getDefault().postSticky(new DatabaseUpdatedEvent());
             preferences.edit().putBoolean("syncing", false).apply();
+            preferences.edit().putLong("sync_time", System.currentTimeMillis()).apply();
         }
     }
 
