@@ -54,6 +54,7 @@
     <string name="log_in">Log In</string>
     <string name="text_more_info">To see episodes, rating, genres, and view stats click the add button. You can click the chackmark to remove the show afterwards if desired</string>
     <string name="full_sync">Full Sync</string>
+    <string name="last_sync_format">last synced %1$d %2$s ago</string>
 
 
 </resources>

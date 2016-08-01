@@ -101,6 +101,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
         Log.d("sync", "episodes sync complete");
         preferences.edit().putBoolean("syncing", false).apply();
+        preferences.edit().putLong("sync_time", System.currentTimeMillis()).apply();
         EventBus.getDefault().postSticky(new DatabaseUpdatedEvent());
     }
 

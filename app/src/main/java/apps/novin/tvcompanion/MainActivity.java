@@ -164,10 +164,40 @@ public class MainActivity extends AppCompatActivity
         String userPhoto = preferences.getString("user_photo", null);
         Glide.with(this).load(userPhoto).centerCrop().error(R.drawable.ic_close_black).into(profile);
         ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.user_name)).setText(preferences.getString("user_name", null));
-        ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.last_synced)).setText("last synced now");
+        ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.last_synced)).setText(formatLastSync(preferences));
 
         Snackbar.make(contentFragment, "Sync complete", Snackbar.LENGTH_LONG).show();
         EventBus.getDefault().removeAllStickyEvents();
+    }
+
+    private String formatLastSync(SharedPreferences preferences) {
+        long now = System.currentTimeMillis();
+        long syncTime = preferences.getLong("sync_time", now);
+        long milliDif = now - syncTime;
+        String unit;
+        int num;
+        if (milliDif > 24 * 60 * 60 * 1000) {
+            num = Math.round(((Long) milliDif).floatValue() / (24*60*60*1000));
+            unit = "days";
+        } else if (milliDif > 60 * 60 * 1000) {
+            num = Math.round(((Long) milliDif).floatValue() / (60*60*1000));
+            unit = "hours";
+        } else if (milliDif > 60 * 1000) {
+            num = Math.round(((Long) milliDif).floatValue() / (60*1000));
+            unit = "minutes";
+        } else if (milliDif > 1000) {
+            num = Math.round(((Long) milliDif).floatValue() / (1000));
+            unit = "seconds";
+        } else if (milliDif != 0){
+            num = Math.round(milliDif);
+            unit = "milliseconds";
+        } else {
+            return "not synced yet";
+        }
+        if (num == 1) {
+            unit = unit.substring(0, unit.length() - 1);
+        }
+        return getString(R.string.last_sync_format, num, unit);
     }
 
     private static Account createSyncAccount(Context context) {
@@ -227,7 +257,7 @@ public class MainActivity extends AppCompatActivity
                 Glide.with(this).load(preferences.getString("user_photo", null)).centerCrop().error(R.drawable.ic_close_black).into(imageView);
             }
             ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.user_name)).setText(preferences.getString("user_name", null));
-            ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.last_synced)).setText("last synced now");
+            ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.last_synced)).setText(formatLastSync(preferences));
         } else {
             View header = mNavigationView.getHeaderView(0);
             ImageView imageView = (ImageView) header.findViewById(R.id.profile);
@@ -235,7 +265,7 @@ public class MainActivity extends AppCompatActivity
                 Glide.with(this).load(preferences.getString("user_photo", null)).centerCrop().error(R.drawable.ic_close_black).into(imageView);
             }
             ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.user_name)).setText(preferences.getString("user_name", null));
-            ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.last_synced)).setText("last synced now");
+            ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.last_synced)).setText(formatLastSync(preferences));
         }
         if (getIntent() != null) {
             boolean fromLogin = getIntent().getBooleanExtra("from_login", false);
