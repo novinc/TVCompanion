@@ -11,6 +11,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.uwetrottmann.trakt5.TraktV2;
+import com.uwetrottmann.trakt5.entities.AccessToken;
 import com.uwetrottmann.trakt5.entities.BaseShow;
 import com.uwetrottmann.trakt5.entities.Episode;
 import com.uwetrottmann.trakt5.entities.Season;
@@ -33,6 +34,7 @@ import apps.novin.tvcompanion.db.EpisodeEntity;
 import apps.novin.tvcompanion.db.EpisodeEntityDao;
 import apps.novin.tvcompanion.db.ShowEntity;
 import apps.novin.tvcompanion.db.ShowEntityDao;
+import retrofit2.Response;
 
 /**
  * Syncs shows then episodes, also provides static helper methods
@@ -84,11 +86,11 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         ShowEntityDao showEntityDao = mDaoSession.getShowEntityDao();
         EpisodeEntityDao episodeEntityDao = mDaoSession.getEpisodeEntityDao();
 
+        // sync user
+        syncUser(traktV2, preferences, getContext());
+
         // gets trending and popular shows, along with recommendations and my shows if oauth
         syncShows(preferences, traktV2, showEntityDao, getContext(), true);
-
-        // sync user
-        syncUser(traktV2, preferences);
 
         // remove unused shows
         removeUnusedShows(showEntityDao, episodeEntityDao);
@@ -105,10 +107,32 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         EventBus.getDefault().postSticky(new DatabaseUpdatedEvent());
     }
 
-    private void syncUser(TraktV2 traktV2, SharedPreferences preferences) {
+    private void syncUser(TraktV2 traktV2, SharedPreferences preferences, Context context) {
+        if (preferences == null) {
+            preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        }
+        if (traktV2 == null) {
+            traktV2 = new TraktV2(BuildConfig.API_KEY, BuildConfig.CLIENT_SECRET, "tvcompanion.novin.apps://oauthredirect");
+            String accessToken = preferences.getString("access_token", null);
+            if (accessToken != null) {
+                traktV2.accessToken(accessToken);
+            }
+        }
         User user = null;
         try {
-            user = traktV2.users().profile(Username.ME, Extended.FULLIMAGES).execute().body();
+            Response<User> execute = traktV2.users().profile(Username.ME, Extended.FULLIMAGES).execute();
+            if (execute.isSuccessful()) {
+                user = execute.body();
+            } else {
+                if (execute.code() == 401) {
+                    // authorization required, supply a valid OAuth access token
+                    newToken(traktV2, preferences);
+                    execute = traktV2.users().profile(Username.ME, Extended.FULLIMAGES).execute();
+                    if (execute.isSuccessful()) {
+                        user = execute.body();
+                    }
+                }
+            }
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -118,6 +142,33 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             edit.putString("user_photo", user.images.avatar.full);
             edit.putString("user_name", user.username);
             edit.apply();
+        }
+    }
+
+    private void newToken(TraktV2 traktV2, SharedPreferences preferences) {
+        traktV2.refreshToken(preferences.getString("refresh_token", null));
+        if (traktV2.refreshToken() != null) {
+            AccessToken token = null;
+            try {
+                token = traktV2.refreshAccessToken().body();
+            } catch (IOException e) {
+                try {
+                    token = traktV2.refreshAccessToken().body();
+                } catch (IOException e1) {
+                    try {
+                        token = traktV2.refreshAccessToken().body();
+                    } catch (IOException e2) {
+                        e2.printStackTrace();
+                    }
+                }
+            }
+            if (token != null) {
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.putString("access_token", token.access_token);
+                editor.putString("refresh_token", token.refresh_token);
+                editor.apply();
+                traktV2.accessToken(token.access_token);
+            }
         }
     }
 
@@ -466,7 +517,9 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                         } else {
                             EpisodeEntity existingEpisode = alreadyHave.get(0);
                             // update existingEpisode with new oauth needed columns
-                            if (existingEpisode.getEp_name() == null || existingEpisode.getEp_description() == null || existingEpisode.getPercent_heart() == null) {
+                            if (existingEpisode.getEp_name() == null || existingEpisode.getEp_description() == null
+                                    || existingEpisode.getPercent_heart() == null || existingEpisode.getPercent_heart() == 0
+                                    || existingEpisode.getPoster_url() == null) {
                                 EpisodeEntity episodeEntity = getEpisodeEntity(episode, showEntity.getId());
                                 existingEpisode.setEp_name(episodeEntity.getEp_name());
                                 existingEpisode.setEp_description(episodeEntity.getEp_description());

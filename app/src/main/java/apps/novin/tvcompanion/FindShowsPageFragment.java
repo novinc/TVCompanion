@@ -2,6 +2,7 @@ package apps.novin.tvcompanion;
 
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -9,6 +10,9 @@ import android.preference.PreferenceManager;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.AsyncTaskLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -49,7 +53,7 @@ import butterknife.ButterKnife;
  * Use the {@link FindShowsPageFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class FindShowsPageFragment extends Fragment {
+public class FindShowsPageFragment extends Fragment implements LoaderManager.LoaderCallbacks<List<ShowEntity>> {
 
     static final int TRENDING = 0;
     static final int MOST_POPULAR = 1;
@@ -200,22 +204,16 @@ public class FindShowsPageFragment extends Fragment {
         }
         mLayoutManager = new GridLayoutManager(getContext(), getContext().getResources().getInteger(R.integer.find_shows_span));
         mRecyclerView.setLayoutManager(mLayoutManager);
-        if (tabMode == TRENDING) {
-            List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.Trending.eq(true)).orderAsc(ShowEntityDao.Properties.Trending_pos).build().list();
-            mAdapter = new MyAdapter(list);
-        } else if (tabMode == MOST_POPULAR) {
-            List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.Most_popular.eq(true)).orderAsc(ShowEntityDao.Properties.Most_popular_pos).build().list();
-            mAdapter = new MyAdapter(list);
-        } else { // search
-            mAdapter = new MyAdapter(new ArrayList<ShowEntity>());
-        }
-        mRecyclerView.setAdapter(mAdapter);
+        getLoaderManager().initLoader(0, null, this).forceLoad();
     }
 
     @Override
     public void onStart() {
         super.onStart();
         EventBus.getDefault().register(this);
+        if (mAdapter == null || mAdapter.getItemCount() == 0) {
+            getLoaderManager().initLoader(0, null, this);
+        }
     }
 
     @Override
@@ -226,16 +224,27 @@ public class FindShowsPageFragment extends Fragment {
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void dataChange(DatabaseUpdatedEvent event) {
-        if (tabMode == TRENDING) {
-            List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.Trending.eq(true)).orderAsc(ShowEntityDao.Properties.Trending_pos).build().list();
-            mAdapter.setData(list);
-        } else if (tabMode == MOST_POPULAR) {
-            List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.Most_popular.eq(true)).orderAsc(ShowEntityDao.Properties.Most_popular_pos).build().list();
-            mAdapter.setData(list);
-        } else { // search
-
-        }
+        getLoaderManager().restartLoader(0, null, this).forceLoad();
         EventBus.getDefault().removeAllStickyEvents();
+    }
+
+    @Override
+    public Loader onCreateLoader(int id, Bundle args) {
+        mAdapter = new MyAdapter(new ArrayList<ShowEntity>(0));
+        mRecyclerView.setAdapter(mAdapter);
+        return new Loader(getContext(), tabMode, (App) getActivity().getApplication());
+    }
+
+    @Override
+    public void onLoadFinished(android.support.v4.content.Loader<List<ShowEntity>> loader, List<ShowEntity> data) {
+        if (mAdapter != null) {
+            mAdapter.setData(data);
+        }
+    }
+
+    @Override
+    public void onLoaderReset(android.support.v4.content.Loader<List<ShowEntity>> loader) {
+        mAdapter = null;
     }
 
     public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
@@ -317,6 +326,30 @@ public class FindShowsPageFragment extends Fragment {
         @Override
         public int getItemCount() {
             return mDataset.size();
+        }
+    }
+    public static class Loader extends AsyncTaskLoader<List<ShowEntity>> {
+
+        private int tabMode;
+        private App app;
+
+        public Loader(Context context, @TabMode int tabMode, App app) {
+            super(context);
+            this.tabMode = tabMode;
+            this.app = app;
+        }
+
+        @Override
+        public List<ShowEntity> loadInBackground() {
+            List<ShowEntity> list = new ArrayList<>(0);
+            if (tabMode == TRENDING) {
+                list = app.getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.Trending.eq(true)).orderAsc(ShowEntityDao.Properties.Trending_pos).build().list();
+            } else if (tabMode == MOST_POPULAR) {
+                list = app.getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.Most_popular.eq(true)).orderAsc(ShowEntityDao.Properties.Most_popular_pos).build().list();
+            } else { // search
+
+            }
+            return list;
         }
     }
 }

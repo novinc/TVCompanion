@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -24,6 +25,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -74,6 +76,8 @@ public class MainActivity extends AppCompatActivity
     public static final long SYNC_INTERVAL =
             SYNC_INTERVAL_IN_MINUTES *
                     SECONDS_PER_MINUTE;
+    private float elevation;
+    private float currentElevation;
 
     private enum ScreenType {
         PHONE, SMALL_TABLET, SMALL_TABLET_LAND, BIG_TABLET
@@ -106,6 +110,8 @@ public class MainActivity extends AppCompatActivity
                 break;
         }
         setSupportActionBar(mToolbar);
+        Resources r = getResources();
+        elevation = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, r.getDisplayMetrics());
 
         mNavigationView.setNavigationItemSelectedListener(this);
 
@@ -161,7 +167,7 @@ public class MainActivity extends AppCompatActivity
         ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.user_name)).setText(preferences.getString("user_name", null));
         ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.last_synced)).setText(formatLastSync(preferences));
 
-        Snackbar.make(contentFragment, "Sync complete", Snackbar.LENGTH_LONG).show();
+        Snackbar.make(contentFragment, getString(R.string.sync_complete), Snackbar.LENGTH_LONG).show();
         EventBus.getDefault().removeAllStickyEvents();
     }
 
@@ -270,7 +276,7 @@ public class MainActivity extends AppCompatActivity
                 ContentResolver.requestSync(mAccount, AUTHORITY, bundle);
                 preferences.edit().putBoolean("syncing", true).apply();
                 progressBar.setVisibility(View.VISIBLE);
-                make = Snackbar.make(contentFragment, "Full sync in progress, this may take a long time. Feel free to close the app and come back later", Snackbar.LENGTH_INDEFINITE);
+                make = Snackbar.make(contentFragment, getString(R.string.full_sync_message), Snackbar.LENGTH_INDEFINITE);
                 make.show();
                 syncing = true;
                 getIntent().removeExtra("from_login");
@@ -280,12 +286,15 @@ public class MainActivity extends AppCompatActivity
         if (!syncing && make != null && make.isShown()) {
             progressBar.setVisibility(View.INVISIBLE);
             make.dismiss();
-            Snackbar.make(contentFragment, "Sync complete", Snackbar.LENGTH_LONG).show();
+            Snackbar.make(contentFragment, getString(R.string.sync_complete), Snackbar.LENGTH_LONG).show();
             EventBus.getDefault().removeAllStickyEvents();
         } else if (syncing && make == null){
             progressBar.setVisibility(View.VISIBLE);
-            make = Snackbar.make(contentFragment, "Still syncing, one second", Snackbar.LENGTH_INDEFINITE);
+            make = Snackbar.make(contentFragment, getString(R.string.still_sync), Snackbar.LENGTH_INDEFINITE);
             make.show();
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            findViewById(R.id.appbar).setElevation(currentElevation);
         }
     }
 
@@ -293,12 +302,14 @@ public class MainActivity extends AppCompatActivity
     public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
         super.onSaveInstanceState(outState, outPersistentState);
         outState.putBoolean("syncing", syncing);
+        outState.putFloat("elevation", currentElevation);
     }
 
     @Override
     public void onRestoreInstanceState(Bundle savedInstanceState, PersistableBundle persistentState) {
         super.onRestoreInstanceState(savedInstanceState, persistentState);
         syncing = savedInstanceState.getBoolean("syncing", false);
+        currentElevation = savedInstanceState.getFloat("elevation", elevation);
     }
 
     @Override
@@ -359,7 +370,7 @@ public class MainActivity extends AppCompatActivity
                 }
             });
             progressBar.setVisibility(View.VISIBLE);
-            make = Snackbar.make(contentFragment, "Sync in progress, this may take a minute", Snackbar.LENGTH_INDEFINITE);
+            make = Snackbar.make(contentFragment, getString(R.string.short_sync_message), Snackbar.LENGTH_INDEFINITE);
             make.show();
             syncing = true;
             return true;
@@ -382,17 +393,29 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_recommendation) {
             fragment = new RecommendationsFragment();
             title = getString(R.string.nav_recommendations);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                findViewById(R.id.appbar).setElevation(elevation);
+                currentElevation = elevation;
+            }
         } else if (id == R.id.nav_find_shows) {
             fragment = new FindShowsFragment();
             title = getString(R.string.nav_find_shows);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                findViewById(R.id.appbar).setElevation(0);
+                currentElevation = 0;
+            }
         } else if (id == R.id.nav_my_shows) {
             fragment = new MyShowsFragment();
             title = getString(R.string.nav_my_shows);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                findViewById(R.id.appbar).setElevation(elevation);
+                currentElevation = elevation;
+            }
         } else if (id == R.id.action_refresh) {
             ContentResolver.cancelSync(mAccount, AUTHORITY);
             ContentResolver.requestSync(mAccount, AUTHORITY, Bundle.EMPTY);
             progressBar.setVisibility(View.VISIBLE);
-            make = Snackbar.make(contentFragment, "Full sync in progress, this may take a long time. Feel free to close the app and come back later", Snackbar.LENGTH_INDEFINITE);
+            make = Snackbar.make(contentFragment, getString(R.string.full_sync_message), Snackbar.LENGTH_INDEFINITE);
             make.show();
             syncing = true;
             if (!isDrawerLocked) {

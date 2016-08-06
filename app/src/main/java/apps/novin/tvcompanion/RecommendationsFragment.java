@@ -1,10 +1,16 @@
 package apps.novin.tvcompanion;
 
+import android.app.Application;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.AsyncTaskLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +24,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -30,7 +37,7 @@ import butterknife.ButterKnife;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class RecommendationsFragment extends Fragment {
+public class RecommendationsFragment extends Fragment implements LoaderManager.LoaderCallbacks<List<ShowEntity>> {
 
     @BindView(R.id.recommendations_list_view)
     RecyclerView mRecyclerView;
@@ -56,9 +63,7 @@ public class RecommendationsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         mLayoutManager = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(mLayoutManager);
-        List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.Recommendation.eq(true)).orderAsc(ShowEntityDao.Properties.Recommendation_pos).build().list();
-        mAdapter = new MyAdapter(list);
-        mRecyclerView.setAdapter(mAdapter);
+        getLoaderManager().initLoader(0, null, this).forceLoad();
     }
 
     @Override
@@ -81,10 +86,27 @@ public class RecommendationsFragment extends Fragment {
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void dataChange(DatabaseUpdatedEvent event) {
-        List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.Recommendation.eq(true)).orderAsc(ShowEntityDao.Properties.Recommendation_pos).build().list();
-        mAdapter.setData(list);
-        mAdapter.notifyDataSetChanged();
+        getLoaderManager().restartLoader(0, null, this).forceLoad();
         EventBus.getDefault().removeAllStickyEvents();
+    }
+
+    @Override
+    public Loader onCreateLoader(int id, Bundle args) {
+        mAdapter = new MyAdapter(new ArrayList<ShowEntity>(0));
+        mRecyclerView.setAdapter(mAdapter);
+        return new Loader(getContext(), (App) getActivity().getApplication());
+    }
+
+    @Override
+    public void onLoadFinished(android.support.v4.content.Loader<List<ShowEntity>> loader, List<ShowEntity> data) {
+        if (mAdapter != null) {
+            mAdapter.setData(data);
+        }
+    }
+
+    @Override
+    public void onLoaderReset(android.support.v4.content.Loader<List<ShowEntity>> loader) {
+        mAdapter = null;
     }
 
     public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
@@ -123,6 +145,7 @@ public class RecommendationsFragment extends Fragment {
 
         public void setData(List<ShowEntity> data) {
             this.data = data;
+            notifyDataSetChanged();
         }
 
         // Create new views (invoked by the layout manager)
@@ -158,6 +181,21 @@ public class RecommendationsFragment extends Fragment {
         @Override
         public int getItemCount() {
             return data.size();
+        }
+    }
+
+    public static class Loader extends AsyncTaskLoader<List<ShowEntity>> {
+
+        App application;
+
+        public Loader(Context context, App application) {
+            super(context);
+            this.application = application;
+        }
+
+        @Override
+        public List<ShowEntity> loadInBackground() {
+            return application.getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.Recommendation.eq(true)).orderAsc(ShowEntityDao.Properties.Recommendation_pos).build().list();
         }
     }
 }

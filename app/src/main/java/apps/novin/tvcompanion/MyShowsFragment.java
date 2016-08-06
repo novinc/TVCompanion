@@ -1,10 +1,14 @@
 package apps.novin.tvcompanion;
 
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.AsyncTaskLoader;
+import android.support.v4.content.Loader;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
@@ -29,6 +33,7 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.ArrayList;
 import java.util.List;
 
 import apps.novin.tvcompanion.db.ShowEntity;
@@ -40,7 +45,7 @@ import butterknife.ButterKnife;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class MyShowsFragment extends Fragment {
+public class MyShowsFragment extends Fragment implements LoaderManager.LoaderCallbacks<List<ShowEntity>> {
 
     static final int AZ = 0;
     static final int RATING = 1;
@@ -109,9 +114,7 @@ public class MyShowsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         mLayoutManager = new GridLayoutManager(getContext(), getContext().getResources().getInteger(R.integer.my_shows_span));
         mRecyclerView.setLayoutManager(mLayoutManager);
-        List<ShowEntity> list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.My_show.eq(true)).orderAsc(ShowEntityDao.Properties.Name).list();
-        mAdapter = new MyAdapter(list);
-        mRecyclerView.setAdapter(mAdapter);
+        getLoaderManager().initLoader(0, null, this).forceLoad();
     }
 
     @Override
@@ -128,18 +131,27 @@ public class MyShowsFragment extends Fragment {
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void dataChange(DatabaseUpdatedEvent event) {
-        List<ShowEntity> list = null;
-        if (sortMode == AZ) {
-            list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.My_show.eq(true)).orderAsc(ShowEntityDao.Properties.Name).list();
-        } else if (sortMode == RATING) {
-            list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.My_show.eq(true)).orderDesc(ShowEntityDao.Properties.Percent_heart).list();
-        } else if (sortMode == NEW_OLD) {
-            list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.My_show.eq(true)).orderDesc(ShowEntityDao.Properties.Year).list();
-        } else if (sortMode == OLD_NEW) {
-            list = ((App) getActivity().getApplication()).getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.My_show.eq(true)).orderAsc(ShowEntityDao.Properties.Year).list();
-        }
-        mAdapter.setData(list);
+        getLoaderManager().restartLoader(0, null, this).forceLoad();
         EventBus.getDefault().removeAllStickyEvents();
+    }
+
+    @Override
+    public Loader onCreateLoader(int id, Bundle args) {
+        mAdapter = new MyAdapter(new ArrayList<ShowEntity>(0));
+        mRecyclerView.setAdapter(mAdapter);
+        return new Loader(getContext(), sortMode, (App) getActivity().getApplication());
+    }
+
+    @Override
+    public void onLoadFinished(android.support.v4.content.Loader<List<ShowEntity>> loader, List<ShowEntity> data) {
+        if (mAdapter != null) {
+            mAdapter.setData(data);
+        }
+    }
+
+    @Override
+    public void onLoaderReset(android.support.v4.content.Loader<List<ShowEntity>> loader) {
+        mAdapter = null;
     }
 
     public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
@@ -203,6 +215,33 @@ public class MyShowsFragment extends Fragment {
         @Override
         public int getItemCount() {
             return mDataset.size();
+        }
+    }
+
+    public static class Loader extends AsyncTaskLoader<List<ShowEntity>> {
+
+        private @SortMode int sortMode;
+        private App app;
+
+        public Loader(Context context, @SortMode int sortMode, App app) {
+            super(context);
+            this.sortMode = sortMode;
+            this.app = app;
+        }
+
+        @Override
+        public List<ShowEntity> loadInBackground() {
+            List<ShowEntity> list = null;
+            if (sortMode == AZ) {
+                list = app.getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.My_show.eq(true)).orderAsc(ShowEntityDao.Properties.Name).list();
+            } else if (sortMode == RATING) {
+                list = app.getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.My_show.eq(true)).orderDesc(ShowEntityDao.Properties.Percent_heart).list();
+            } else if (sortMode == NEW_OLD) {
+                list = app.getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.My_show.eq(true)).orderDesc(ShowEntityDao.Properties.Year).list();
+            } else if (sortMode == OLD_NEW) {
+                list = app.getDaoSession().queryBuilder(ShowEntity.class).where(ShowEntityDao.Properties.My_show.eq(true)).orderAsc(ShowEntityDao.Properties.Year).list();
+            }
+            return list;
         }
     }
 }

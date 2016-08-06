@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -46,28 +47,6 @@ public class FindShowsFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_find_shows, container, false);
         ButterKnife.bind(this, view);
         return view;
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            if (getActivity().findViewById(R.id.appbar) != null) {
-                elevation = getActivity().findViewById(R.id.appbar).getElevation();
-                getActivity().findViewById(R.id.appbar).setElevation(0);
-            } else {
-                Resources r = getResources();
-                elevation = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, r.getDisplayMetrics());
-            }
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            getActivity().findViewById(R.id.appbar).setElevation(elevation);
-        }
-        super.onDetach();
     }
 
     @Override
