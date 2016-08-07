@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<vector android:height="150dp" android:viewportHeight="1.0"
-    android:viewportWidth="1.0" android:width="100dp" xmlns:android="http://schemas.android.com/apk/res/android">
-    <path android:fillColor="#f90" android:pathData="M0,0h1v1H0"/>
-</vector>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="135"
+        android:startColor="#ed1c24"
+        android:endColor="#1d1d1d"
+        android:type="linear" />
+</shape>

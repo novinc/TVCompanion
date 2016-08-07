@@ -108,6 +108,8 @@ public class ShowDetailDialog extends DialogFragment {
 
     private long id;
 
+    String backdropURL;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -132,11 +134,13 @@ public class ShowDetailDialog extends DialogFragment {
                     public void run() {
                         Glide.with(ShowDetailDialog.this).load(showEntity.getPoster_url())
                                 .placeholder(R.drawable.show_background)
-                                .error(R.drawable.ic_close_black)
+                                .error(R.drawable.trakt)
                                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                                 .into(poster);
-                        Glide.with(ShowDetailDialog.this).load(showEntity.getBackdrop_url())
+                        backdropURL = showEntity.getBackdrop_url();
+                        Glide.with(ShowDetailDialog.this).load(backdropURL)
                                 .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                                .error(R.drawable.trakt)
                                 .into(backdropImage);
                         title.setText(showEntity.getName());
                         genres.setText(showEntity.getGenres());
@@ -481,7 +485,7 @@ public class ShowDetailDialog extends DialogFragment {
             Glide.with(ShowDetailDialog.this)
                     .load(episode.getPoster_url())
                     .placeholder(R.color.colorAccent)
-                    .error(R.drawable.ic_close_black)
+                    .error(R.drawable.trakt)
                     .centerCrop()
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .into(holder.poster);

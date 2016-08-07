@@ -107,6 +107,8 @@ public class ShowDetailActivity extends AppCompatActivity {
 
     private long id;
 
+    String backdropURL;
+
     public ShowDetailActivity() {
     }
 
@@ -132,11 +134,13 @@ public class ShowDetailActivity extends AppCompatActivity {
                     public void run() {
                         Glide.with(ShowDetailActivity.this).load(showEntity.getPoster_url())
                                 .placeholder(R.drawable.show_background)
-                                .error(R.drawable.ic_close_black)
+                                .error(R.drawable.trakt)
                                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                                 .into(poster);
-                        Glide.with(ShowDetailActivity.this).load(showEntity.getBackdrop_url())
+                        backdropURL = showEntity.getBackdrop_url();
+                        Glide.with(ShowDetailActivity.this).load(backdropURL)
                                 .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                                .error(R.drawable.trakt)
                                 .into(backdropImage);
                         title.setText(showEntity.getName());
                         genres.setText(showEntity.getGenres());
@@ -494,13 +498,13 @@ public class ShowDetailActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
             EpisodeEntity episode = mDataset.get(position);
-            holder.title.setText(String.format(Locale.ENGLISH, "%s %s", episode.getEp_name(), String.format(Locale.ENGLISH, "%dx%s", episode.getSeason(), episode.getEp_number())));
+            holder.title.setText(String.format(Locale.ENGLISH, "%s %s", episode.getEp_name() == null ? "" : episode.getEp_name(), String.format(Locale.ENGLISH, "%dx%s", episode.getSeason(), episode.getEp_number())));
             holder.description.setText(episode.getEp_description());
             holder.heartButton.setText(String.format(Locale.ENGLISH, "%d%%", episode.getPercent_heart()));
             Glide.with(ShowDetailActivity.this)
                     .load(episode.getPoster_url())
                     .placeholder(R.color.colorAccent)
-                    .error(R.drawable.ic_close_black)
+                    .error(R.drawable.trakt)
                     .centerCrop()
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .into(holder.poster);
