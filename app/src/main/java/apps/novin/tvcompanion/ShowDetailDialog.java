@@ -484,7 +484,7 @@ public class ShowDetailDialog extends DialogFragment {
             holder.heartButton.setText(String.format(Locale.ENGLISH, "%d%%", episode.getPercent_heart()));
             Glide.with(ShowDetailDialog.this)
                     .load(episode.getPoster_url())
-                    .placeholder(R.color.colorAccent)
+                    .placeholder(R.drawable.show_background)
                     .error(R.drawable.trakt)
                     .centerCrop()
                     .diskCacheStrategy(DiskCacheStrategy.ALL)

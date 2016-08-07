@@ -14,6 +14,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,7 +50,7 @@ import butterknife.ButterKnife;
 
 /**
  * A simple {@link Fragment} subclass.
- * Use the {@link FindShowsPageFragment#newInstance} factory method to
+ * Use the {@link FindShowsPageFragment#getInstance} factory method to
  * create an instance of this fragment.
  */
 public class FindShowsPageFragment extends Fragment implements LoaderManager.LoaderCallbacks<List<ShowEntity>> {
@@ -79,6 +80,8 @@ public class FindShowsPageFragment extends Fragment implements LoaderManager.Loa
     private RecyclerView.LayoutManager mLayoutManager;
     private FindShowsPageFragment.MyAdapter mAdapter;
 
+    private static FindShowsPageFragment[] fragments = new FindShowsPageFragment[3];
+
 
     public FindShowsPageFragment() {
         // Required empty public constructor
@@ -91,12 +94,16 @@ public class FindShowsPageFragment extends Fragment implements LoaderManager.Loa
      * @param tabMode Parameter 1.
      * @return A new instance of fragment FindShowsPageFragment.
      */
-    public static FindShowsPageFragment newInstance(@TabMode int tabMode) {
-        FindShowsPageFragment fragment = new FindShowsPageFragment();
-        Bundle args = new Bundle();
-        args.putInt(TAB_MODE, tabMode);
-        fragment.setArguments(args);
-        return fragment;
+    public static FindShowsPageFragment getInstance(@TabMode int tabMode) {
+        if (fragments[tabMode] == null) {
+            FindShowsPageFragment fragment = new FindShowsPageFragment();
+            Bundle args = new Bundle();
+            args.putInt(TAB_MODE, tabMode);
+            fragment.setArguments(args);
+            fragments[tabMode] = fragment;
+            Log.d("aaaa", "made new one");
+        }
+        return fragments[tabMode];
     }
 
     @Override
