@@ -12,7 +12,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
-import android.support.v4.content.Loader;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -204,15 +203,17 @@ public class FindShowsPageFragment extends Fragment implements LoaderManager.Loa
         }
         mLayoutManager = new GridLayoutManager(getContext(), getContext().getResources().getInteger(R.integer.find_shows_span));
         mRecyclerView.setLayoutManager(mLayoutManager);
-        getLoaderManager().initLoader(0, null, this).forceLoad();
+        mAdapter = new MyAdapter(new ArrayList<ShowEntity>(0));
+        mRecyclerView.setAdapter(mAdapter);
+        getLoaderManager().initLoader(tabMode, null, this).forceLoad();
     }
 
     @Override
     public void onStart() {
         super.onStart();
         EventBus.getDefault().register(this);
-        if (mAdapter == null || mAdapter.getItemCount() == 0) {
-            getLoaderManager().initLoader(0, null, this);
+        if (mRecyclerView.getAdapter().getItemCount() == 0) {
+            getLoaderManager().initLoader(tabMode, null, this).forceLoad();
         }
     }
 
@@ -224,14 +225,12 @@ public class FindShowsPageFragment extends Fragment implements LoaderManager.Loa
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void dataChange(DatabaseUpdatedEvent event) {
-        getLoaderManager().restartLoader(0, null, this).forceLoad();
+        getLoaderManager().restartLoader(tabMode, null, this).forceLoad();
         EventBus.getDefault().removeAllStickyEvents();
     }
 
     @Override
     public Loader onCreateLoader(int id, Bundle args) {
-        mAdapter = new MyAdapter(new ArrayList<ShowEntity>(0));
-        mRecyclerView.setAdapter(mAdapter);
         return new Loader(getContext(), tabMode, (App) getActivity().getApplication());
     }
 
@@ -244,7 +243,7 @@ public class FindShowsPageFragment extends Fragment implements LoaderManager.Loa
 
     @Override
     public void onLoaderReset(android.support.v4.content.Loader<List<ShowEntity>> loader) {
-        mAdapter = null;
+
     }
 
     public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {

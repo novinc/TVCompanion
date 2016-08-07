@@ -340,10 +340,15 @@ public class ShowDetailDialog extends DialogFragment {
             for (int i = seasonStart; i < numSeasons + seasonStart; i++) {
                 seasons.add("season " + i);
             }
-            spinner.setEnabled(true);
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, seasons);
+            final ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, seasons);
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            spinner.setAdapter(adapter);
+            spinner.setEnabled(true);
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    spinner.setAdapter(adapter);
+                }
+            });
             spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {

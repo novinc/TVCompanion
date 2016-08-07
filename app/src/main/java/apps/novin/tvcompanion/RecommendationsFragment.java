@@ -63,13 +63,9 @@ public class RecommendationsFragment extends Fragment implements LoaderManager.L
         super.onViewCreated(view, savedInstanceState);
         mLayoutManager = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(mLayoutManager);
+        mAdapter = new MyAdapter(new ArrayList<ShowEntity>(0));
+        mRecyclerView.setAdapter(mAdapter);
         getLoaderManager().initLoader(0, null, this).forceLoad();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        dataChange(null);
     }
 
     @Override
@@ -92,8 +88,6 @@ public class RecommendationsFragment extends Fragment implements LoaderManager.L
 
     @Override
     public Loader onCreateLoader(int id, Bundle args) {
-        mAdapter = new MyAdapter(new ArrayList<ShowEntity>(0));
-        mRecyclerView.setAdapter(mAdapter);
         return new Loader(getContext(), (App) getActivity().getApplication());
     }
 

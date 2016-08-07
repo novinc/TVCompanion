@@ -114,6 +114,8 @@ public class MyShowsFragment extends Fragment implements LoaderManager.LoaderCal
         super.onViewCreated(view, savedInstanceState);
         mLayoutManager = new GridLayoutManager(getContext(), getContext().getResources().getInteger(R.integer.my_shows_span));
         mRecyclerView.setLayoutManager(mLayoutManager);
+        mAdapter = new MyAdapter(new ArrayList<ShowEntity>(0));
+        mRecyclerView.setAdapter(mAdapter);
         getLoaderManager().initLoader(0, null, this).forceLoad();
     }
 
@@ -137,8 +139,6 @@ public class MyShowsFragment extends Fragment implements LoaderManager.LoaderCal
 
     @Override
     public Loader onCreateLoader(int id, Bundle args) {
-        mAdapter = new MyAdapter(new ArrayList<ShowEntity>(0));
-        mRecyclerView.setAdapter(mAdapter);
         return new Loader(getContext(), sortMode, (App) getActivity().getApplication());
     }
 

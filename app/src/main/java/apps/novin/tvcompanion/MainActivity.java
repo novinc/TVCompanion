@@ -12,7 +12,6 @@ import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -25,6 +24,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity
             SYNC_INTERVAL_IN_MINUTES *
                     SECONDS_PER_MINUTE;
     private float elevation;
-    private float currentElevation;
+    private int currPage;
 
     private enum ScreenType {
         PHONE, SMALL_TABLET, SMALL_TABLET_LAND, BIG_TABLET
@@ -110,8 +110,10 @@ public class MainActivity extends AppCompatActivity
                 break;
         }
         setSupportActionBar(mToolbar);
+
         Resources r = getResources();
         elevation = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, r.getDisplayMetrics());
+        currPage = 0;
 
         mNavigationView.setNavigationItemSelectedListener(this);
 
@@ -293,23 +295,13 @@ public class MainActivity extends AppCompatActivity
             make = Snackbar.make(contentFragment, getString(R.string.still_sync), Snackbar.LENGTH_INDEFINITE);
             make.show();
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            findViewById(R.id.appbar).setElevation(currentElevation);
-        }
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
-        super.onSaveInstanceState(outState, outPersistentState);
+    protected void onSaveInstanceState(Bundle outState) {
         outState.putBoolean("syncing", syncing);
-        outState.putFloat("elevation", currentElevation);
-    }
-
-    @Override
-    public void onRestoreInstanceState(Bundle savedInstanceState, PersistableBundle persistentState) {
-        super.onRestoreInstanceState(savedInstanceState, persistentState);
-        syncing = savedInstanceState.getBoolean("syncing", false);
-        currentElevation = savedInstanceState.getFloat("elevation", elevation);
+        outState.putInt("page", currPage);
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -317,6 +309,17 @@ public class MainActivity extends AppCompatActivity
         super.onRestoreInstanceState(savedInstanceState);
         if (savedInstanceState == null) {
             mNavigationView.getMenu().findItem(R.id.nav_recommendation).setChecked(true);
+        }
+        if (savedInstanceState != null) {
+            syncing = savedInstanceState.getBoolean("syncing", false);
+            currPage = savedInstanceState.getInt("page", 0);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                if (currPage == 1) {
+                    findViewById(R.id.appbar).setElevation(0);
+                } else {
+                    findViewById(R.id.appbar).setElevation(elevation);
+                }
+            }
         }
     }
 
@@ -395,22 +398,22 @@ public class MainActivity extends AppCompatActivity
             title = getString(R.string.nav_recommendations);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 findViewById(R.id.appbar).setElevation(elevation);
-                currentElevation = elevation;
             }
+            currPage = 0;
         } else if (id == R.id.nav_find_shows) {
             fragment = new FindShowsFragment();
             title = getString(R.string.nav_find_shows);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 findViewById(R.id.appbar).setElevation(0);
-                currentElevation = 0;
             }
+            currPage = 1;
         } else if (id == R.id.nav_my_shows) {
             fragment = new MyShowsFragment();
             title = getString(R.string.nav_my_shows);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 findViewById(R.id.appbar).setElevation(elevation);
-                currentElevation = elevation;
             }
+            currPage = 2;
         } else if (id == R.id.action_refresh) {
             ContentResolver.cancelSync(mAccount, AUTHORITY);
             ContentResolver.requestSync(mAccount, AUTHORITY, Bundle.EMPTY);
@@ -461,6 +464,7 @@ public class MainActivity extends AppCompatActivity
         //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) { // disables big tablet dialog
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && screenType != ScreenType.BIG_TABLET) {
             ImageView poster = (ImageView) view.findViewById(R.id.poster);
+            poster.setTransitionName(getString(R.string.poster_transition));
             TextView title = (TextView) view.findViewById(R.id.title);
             TextView genre = (TextView) view.findViewById(R.id.genres);
             Pair<View, String> posterTrans = Pair.create((View) poster, getString(R.string.poster_transition));
