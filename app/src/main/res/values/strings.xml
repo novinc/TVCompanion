@@ -41,7 +41,7 @@
     <string name="desc_add_fab">Watch all episodes and add to shows</string>
     <string name="desc_remove_fab">Remove show and unwatch all episodes</string>
 
-    <string name="login_desc">Log</string>
+    <string name="login_desc">This app uses the trakt.tv API to get TV show information, your watch history, and recommendations. Click the button below to login or create a new account on trakt.tv.</string>
     <string name="app">APP</string>
 
     <string name="action_refresh">Refresh</string>
@@ -59,6 +59,7 @@
     <string name="short_sync_message">Sync in progress, this may take a minute…</string>
     <string name="sync_complete">Sync complete</string>
     <string name="still_sync">Still syncing…</string>
+    <string name="login_bg">Login background</string>
 
 
 </resources>
