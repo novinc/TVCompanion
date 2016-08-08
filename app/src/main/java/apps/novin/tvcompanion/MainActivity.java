@@ -77,7 +77,10 @@ public class MainActivity extends AppCompatActivity
             SYNC_INTERVAL_IN_MINUTES *
                     SECONDS_PER_MINUTE;
     private float elevation;
+
+
     private int currPage;
+    private Fragment currentFragment;
 
     private enum ScreenType {
         PHONE, SMALL_TABLET, SMALL_TABLET_LAND, BIG_TABLET
@@ -301,9 +304,11 @@ public class MainActivity extends AppCompatActivity
     protected void onSaveInstanceState(Bundle outState) {
         outState.putBoolean("syncing", syncing);
         outState.putInt("page", currPage);
+        getSupportFragmentManager().putFragment(outState, "fragment" + currPage, currentFragment);
         super.onSaveInstanceState(outState);
     }
 
+    @SuppressLint("CommitTransaction")
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
@@ -313,6 +318,8 @@ public class MainActivity extends AppCompatActivity
         if (savedInstanceState != null) {
             syncing = savedInstanceState.getBoolean("syncing", false);
             currPage = savedInstanceState.getInt("page", 0);
+            currentFragment = getSupportFragmentManager().getFragment(savedInstanceState, "fragment" + currPage);
+            getSupportFragmentManager().beginTransaction().replace(R.id.content_frame, currentFragment).commitNow();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 if (currPage == 1) {
                     findViewById(R.id.appbar).setElevation(0);
@@ -389,26 +396,24 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        Fragment fragment = null;
-
         String title = null;
 
         if (id == R.id.nav_recommendation) {
-            fragment = new RecommendationsFragment();
+            currentFragment = new RecommendationsFragment();
             title = getString(R.string.nav_recommendations);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 findViewById(R.id.appbar).setElevation(elevation);
             }
             currPage = 0;
         } else if (id == R.id.nav_find_shows) {
-            fragment = new FindShowsFragment();
+            currentFragment = new FindShowsFragment();
             title = getString(R.string.nav_find_shows);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 findViewById(R.id.appbar).setElevation(0);
             }
             currPage = 1;
         } else if (id == R.id.nav_my_shows) {
-            fragment = new MyShowsFragment();
+            currentFragment = new MyShowsFragment();
             title = getString(R.string.nav_my_shows);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 findViewById(R.id.appbar).setElevation(elevation);
@@ -433,7 +438,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.content_frame, fragment)
+                .replace(R.id.content_frame, currentFragment)
                 .commitNow();
 
         invalidateOptionsMenu();
