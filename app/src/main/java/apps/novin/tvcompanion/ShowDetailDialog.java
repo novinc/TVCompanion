@@ -145,7 +145,7 @@ public class ShowDetailDialog extends DialogFragment {
                         title.setText(showEntity.getName());
                         genres.setText(showEntity.getGenres());
                         description.setText(showEntity.getDescription());
-                        year.setText(String.format(Locale.ENGLISH, "%d", showEntity.getYear()));
+                        year.setText(showEntity.getYear() != null ? String.format(Locale.ENGLISH, "%d", showEntity.getYear()) : "");
                         if ((showEntity.getWatchers() != null && showEntity.getPlayers() != null) || showEntity.getPercent_heart() != 0) {
                             percentage.setText(String.format(Locale.ENGLISH, "%d%%", showEntity.getPercent_heart()));
                             watchers.setText(String.format(Locale.ENGLISH, "%s watchers", statFormat(showEntity.getWatchers())));

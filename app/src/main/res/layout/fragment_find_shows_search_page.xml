@@ -18,6 +18,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:imeOptions="actionSearch"
+            android:imeActionLabel="@string/action_search"
             android:inputType="text" />
 
         <Button

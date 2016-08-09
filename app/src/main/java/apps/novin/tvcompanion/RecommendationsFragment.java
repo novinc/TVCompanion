@@ -8,6 +8,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -123,6 +124,8 @@ public class RecommendationsFragment extends Fragment implements LoaderManager.L
             TextView percentage;
             @BindView(R.id.poster)
             ImageView poster;
+            @BindView(R.id.card_view)
+            CardView cardView;
 
             long id;
 
@@ -155,7 +158,7 @@ public class RecommendationsFragment extends Fragment implements LoaderManager.L
 
         // Replace the contents of a view (invoked by the layout manager)
         @Override
-        public void onBindViewHolder(ViewHolder holder, int position) {
+        public void onBindViewHolder(final ViewHolder holder, int position) {
             ShowEntity showEntity = data.get(position);
             Glide.with(RecommendationsFragment.this)
                     .load(showEntity.getPoster_url())
@@ -169,6 +172,18 @@ public class RecommendationsFragment extends Fragment implements LoaderManager.L
             holder.seasons.setText(getString(R.string.seasons_format, showEntity.getSeasons()));
             holder.percentage.setText(String.format(Locale.ENGLISH, "%d%%", showEntity.getPercent_heart()));
             holder.id = showEntity.getId();
+            holder.cardView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View view) {
+                    LongPressDialog dialog = new LongPressDialog();
+                    Bundle bundle = new Bundle();
+                    bundle.putString("title", holder.title.getText().toString());
+                    bundle.putLong("id", holder.id);
+                    dialog.setArguments(bundle);
+                    dialog.show(getActivity().getFragmentManager(), "dialog");
+                    return true;
+                }
+            });
         }
 
         // Return the size of your dataset (invoked by the layout manager)

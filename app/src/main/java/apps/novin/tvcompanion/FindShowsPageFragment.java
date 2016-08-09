@@ -2,6 +2,7 @@ package apps.novin.tvcompanion;
 
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -15,14 +16,18 @@ import android.support.v4.content.AsyncTaskLoader;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
@@ -136,75 +141,88 @@ public class FindShowsPageFragment extends Fragment implements LoaderManager.Loa
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        if (searchButton != null) {
+        if (searchButton != null && searchText != null) {
             searchButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (searchText != null) {
-                        if (progressBar != null) {
-                            progressBar.setVisibility(View.VISIBLE);
-                        }
-                        final String query = searchText.getText().toString();
-                        AsyncTask.execute(new Runnable() {
-                            @Override
-                            public void run() {
-                                final TraktV2 traktV2 = new TraktV2(BuildConfig.API_KEY, BuildConfig.CLIENT_SECRET, "tvcompanion.novin.apps://oauthredirect");
-                                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-                                String accessToken = preferences.getString("access_token", null);
-                                traktV2.accessToken(accessToken);
-                                List<SearchResult> searchResults = null;
+                    if (searchText.getText().length() == 0) {
+                        Toast.makeText(getContext(),"Enter title to search for", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Activity.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                    if (progressBar != null) {
+                        progressBar.setVisibility(View.VISIBLE);
+                    }
+                    final String query = searchText.getText().toString();
+                    AsyncTask.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            final TraktV2 traktV2 = new TraktV2(BuildConfig.API_KEY, BuildConfig.CLIENT_SECRET, "tvcompanion.novin.apps://oauthredirect");
+                            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+                            String accessToken = preferences.getString("access_token", null);
+                            traktV2.accessToken(accessToken);
+                            List<SearchResult> searchResults = null;
+                            try {
+                                searchResults = traktV2.search().textQuery(query, Type.SHOW, null, 1, 10).execute().body();
+                            } catch (IOException e) {
                                 try {
                                     searchResults = traktV2.search().textQuery(query, Type.SHOW, null, 1, 10).execute().body();
-                                } catch (IOException e) {
+                                } catch (IOException e1) {
                                     try {
                                         searchResults = traktV2.search().textQuery(query, Type.SHOW, null, 1, 10).execute().body();
-                                    } catch (IOException e1) {
-                                        try {
-                                            searchResults = traktV2.search().textQuery(query, Type.SHOW, null, 1, 10).execute().body();
-                                        } catch (IOException e2) {
-                                            e2.printStackTrace();
-                                        }
+                                    } catch (IOException e2) {
+                                        e2.printStackTrace();
                                     }
-                                }
-                                if (searchResults != null) {
-                                    final List<ShowEntity> showEntities = new ArrayList<>(searchResults.size());
-                                    final EpisodeEntityDao episodeEntityDao = ((App) getActivity().getApplication()).getDaoSession().getEpisodeEntityDao();
-                                    for (SearchResult result : searchResults) {
-                                        ShowEntityDao showEntityDao = ((App) getActivity().getApplication()).getDaoSession().getShowEntityDao();
-                                        List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(result.show.ids.trakt)).list();
-                                        if (sameShows.size() == 0) {
-                                            final ShowEntity showEntity;
-                                            if (result.show.genres == null) {
-                                                showEntity = new ShowEntity(null, result.show.ids.trakt, result.show.title, "genres:", result.show.overview,
-                                                        0, 0, result.show.images.poster.thumb, result.show.images.fanart.medium,
-                                                        result.show.year, null, null,
-                                                        false, null, false, null, false, null, false);
-                                            } else {
-                                                showEntity = new ShowEntity(null, result.show.ids.trakt, result.show.title, "genres: " + result.show.genres.toString(), result.show.overview,
-                                                        0, 0, result.show.images.poster.thumb, result.show.images.fanart.medium,
-                                                        result.show.year, null, null,
-                                                        false, null, false, null, false, null, false);
-                                            }
-                                            showEntities.add(showEntity);
-                                            showEntityDao.insert(showEntity);
-                                        } else {
-                                            showEntities.add(sameShows.get(0));
-                                        }
-
-                                    }
-                                    getActivity().runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            if (progressBar != null) {
-                                                progressBar.setVisibility(View.GONE);
-                                            }
-                                            mAdapter.setData(showEntities);
-                                        }
-                                    });
                                 }
                             }
-                        });
+                            if (searchResults != null) {
+                                final List<ShowEntity> showEntities = new ArrayList<>(searchResults.size());
+                                final EpisodeEntityDao episodeEntityDao = ((App) getActivity().getApplication()).getDaoSession().getEpisodeEntityDao();
+                                for (SearchResult result : searchResults) {
+                                    ShowEntityDao showEntityDao = ((App) getActivity().getApplication()).getDaoSession().getShowEntityDao();
+                                    List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(result.show.ids.trakt)).list();
+                                    if (sameShows.size() == 0) {
+                                        final ShowEntity showEntity;
+                                        if (result.show.genres == null) {
+                                            showEntity = new ShowEntity(null, result.show.ids.trakt, result.show.title, "genres:", result.show.overview,
+                                                    0, 0, result.show.images.poster.thumb, result.show.images.fanart.medium,
+                                                    result.show.year, null, null,
+                                                    false, null, false, null, false, null, false);
+                                        } else {
+                                            showEntity = new ShowEntity(null, result.show.ids.trakt, result.show.title, "genres: " + result.show.genres.toString(), result.show.overview,
+                                                    0, 0, result.show.images.poster.thumb, result.show.images.fanart.medium,
+                                                    result.show.year, null, null,
+                                                    false, null, false, null, false, null, false);
+                                        }
+                                        showEntities.add(showEntity);
+                                        showEntityDao.insert(showEntity);
+                                    } else {
+                                        showEntities.add(sameShows.get(0));
+                                    }
+
+                                }
+                                getActivity().runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (progressBar != null) {
+                                            progressBar.setVisibility(View.GONE);
+                                        }
+                                        mAdapter.setData(showEntities);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+            searchText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                @Override
+                public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
+                    if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                        searchButton.callOnClick();
                     }
+                    return true;
                 }
             });
         }
@@ -317,7 +335,7 @@ public class FindShowsPageFragment extends Fragment implements LoaderManager.Loa
                     .into(holder.poster);
             holder.title.setText(showEntity.getName());
             holder.genres.setText(showEntity.getGenres());
-            holder.year.setText(String.format(Locale.ENGLISH, "%d", showEntity.getYear()));
+            holder.year.setText(showEntity.getYear() != null ? String.format(Locale.ENGLISH, "%d", showEntity.getYear()) : "");
             if (showEntity.getPercent_heart() != 0) {
                 holder.percentage.setText(String.format(Locale.ENGLISH, "%d%%", showEntity.getPercent_heart()));
             } else {

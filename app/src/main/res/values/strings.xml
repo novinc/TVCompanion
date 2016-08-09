@@ -60,6 +60,9 @@
     <string name="sync_complete">Sync complete</string>
     <string name="still_sync">Still syncing…</string>
     <string name="login_bg">Login background</string>
+    <string name="remove_recommendation">Remove from recommendations</string>
+    <string name="view_browser">View show in browser</string>
+    <string name="add_watchlist">Add to watchlist</string>
 
 
 </resources>
