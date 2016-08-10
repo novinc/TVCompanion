@@ -159,7 +159,7 @@ public class RecommendationsFragment extends Fragment implements LoaderManager.L
         // Replace the contents of a view (invoked by the layout manager)
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
-            ShowEntity showEntity = data.get(position);
+            final ShowEntity showEntity = data.get(position);
             Glide.with(RecommendationsFragment.this)
                     .load(showEntity.getPoster_url())
                     .placeholder(R.drawable.show_background)
@@ -178,7 +178,7 @@ public class RecommendationsFragment extends Fragment implements LoaderManager.L
                     LongPressDialog dialog = new LongPressDialog();
                     Bundle bundle = new Bundle();
                     bundle.putString("title", holder.title.getText().toString());
-                    bundle.putLong("id", holder.id);
+                    bundle.putInt("id", (int) showEntity.getTrakt_id());
                     dialog.setArguments(bundle);
                     dialog.show(getActivity().getFragmentManager(), "dialog");
                     return true;

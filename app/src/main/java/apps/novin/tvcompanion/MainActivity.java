@@ -172,7 +172,9 @@ public class MainActivity extends AppCompatActivity
         ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.user_name)).setText(preferences.getString("user_name", null));
         ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.last_synced)).setText(formatLastSync(preferences));
 
-        Snackbar.make(contentFragment, getString(R.string.sync_complete), Snackbar.LENGTH_LONG).show();
+        if (e.showMessage()) {
+            Snackbar.make(contentFragment, getString(R.string.sync_complete), Snackbar.LENGTH_LONG).show();
+        }
         EventBus.getDefault().removeAllStickyEvents();
     }
 
