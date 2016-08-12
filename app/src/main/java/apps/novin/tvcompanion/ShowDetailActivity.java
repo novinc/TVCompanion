@@ -176,6 +176,7 @@ public class ShowDetailActivity extends AppCompatActivity {
                     public void onClick(final View view) {
                         final Snackbar make = Snackbar.make(view, "One second", Snackbar.LENGTH_INDEFINITE);
                         make.show();
+                        fab.setClickable(false);
                         AsyncTask.execute(new Runnable() {
                             @Override
                             public void run() {
@@ -325,6 +326,12 @@ public class ShowDetailActivity extends AppCompatActivity {
                                         });
                                     }
                                 }
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        fab.setClickable(true);
+                                    }
+                                });
                             }
                         });
                     }

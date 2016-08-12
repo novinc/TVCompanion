@@ -3,6 +3,7 @@ package apps.novin.tvcompanion;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -121,8 +122,8 @@ public class MainActivity extends AppCompatActivity
         mNavigationView.setNavigationItemSelectedListener(this);
 
         if (savedInstanceState == null) {
-            mNavigationView.setCheckedItem(R.id.nav_recommendation);
-            mNavigationView.getMenu().performIdentifierAction(R.id.nav_recommendation, 0);
+            mNavigationView.setCheckedItem(R.id.nav_find_shows);
+            mNavigationView.getMenu().performIdentifierAction(R.id.nav_find_shows, 0);
         }
         mAccount = createSyncAccount(this);
     }
@@ -300,6 +301,26 @@ public class MainActivity extends AppCompatActivity
             make = Snackbar.make(contentFragment, getString(R.string.still_sync), Snackbar.LENGTH_INDEFINITE);
             make.show();
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            final View appBar = findViewById(R.id.appbar);
+            if (currPage == 0) {
+                appBar.postDelayed(new Runnable() {
+                    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+                    @Override
+                    public void run() {
+                        appBar.setElevation(0);
+                    }
+                }, 400);
+            } else {
+                appBar.postDelayed(new Runnable() {
+                    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+                    @Override
+                    public void run() {
+                        appBar.setElevation(elevation);
+                    }
+                }, 400);
+            }
+        }
     }
 
     @Override
@@ -323,7 +344,7 @@ public class MainActivity extends AppCompatActivity
             currentFragment = getSupportFragmentManager().getFragment(savedInstanceState, "fragment" + currPage);
             getSupportFragmentManager().beginTransaction().replace(R.id.content_frame, currentFragment).commitNow();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                if (currPage == 1) {
+                if (currPage == 0) {
                     findViewById(R.id.appbar).setElevation(0);
                 } else {
                     findViewById(R.id.appbar).setElevation(elevation);
@@ -375,16 +396,18 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.action_refresh) {
-            AsyncTask.execute(new Runnable() {
-                @Override
-                public void run() {
-                    SyncAdapter.syncShows(null, null, ((App) getApplication()).getDaoSession().getShowEntityDao(), getApplicationContext(), false);
-                }
-            });
-            progressBar.setVisibility(View.VISIBLE);
-            make = Snackbar.make(contentFragment, getString(R.string.short_sync_message), Snackbar.LENGTH_INDEFINITE);
-            make.show();
-            syncing = true;
+            if (!syncing) {
+                AsyncTask.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        SyncAdapter.syncShows(null, null, ((App) getApplication()).getDaoSession().getShowEntityDao(), getApplicationContext(), false);
+                    }
+                });
+                progressBar.setVisibility(View.VISIBLE);
+                make = Snackbar.make(contentFragment, getString(R.string.short_sync_message), Snackbar.LENGTH_INDEFINITE);
+                make.show();
+                syncing = true;
+            }
             return true;
         }
 
@@ -400,18 +423,18 @@ public class MainActivity extends AppCompatActivity
 
         String title = null;
 
-        if (id == R.id.nav_recommendation) {
-            currentFragment = new RecommendationsFragment();
-            title = getString(R.string.nav_recommendations);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                findViewById(R.id.appbar).setElevation(elevation);
-            }
-            currPage = 0;
-        } else if (id == R.id.nav_find_shows) {
+        if (id == R.id.nav_find_shows) {
             currentFragment = new FindShowsFragment();
             title = getString(R.string.nav_find_shows);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 findViewById(R.id.appbar).setElevation(0);
+            }
+            currPage = 0;
+        } else if (id == R.id.nav_recommendation) {
+            currentFragment = new RecommendationsFragment();
+            title = getString(R.string.nav_recommendations);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                findViewById(R.id.appbar).setElevation(elevation);
             }
             currPage = 1;
         } else if (id == R.id.nav_my_shows) {
@@ -422,17 +445,20 @@ public class MainActivity extends AppCompatActivity
             }
             currPage = 2;
         } else if (id == R.id.action_refresh) {
-            ContentResolver.cancelSync(mAccount, AUTHORITY);
-            ContentResolver.requestSync(mAccount, AUTHORITY, Bundle.EMPTY);
-            progressBar.setVisibility(View.VISIBLE);
-            make = Snackbar.make(contentFragment, getString(R.string.full_sync_message), Snackbar.LENGTH_INDEFINITE);
-            make.show();
-            syncing = true;
-            if (!isDrawerLocked) {
-                DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-                drawer.closeDrawer(GravityCompat.START);
+            if (!syncing) {
+                ContentResolver.cancelSync(mAccount, AUTHORITY);
+                ContentResolver.requestSync(mAccount, AUTHORITY, Bundle.EMPTY);
+                progressBar.setVisibility(View.VISIBLE);
+                make = Snackbar.make(contentFragment, getString(R.string.full_sync_message), Snackbar.LENGTH_INDEFINITE);
+                make.show();
+                syncing = true;
+                if (!isDrawerLocked) {
+                    DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+                    drawer.closeDrawer(GravityCompat.START);
+                }
+                return true;
             }
-            return true;
+            return false;
         } else if (id == R.id.nav_settings) {
             return false;
         } else if (id == R.id.nav_about) {

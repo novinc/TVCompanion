@@ -106,7 +106,6 @@ public class FindShowsPageFragment extends Fragment implements LoaderManager.Loa
             args.putInt(TAB_MODE, tabMode);
             fragment.setArguments(args);
             fragments[tabMode] = fragment;
-            Log.d("aaaa", "made new one");
         }
         return fragments[tabMode];
     }

@@ -48,7 +48,6 @@ public class FindShowsFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        Log.d("aaaa", "created view");
         setupViewPager(mViewPager);
         mTabLayout.setupWithViewPager(mViewPager);
         mTabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {

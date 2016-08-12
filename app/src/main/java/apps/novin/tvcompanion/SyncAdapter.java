@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import apps.novin.tvcompanion.db.DaoSession;
 import apps.novin.tvcompanion.db.EpisodeEntity;
@@ -42,6 +43,7 @@ import retrofit2.Response;
 public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     private DaoSession mDaoSession;
+    AtomicBoolean canceled;
 
     public SyncAdapter(Context context, boolean autoInitialize, DaoSession session) {
         super(context, autoInitialize);
@@ -57,11 +59,13 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         super.onSyncCanceled();
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
         preferences.edit().putBoolean("syncing", false).apply();
+        canceled.set(true);
     }
 
     @Override
     public void onPerformSync(Account account, Bundle bundle, String s, ContentProviderClient contentProviderClient, SyncResult syncResult) {
         Log.d("sync adapter", "onPerformSync called authority: " + s);
+        canceled.set(false);
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
 
@@ -86,18 +90,39 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         ShowEntityDao showEntityDao = mDaoSession.getShowEntityDao();
         EpisodeEntityDao episodeEntityDao = mDaoSession.getEpisodeEntityDao();
 
+        if (canceled.get()) {
+            return;
+        }
+
         // sync user
         syncUser(traktV2, preferences, getContext());
+
+        if (canceled.get()) {
+            return;
+        }
 
         // gets trending and popular shows, along with recommendations and my shows if oauth
         syncShows(preferences, traktV2, showEntityDao, getContext(), true);
 
+        if (canceled.get()) {
+            return;
+        }
+
         // remove unused shows
         removeUnusedShows(showEntityDao, episodeEntityDao);
+
+        if (canceled.get()) {
+            return;
+        }
+
         // episodes sync
         List<EpisodeEntity> episodesToInsert = new ArrayList<>();
         for (ShowEntity showEntity : showEntityDao.loadAll()) {
             getEpisodesFor(showEntity, traktV2, episodeEntityDao, episodesToInsert, false);
+            if (canceled.get()) {
+                episodeEntityDao.insertInTx(episodesToInsert);
+                return;
+            }
         }
         episodeEntityDao.insertInTx(episodesToInsert);
 

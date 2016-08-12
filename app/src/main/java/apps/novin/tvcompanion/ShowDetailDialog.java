@@ -175,6 +175,7 @@ public class ShowDetailDialog extends DialogFragment {
                     @Override
                     public void onClick(final View view) {
                         final Snackbar make = Snackbar.make(view, "One second", Snackbar.LENGTH_INDEFINITE);
+                        fab.setClickable(false);
                         AsyncTask.execute(new Runnable() {
                             @Override
                             public void run() {
@@ -324,6 +325,12 @@ public class ShowDetailDialog extends DialogFragment {
                                         });
                                     }
                                 }
+                                getActivity().runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        fab.setClickable(true);
+                                    }
+                                });
                             }
                         });
                     }
