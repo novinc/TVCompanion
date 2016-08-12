@@ -35,6 +35,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 import com.google.firebase.analytics.FirebaseAnalytics;
 
 import org.greenrobot.eventbus.EventBus;
@@ -57,6 +59,8 @@ public class MainActivity extends AppCompatActivity
     NavigationView mNavigationView;
     @BindView(R.id.loading)
     ProgressBar progressBar;
+    @BindView(R.id.ad_view)
+    AdView adView;
 
     Snackbar make;
 
@@ -118,6 +122,12 @@ public class MainActivity extends AppCompatActivity
         setSupportActionBar(mToolbar);
 
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+
+        AdRequest request = new AdRequest.Builder()
+                .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)        // All emulators
+                .addTestDevice("5B11814D0C43B2169F63811CB9BB055A")
+                .build();
+        adView.loadAd(request);
 
         Resources r = getResources();
         elevation = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, r.getDisplayMetrics());

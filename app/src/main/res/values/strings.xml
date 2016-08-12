@@ -64,8 +64,10 @@
     <string name="view_browser">View show in browser</string>
     <string name="add_watchlist">Add to watchlist</string>
     <string name="no_watch_history">You have no watch history. Go to find shows.</string>
-    <string name="ok">ok</string>
+    <string name="ok">OK</string>
     <string name="no_recommendations">Add shows then sync to get recommendations.</string>
+
+    <string name="main_banner_ad_unit_id">ca-app-pub-6177115838392476/3147329145</string>
 
 
 </resources>
