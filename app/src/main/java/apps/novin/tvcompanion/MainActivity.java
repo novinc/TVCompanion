@@ -25,7 +25,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -36,6 +35,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.analytics.FirebaseAnalytics;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -83,6 +83,8 @@ public class MainActivity extends AppCompatActivity
     private int currPage;
     private Fragment currentFragment;
 
+    private FirebaseAnalytics mFirebaseAnalytics;
+
     private enum ScreenType {
         PHONE, SMALL_TABLET, SMALL_TABLET_LAND, BIG_TABLET
     }
@@ -114,6 +116,8 @@ public class MainActivity extends AppCompatActivity
                 break;
         }
         setSupportActionBar(mToolbar);
+
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
 
         Resources r = getResources();
         elevation = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, r.getDisplayMetrics());
@@ -470,6 +474,12 @@ public class MainActivity extends AppCompatActivity
                 .commitNow();
 
         invalidateOptionsMenu();
+
+        // firebase analytics
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "MainDrawerTab");
+        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, title);
+        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle(title);

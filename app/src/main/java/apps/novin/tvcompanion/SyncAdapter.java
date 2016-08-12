@@ -65,7 +65,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     @Override
     public void onPerformSync(Account account, Bundle bundle, String s, ContentProviderClient contentProviderClient, SyncResult syncResult) {
         Log.d("sync adapter", "onPerformSync called authority: " + s);
-        canceled.set(false);
+        canceled = new AtomicBoolean(false);
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
 
@@ -144,23 +144,30 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             }
         }
         User user = null;
-        try {
-            Response<User> execute = traktV2.users().profile(Username.ME, Extended.FULLIMAGES).execute();
-            if (execute.isSuccessful()) {
-                user = execute.body();
-            } else {
-                if (execute.code() == 401) {
-                    // authorization required, supply a valid OAuth access token
-                    newToken(traktV2, preferences);
-                    execute = traktV2.users().profile(Username.ME, Extended.FULLIMAGES).execute();
-                    if (execute.isSuccessful()) {
-                        user = execute.body();
+        int count = 0;
+        int maxTries = 3;
+        while(true) {
+            try {
+                Response<User> execute = traktV2.users().profile(Username.ME, Extended.FULLIMAGES).execute();
+                if (execute.isSuccessful()) {
+                    user = execute.body();
+                } else {
+                    if (execute.code() == 401) {
+                        // authorization required, supply a valid OAuth access token
+                        newToken(traktV2, preferences);
+                        execute = traktV2.users().profile(Username.ME, Extended.FULLIMAGES).execute();
+                        if (execute.isSuccessful()) {
+                            user = execute.body();
+                        }
                     }
                 }
+                break;
+            } catch (Exception e) {
+                if (++count == maxTries) {
+                    e.printStackTrace();
+                    break;
+                }
             }
-
-        } catch (IOException e) {
-            e.printStackTrace();
         }
         if (user != null) {
             SharedPreferences.Editor edit = preferences.edit();
@@ -541,17 +548,13 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                             episodesToInsert.add(newEpisode);
                         } else {
                             EpisodeEntity existingEpisode = alreadyHave.get(0);
-                            // update existingEpisode with new oauth needed columns
-                            if (existingEpisode.getEp_name() == null || existingEpisode.getEp_description() == null
-                                    || existingEpisode.getPercent_heart() == null || existingEpisode.getPercent_heart() == 0
-                                    || existingEpisode.getPoster_url() == null) {
-                                EpisodeEntity episodeEntity = getEpisodeEntity(episode, showEntity.getId());
-                                existingEpisode.setEp_name(episodeEntity.getEp_name());
-                                existingEpisode.setEp_description(episodeEntity.getEp_description());
-                                existingEpisode.setPercent_heart(episodeEntity.getPercent_heart());
-                                existingEpisode.setPoster_url(episodeEntity.getPoster_url());
-                                episodeEntityDao.update(existingEpisode);
-                            }
+                            // update existingEpisode with new columns
+                            EpisodeEntity episodeEntity = getEpisodeEntity(episode, showEntity.getId());
+                            existingEpisode.setEp_name(episodeEntity.getEp_name());
+                            existingEpisode.setEp_description(episodeEntity.getEp_description());
+                            existingEpisode.setPercent_heart(episodeEntity.getPercent_heart());
+                            existingEpisode.setPoster_url(episodeEntity.getPoster_url());
+                            episodeEntityDao.update(existingEpisode);
                         }
                     }
                 }

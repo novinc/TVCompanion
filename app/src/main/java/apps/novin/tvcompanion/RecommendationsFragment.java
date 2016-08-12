@@ -1,17 +1,15 @@
 package apps.novin.tvcompanion;
 
-import android.app.Application;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
-import android.support.v4.content.Loader;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -140,9 +138,18 @@ public class RecommendationsFragment extends Fragment implements LoaderManager.L
             this.data = data;
         }
 
-        public void setData(List<ShowEntity> data) {
-            this.data = data;
+        public void setData(List<ShowEntity> list) {
+            this.data = list;
             notifyDataSetChanged();
+            if (list.size() == 0) {
+                final Snackbar make = Snackbar.make(RecommendationsFragment.this.getView(), R.string.no_recommendations, Snackbar.LENGTH_INDEFINITE);
+                make.setAction(R.string.ok, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        make.dismiss();
+                    }
+                }).show();
+            }
         }
 
         // Create new views (invoked by the layout manager)
@@ -179,6 +186,7 @@ public class RecommendationsFragment extends Fragment implements LoaderManager.L
                     Bundle bundle = new Bundle();
                     bundle.putString("title", holder.title.getText().toString());
                     bundle.putInt("id", (int) showEntity.getTrakt_id());
+                    bundle.putInt("from", 1);
                     dialog.setArguments(bundle);
                     dialog.show(getActivity().getFragmentManager(), "dialog");
                     return true;

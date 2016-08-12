@@ -4,8 +4,6 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -15,16 +13,11 @@ import android.os.Handler;
 import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
-import android.test.mock.MockApplication;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.ProgressBar;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.uwetrottmann.trakt5.TraktV2;
 import com.uwetrottmann.trakt5.entities.Show;
@@ -36,7 +29,6 @@ import com.uwetrottmann.trakt5.enums.Extended;
 
 import org.greenrobot.eventbus.EventBus;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,8 +36,6 @@ import apps.novin.tvcompanion.db.EpisodeEntity;
 import apps.novin.tvcompanion.db.EpisodeEntityDao;
 import apps.novin.tvcompanion.db.ShowEntity;
 import apps.novin.tvcompanion.db.ShowEntityDao;
-import butterknife.BindView;
-import butterknife.ButterKnife;
 
 /**
  * Created by ncnov on 8/9/2016.
@@ -57,6 +47,7 @@ public class LongPressDialog extends DialogFragment {
     Button recommendationRemove;
 
     int id;
+    private int from;
 
     ShowEntityDao showEntityDao;
     EpisodeEntityDao episodeEntityDao;
@@ -91,6 +82,7 @@ public class LongPressDialog extends DialogFragment {
         builder.setView(view);
         builder.setTitle(getArguments().getString("title"));
         id = getArguments().getInt("id");
+        from = getArguments().getInt("from");
         setUpButtons();
         AlertDialog dialog = builder.create();
         dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
@@ -202,77 +194,81 @@ public class LongPressDialog extends DialogFragment {
                 }
             }
         });
-        recommendationRemove.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                LongPressDialog.this.dismiss();
-                final View rootView = getActivity().findViewById(R.id.content_frame);
-                final View progressBar = getActivity().findViewById(R.id.loading);
-                progressBar.setVisibility(View.VISIBLE);
-                final Snackbar snackbar = Snackbar.make(rootView, "Updating recommendations...", Snackbar.LENGTH_INDEFINITE);
-                snackbar.show();
-                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-                final TraktV2 traktV2 = new TraktV2(BuildConfig.API_KEY, BuildConfig.CLIENT_SECRET, "tvcompanion.novin.apps://oauthredirect");
-                String accessToken = preferences.getString("access_token", null);
-                if (accessToken != null) {
-                    traktV2.accessToken(accessToken);
-                    AsyncTask.execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            boolean successful = false;
-                            int count = 0;
-                            int maxTries = 3;
-                            while(true) {
-                                try {
-                                    successful = traktV2.recommendations().dismissShow("" + id).execute().isSuccessful();
-                                    break;
-                                } catch (Exception e) {
-                                    if (++count == maxTries) {
-                                        e.printStackTrace();
+        if (from == 1) {
+            recommendationRemove.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    LongPressDialog.this.dismiss();
+                    final View rootView = getActivity().findViewById(R.id.content_frame);
+                    final View progressBar = getActivity().findViewById(R.id.loading);
+                    progressBar.setVisibility(View.VISIBLE);
+                    final Snackbar snackbar = Snackbar.make(rootView, "Updating recommendations...", Snackbar.LENGTH_INDEFINITE);
+                    snackbar.show();
+                    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+                    final TraktV2 traktV2 = new TraktV2(BuildConfig.API_KEY, BuildConfig.CLIENT_SECRET, "tvcompanion.novin.apps://oauthredirect");
+                    String accessToken = preferences.getString("access_token", null);
+                    if (accessToken != null) {
+                        traktV2.accessToken(accessToken);
+                        AsyncTask.execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                boolean successful = false;
+                                int count = 0;
+                                int maxTries = 3;
+                                while(true) {
+                                    try {
+                                        successful = traktV2.recommendations().dismissShow("" + id).execute().isSuccessful();
                                         break;
+                                    } catch (Exception e) {
+                                        if (++count == maxTries) {
+                                            e.printStackTrace();
+                                            break;
+                                        }
                                     }
                                 }
-                            }
-                            if (!successful) {
+                                if (!successful) {
+                                    snackbar.dismiss();
+                                    Snackbar.make(rootView, "Couldn't remove recommendation from trakt, most likely due to a connection issue", Snackbar.LENGTH_LONG).show();
+                                    return;
+                                }
+                                List<Show> recommendations;
+                                count = 0;
+                                maxTries = 3;
+                                while(true) {
+                                    try {
+                                        recommendations = traktV2.recommendations().shows(Extended.FULLIMAGES).execute().body();
+                                        break;
+                                    } catch (Exception e) {
+                                        if (++count == maxTries) e.printStackTrace();
+                                    }
+                                }
+                                final List<ShowEntity> recommendationsToInsert = new ArrayList<>();
+                                for (Show show : recommendations) {
+                                    SyncAdapter.getStatsForRecommendationAndUpdatePositions(show, recommendationsToInsert, recommendations, traktV2, showEntityDao);
+                                }
+                                showEntityDao.insertInTx(recommendationsToInsert);
+                                List<EpisodeEntity> episodesToInsert = new ArrayList<>();
+                                for (ShowEntity showEntity : recommendationsToInsert) {
+                                    SyncAdapter.getEpisodesFor(showEntity, traktV2, episodeEntityDao, episodesToInsert, false);
+                                }
+                                episodeEntityDao.insertInTx(episodesToInsert);
                                 snackbar.dismiss();
-                                Snackbar.make(rootView, "Couldn't remove recommendation from trakt, most likely due to a connection issue", Snackbar.LENGTH_LONG).show();
-                                return;
+                                Snackbar.make(rootView, "Recommendations updated!", Snackbar.LENGTH_LONG).show();
+                                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        progressBar.setVisibility(View.INVISIBLE);
+                                    }
+                                });
+                                EventBus.getDefault().postSticky(new DatabaseUpdatedEvent(false));
                             }
-                            List<Show> recommendations;
-                            count = 0;
-                            maxTries = 3;
-                            while(true) {
-                                try {
-                                    recommendations = traktV2.recommendations().shows(Extended.FULLIMAGES).execute().body();
-                                    break;
-                                } catch (Exception e) {
-                                    if (++count == maxTries) e.printStackTrace();
-                                }
-                            }
-                            final List<ShowEntity> recommendationsToInsert = new ArrayList<>();
-                            for (Show show : recommendations) {
-                                SyncAdapter.getStatsForRecommendationAndUpdatePositions(show, recommendationsToInsert, recommendations, traktV2, showEntityDao);
-                            }
-                            showEntityDao.insertInTx(recommendationsToInsert);
-                            List<EpisodeEntity> episodesToInsert = new ArrayList<>();
-                            for (ShowEntity showEntity : recommendationsToInsert) {
-                                SyncAdapter.getEpisodesFor(showEntity, traktV2, episodeEntityDao, episodesToInsert, false);
-                            }
-                            episodeEntityDao.insertInTx(episodesToInsert);
-                            snackbar.dismiss();
-                            Snackbar.make(rootView, "Recommendations updated!", Snackbar.LENGTH_LONG).show();
-                            new Handler(Looper.getMainLooper()).post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    progressBar.setVisibility(View.INVISIBLE);
-                                }
-                            });
-                            EventBus.getDefault().postSticky(new DatabaseUpdatedEvent(false));
-                        }
-                    });
+                        });
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            recommendationRemove.setEnabled(false);
+        }
     }
 
 }

@@ -13,7 +13,7 @@ import apps.novin.tvcompanion.db.ShowEntityContentProvider;
  */
 public class App extends Application {
 
-    DaoSession daoSession;
+    private DaoSession daoSession;
 
     @Override
     public void onCreate() {

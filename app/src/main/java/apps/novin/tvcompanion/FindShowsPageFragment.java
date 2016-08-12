@@ -13,9 +13,9 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -294,6 +294,8 @@ public class FindShowsPageFragment extends Fragment implements LoaderManager.Loa
             ImageView poster;
             @BindView(R.id.heart_icon)
             ImageView heartIcon;
+            @BindView(R.id.card_view)
+            CardView cardView;
             long id;
 
             public ViewHolder(View view) {
@@ -323,8 +325,8 @@ public class FindShowsPageFragment extends Fragment implements LoaderManager.Loa
 
         // Replace the contents of a view (invoked by the layout manager)
         @Override
-        public void onBindViewHolder(ViewHolder holder, int position) {
-            ShowEntity showEntity = mDataset.get(position);
+        public void onBindViewHolder(final ViewHolder holder, int position) {
+            final ShowEntity showEntity = mDataset.get(position);
             Glide.with(FindShowsPageFragment.this)
                     .load(showEntity.getPoster_url())
                     .placeholder(R.drawable.show_background)
@@ -343,6 +345,19 @@ public class FindShowsPageFragment extends Fragment implements LoaderManager.Loa
                 holder.genres.setVisibility(View.INVISIBLE);
             }
             holder.id = showEntity.getId();
+            holder.cardView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View view) {
+                    LongPressDialog dialog = new LongPressDialog();
+                    Bundle bundle = new Bundle();
+                    bundle.putString("title", holder.title.getText().toString());
+                    bundle.putInt("id", (int) showEntity.getTrakt_id());
+                    bundle.putInt("from", 0);
+                    dialog.setArguments(bundle);
+                    dialog.show(getActivity().getFragmentManager(), "dialog");
+                    return true;
+                }
+            });
         }
 
         // Return the size of your dataset (invoked by the layout manager)

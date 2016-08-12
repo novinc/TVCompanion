@@ -8,10 +8,11 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.google.firebase.analytics.FirebaseAnalytics;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +33,8 @@ public class FindShowsFragment extends Fragment {
 
     private float elevation;
 
+    private FirebaseAnalytics mFirebaseAnalytics;
+
     public FindShowsFragment() {
         // Required empty public constructor
     }
@@ -42,6 +45,7 @@ public class FindShowsFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_find_shows, container, false);
         ButterKnife.bind(this, view);
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(getContext());
         return view;
     }
 
@@ -54,6 +58,11 @@ public class FindShowsFragment extends Fragment {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 mViewPager.setCurrentItem(tab.getPosition());
+                // firebase analytics
+                Bundle bundle = new Bundle();
+                bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "FindShowsTab");
+                bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "" + tab.getText());
+                mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
             }
 
             @Override

@@ -5,10 +5,10 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
-import android.support.v4.content.Loader;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
@@ -160,6 +160,15 @@ public class MyShowsFragment extends Fragment implements LoaderManager.LoaderCal
         public void setData(List<ShowEntity> list) {
             mDataset = list;
             notifyDataSetChanged();
+            if (list.size() == 0) {
+                final Snackbar make = Snackbar.make(MyShowsFragment.this.getView(), R.string.no_watch_history, Snackbar.LENGTH_INDEFINITE);
+                make.setAction(R.string.ok, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        make.dismiss();
+                    }
+                }).show();
+            }
         }
 
         // Provide a reference to the views for each data item
