@@ -148,8 +148,8 @@ public class ShowDetailDialog extends DialogFragment {
                         year.setText(showEntity.getYear() != null ? String.format(Locale.ENGLISH, "%d", showEntity.getYear()) : "");
                         if ((showEntity.getWatchers() != null && showEntity.getPlayers() != null) || showEntity.getPercent_heart() != 0) {
                             percentage.setText(String.format(Locale.ENGLISH, "%d%%", showEntity.getPercent_heart()));
-                            watchers.setText(String.format(Locale.ENGLISH, "%s watchers", statFormat(showEntity.getWatchers())));
-                            plays.setText(String.format(Locale.ENGLISH, "%s plays", statFormat(showEntity.getPlayers())));
+                            watchers.setText(String.format(Locale.ENGLISH, getString(R.string.watchers), statFormat(showEntity.getWatchers())));
+                            plays.setText(String.format(Locale.ENGLISH, getString(R.string.players), statFormat(showEntity.getPlayers())));
                         } else {
                             heartIcon.setVisibility(View.INVISIBLE);
                             eyeIcon.setVisibility(View.INVISIBLE);
@@ -174,7 +174,7 @@ public class ShowDetailDialog extends DialogFragment {
                 fab.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(final View view) {
-                        final Snackbar make = Snackbar.make(view, "One second", Snackbar.LENGTH_INDEFINITE);
+                        final Snackbar make = Snackbar.make(view, R.string.one_sec, Snackbar.LENGTH_INDEFINITE);
                         fab.setClickable(false);
                         AsyncTask.execute(new Runnable() {
                             @Override
@@ -215,7 +215,7 @@ public class ShowDetailDialog extends DialogFragment {
                                             public void run() {
                                                 make.dismiss();
                                                 fab.setImageResource(R.drawable.ic_add_black);
-                                                Snackbar.make(view, "Removed show and all episodes from watched history", Snackbar.LENGTH_LONG).show();
+                                                Snackbar.make(view, R.string.removed_show, Snackbar.LENGTH_LONG).show();
                                             }
                                         });
                                         EventBus.getDefault().postSticky(new DatabaseUpdatedEvent());
@@ -224,7 +224,7 @@ public class ShowDetailDialog extends DialogFragment {
                                             @Override
                                             public void run() {
                                                 make.dismiss();
-                                                Snackbar.make(view, "Could not remove from trakt, try again later. Most likely due to connectivity issues", Snackbar.LENGTH_LONG).show();
+                                                Snackbar.make(view, R.string.remove_show_fail, Snackbar.LENGTH_LONG).show();
                                             }
                                         });
                                     }
@@ -274,7 +274,7 @@ public class ShowDetailDialog extends DialogFragment {
                                     if (success) {
                                         if (show != null) {
                                             showEntity.setPercent_heart((int)(10 * show.rating));
-                                            showEntity.setGenres("genres: " + show.genres.toString().replace("[", "").replace("]", ""));
+                                            showEntity.setGenres(getString(R.string.genres) + show.genres.toString().replace("[", "").replace("]", ""));
                                             if (stats != null) {
                                                 showEntity.setWatchers(stats.watchers.longValue());
                                                 showEntity.setPlayers(stats.plays.longValue());
@@ -290,8 +290,8 @@ public class ShowDetailDialog extends DialogFragment {
                                                     percentage.setText(String.format(Locale.ENGLISH, "%d%%", showEntity.getPercent_heart()));
                                                     heartIcon.setVisibility(View.VISIBLE);
                                                     if (finalStats != null) {
-                                                        watchers.setText(String.format(Locale.ENGLISH, "%s watchers", statFormat(showEntity.getWatchers())));
-                                                        plays.setText(String.format(Locale.ENGLISH, "%s plays", statFormat(showEntity.getPlayers())));
+                                                        watchers.setText(String.format(Locale.ENGLISH, getString(R.string.watchers), statFormat(showEntity.getWatchers())));
+                                                        plays.setText(String.format(Locale.ENGLISH, getString(R.string.players), statFormat(showEntity.getPlayers())));
                                                         eyeIcon.setVisibility(View.VISIBLE);
                                                     }
                                                 }
@@ -310,7 +310,7 @@ public class ShowDetailDialog extends DialogFragment {
                                             public void run() {
                                                 make.dismiss();
                                                 fab.setImageResource(R.drawable.ic_check_black);
-                                                Snackbar.make(view, "Added show and all episodes to watched history", Snackbar.LENGTH_LONG).show();
+                                                Snackbar.make(view, R.string.added_show, Snackbar.LENGTH_LONG).show();
                                                 updateSpinnerAndEpisodes(showEntity, episodeEntityDao);
                                             }
                                         });
@@ -320,7 +320,7 @@ public class ShowDetailDialog extends DialogFragment {
                                             @Override
                                             public void run() {
                                                 make.dismiss();
-                                                Snackbar.make(view, "Could not add to trakt, try again later. Most likely due to connectivity issues", Snackbar.LENGTH_LONG).show();
+                                                Snackbar.make(view, R.string.add_show_failed, Snackbar.LENGTH_LONG).show();
                                             }
                                         });
                                     }
@@ -346,10 +346,9 @@ public class ShowDetailDialog extends DialogFragment {
         if (all.size() > 0) {
             final int seasonStart = all.get(0).getSeason();
             int numSeasons = showEntity.getSeasons();
-            Log.d("details", "start " + seasonStart + " num " + numSeasons);
             List<String> seasons = new ArrayList<>(numSeasons);
             for (int i = seasonStart; i < numSeasons + seasonStart; i++) {
-                seasons.add("season " + i);
+                seasons.add(getString(R.string.season) + " " + i);
             }
             final ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, seasons);
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);

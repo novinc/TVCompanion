@@ -201,21 +201,21 @@ public class MainActivity extends AppCompatActivity
         int num;
         if (milliDif > 24 * 60 * 60 * 1000) {
             num = Math.round(((Long) milliDif).floatValue() / (24*60*60*1000));
-            unit = "days";
+            unit = getString(R.string.days);
         } else if (milliDif > 60 * 60 * 1000) {
             num = Math.round(((Long) milliDif).floatValue() / (60*60*1000));
-            unit = "hours";
+            unit = getString(R.string.hours);
         } else if (milliDif > 60 * 1000) {
             num = Math.round(((Long) milliDif).floatValue() / (60*1000));
-            unit = "minutes";
+            unit = getString(R.string.minutes);
         } else if (milliDif > 1000) {
             num = Math.round(((Long) milliDif).floatValue() / (1000));
-            unit = "seconds";
+            unit = getString(R.string.seconds);
         } else if (milliDif != 0){
             num = Math.round(milliDif);
-            unit = "milliseconds";
+            unit = getString(R.string.milliseconds);
         } else {
-            return "not synced yet";
+            return getString(R.string.no_sync);
         }
         if (num == 1) {
             unit = unit.substring(0, unit.length() - 1);

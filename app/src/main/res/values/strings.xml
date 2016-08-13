@@ -69,5 +69,25 @@
 
     <string name="main_banner_ad_unit_id">ca-app-pub-6177115838392476/3147329145</string>
 
+    <string name="one_sec">One second</string>
+    <string name="removed_show">Removed show and all episodes from watched history</string>
+    <string name="remove_show_fail">Could not remove from trakt, try again later. Most likely due to connectivity issues</string>
+    <string name="watchers">%1$s watchers</string>
+    <string name="players">%1$s plays</string>
+    <string name="added_show">Added show and all episodes to watched history</string>
+    <string name="add_show_failed">Could not add to trakt, try again later. Most likely due to connectivity issues</string>
+    <string name="genres">genres:</string>
+    <string name="days">days</string>
+    <string name="hours">hours</string>
+    <string name="minutes">minutes</string>
+    <string name="seconds">seconds</string>
+    <string name="milliseconds">milliseconds</string>
+    <string name="no_sync">not synced yet</string>
+    <string name="adding_watchlist">Adding to watchlist…</string>
+    <string name="remove_recommendation_fail">Couldn\'t remove recommendation from trakt, most likely due to a connection issue</string>
+    <string name="watchlist_added">Added to watchlist and recommendations updated!</string>
+    <string name="updating_recommendations">Updating recommendations…</string>
+    <string name="recommendations_updated">Recommendations updated!</string>
+
 
 </resources>

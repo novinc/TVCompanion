@@ -184,12 +184,12 @@ public class FindShowsPageFragment extends Fragment implements LoaderManager.Loa
                                     if (sameShows.size() == 0) {
                                         final ShowEntity showEntity;
                                         if (result.show.genres == null) {
-                                            showEntity = new ShowEntity(null, result.show.ids.trakt, result.show.title, "genres:", result.show.overview,
+                                            showEntity = new ShowEntity(null, result.show.ids.trakt, result.show.title, getString(R.string.genres), result.show.overview,
                                                     0, 0, result.show.images.poster.thumb, result.show.images.fanart.medium,
                                                     result.show.year, null, null,
                                                     false, null, false, null, false, null, false);
                                         } else {
-                                            showEntity = new ShowEntity(null, result.show.ids.trakt, result.show.title, "genres: " + result.show.genres.toString(), result.show.overview,
+                                            showEntity = new ShowEntity(null, result.show.ids.trakt, result.show.title, getString(R.string.genres) + result.show.genres.toString(), result.show.overview,
                                                     0, 0, result.show.images.poster.thumb, result.show.images.fanart.medium,
                                                     result.show.year, null, null,
                                                     false, null, false, null, false, null, false);

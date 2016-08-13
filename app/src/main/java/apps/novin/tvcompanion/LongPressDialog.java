@@ -107,7 +107,7 @@ public class LongPressDialog extends DialogFragment {
                 final View rootView = getActivity().findViewById(R.id.content_frame);
                 final View progressBar = getActivity().findViewById(R.id.loading);
                 progressBar.setVisibility(View.VISIBLE);
-                final Snackbar snackbar = Snackbar.make(rootView, "Adding to watchlist...", Snackbar.LENGTH_INDEFINITE);
+                final Snackbar snackbar = Snackbar.make(rootView, R.string.adding_watchlist, Snackbar.LENGTH_INDEFINITE);
                 snackbar.show();
                 SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
                 final TraktV2 traktV2 = new TraktV2(BuildConfig.API_KEY, BuildConfig.CLIENT_SECRET, "tvcompanion.novin.apps://oauthredirect");
@@ -155,7 +155,7 @@ public class LongPressDialog extends DialogFragment {
                                 }
                                 if (!successful) {
                                     snackbar.dismiss();
-                                    Snackbar.make(rootView, "Couldn't remove recommendation from trakt, most likely due to a connection issue", Snackbar.LENGTH_LONG).show();
+                                    Snackbar.make(rootView, R.string.remove_recommendation_fail, Snackbar.LENGTH_LONG).show();
                                     return;
                                 }
                                 List<Show> recommendations;
@@ -180,7 +180,7 @@ public class LongPressDialog extends DialogFragment {
                                 }
                                 episodeEntityDao.insertInTx(episodesToInsert);
                                 snackbar.dismiss();
-                                Snackbar.make(rootView, "Added to watchlist and recommendations updated!", Snackbar.LENGTH_LONG).show();
+                                Snackbar.make(rootView, R.string.watchlist_added, Snackbar.LENGTH_LONG).show();
                                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                                     @Override
                                     public void run() {
@@ -202,7 +202,7 @@ public class LongPressDialog extends DialogFragment {
                     final View rootView = getActivity().findViewById(R.id.content_frame);
                     final View progressBar = getActivity().findViewById(R.id.loading);
                     progressBar.setVisibility(View.VISIBLE);
-                    final Snackbar snackbar = Snackbar.make(rootView, "Updating recommendations...", Snackbar.LENGTH_INDEFINITE);
+                    final Snackbar snackbar = Snackbar.make(rootView, R.string.updating_recommendations, Snackbar.LENGTH_INDEFINITE);
                     snackbar.show();
                     SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
                     final TraktV2 traktV2 = new TraktV2(BuildConfig.API_KEY, BuildConfig.CLIENT_SECRET, "tvcompanion.novin.apps://oauthredirect");
@@ -228,7 +228,7 @@ public class LongPressDialog extends DialogFragment {
                                 }
                                 if (!successful) {
                                     snackbar.dismiss();
-                                    Snackbar.make(rootView, "Couldn't remove recommendation from trakt, most likely due to a connection issue", Snackbar.LENGTH_LONG).show();
+                                    Snackbar.make(rootView, R.string.remove_recommendation_fail, Snackbar.LENGTH_LONG).show();
                                     return;
                                 }
                                 List<Show> recommendations;
@@ -253,7 +253,7 @@ public class LongPressDialog extends DialogFragment {
                                 }
                                 episodeEntityDao.insertInTx(episodesToInsert);
                                 snackbar.dismiss();
-                                Snackbar.make(rootView, "Recommendations updated!", Snackbar.LENGTH_LONG).show();
+                                Snackbar.make(rootView, R.string.recommendations_updated, Snackbar.LENGTH_LONG).show();
                                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                                     @Override
                                     public void run() {
