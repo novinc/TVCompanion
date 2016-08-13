@@ -478,14 +478,14 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         Show show = baseShow.show;
         return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + (show.genres == null ? "" : (show.genres.toString().replace("[", "").replace("]", ""))), show.overview,
                 0, show.rating != null ? (int) (show.rating * 10) : 0,
-                show.images.poster.thumb, show.images.fanart.medium, show.year, stats.watchers.longValue(), stats.plays.longValue(),
+                show.images.poster.thumb, show.images.fanart.medium, show.year, stats == null ? 0 : stats.watchers.longValue(), stats == null ? 0 : stats.plays.longValue(),
                 false, null, false, null, false, null, true);
     }
 
     private static ShowEntity getEntityFromRecommendedShow(Show show, int i, Stats stats) {
         return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + (show.genres == null ? "" : (show.genres.toString().replace("[", "").replace("]", ""))), show.overview,
                 0, show.rating != null ? (int) (show.rating * 10) : 0,
-                show.images.poster.thumb, show.images.fanart.medium, show.year, stats.watchers.longValue(), stats.plays.longValue(),
+                show.images.poster.thumb, show.images.fanart.medium, show.year, stats == null ? 0 : stats.watchers.longValue(), stats == null ? 0 : stats.plays.longValue(),
                 false, null, false, null, true, i, false);
     }
 
@@ -497,14 +497,14 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     private static ShowEntity getEntityFromPopularShow(Show show, int i, Stats stats) {
         return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + (show.genres == null ? "" : (show.genres.toString().replace("[", "").replace("]", ""))), show.overview,
                 0, show.rating != null ? (int) (show.rating * 10) : 0,
-                show.images.poster.thumb, show.images.fanart.medium, show.year, stats.watchers.longValue(), stats.plays.longValue(),
+                show.images.poster.thumb, show.images.fanart.medium, show.year, stats == null ? 0 : stats.watchers.longValue(), stats == null ? 0 : stats.plays.longValue(),
                 false, null, true, i, false, null, false);
     }
 
     private static ShowEntity getEntityFromTrendingShow(Show show, int i, Stats stats) {
         return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + (show.genres == null ? "" : (show.genres.toString().replace("[", "").replace("]", ""))), show.overview,
                 0, show.rating != null ? (int) (show.rating * 10) : 0,
-                show.images.poster.thumb, show.images.fanart.medium, show.year, stats.watchers.longValue(), stats.plays.longValue(),
+                show.images.poster.thumb, show.images.fanart.medium, show.year, stats == null ? 0 : stats.watchers.longValue(), stats == null ? 0 : stats.plays.longValue(),
                 true, i, false, null, false, null, false);
     }
 }
