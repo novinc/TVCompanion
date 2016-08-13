@@ -4,10 +4,10 @@ apply plugin: 'android-apt'
 android {
     signingConfigs {
         release {
-            keyAlias 'novinApps'
-            keyPassword 'myKeystorePass'
-            storeFile file('../../myKeystore.jks')
-            storePassword 'myKeystorePass'
+            keyAlias 'udacityKey'
+            keyPassword 'udacitypass'
+            storeFile file('./keystore.jks')
+            storePassword 'udacitypass'
         }
     }
     compileSdkVersion 24
