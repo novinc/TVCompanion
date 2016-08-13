@@ -293,15 +293,25 @@ public class MainActivity extends AppCompatActivity
         if (getIntent() != null) {
             boolean fromLogin = getIntent().getBooleanExtra("from_login", false);
             if (fromLogin) {
-                Bundle bundle = new Bundle();
-                bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
-                ContentResolver.requestSync(mAccount, AUTHORITY, bundle);
+                if (!ContentResolver.isSyncPending(mAccount, AUTHORITY) && !ContentResolver.isSyncActive(mAccount, AUTHORITY)) {
+                    Bundle bundle = new Bundle();
+                    bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+                    ContentResolver.requestSync(mAccount, AUTHORITY, bundle);
+                }
                 preferences.edit().putBoolean("syncing", true).apply();
                 progressBar.setVisibility(View.VISIBLE);
                 make = Snackbar.make(contentFragment, getString(R.string.full_sync_message), Snackbar.LENGTH_INDEFINITE);
                 make.show();
                 syncing = true;
                 getIntent().removeExtra("from_login");
+            }
+            if (getIntent().getAction() != null && getIntent().getAction().contains(Intent.ACTION_VIEW)) {
+                long id = getIntent().getLongExtra(ShowDetailActivity.ID_KEY, 0);
+                DialogFragment dialogFragment = new ShowDetailDialog();
+                Bundle bundle = new Bundle();
+                bundle.putLong(ShowDetailDialog.ID_KEY, id);
+                dialogFragment.setArguments(bundle);
+                dialogFragment.show(getSupportFragmentManager(), "details");
             }
         }
         syncing = preferences.getBoolean("syncing", false);
@@ -473,11 +483,11 @@ public class MainActivity extends AppCompatActivity
                 return true;
             }
             return false;
-        } else if (id == R.id.nav_settings) {
+        } /*else if (id == R.id.nav_settings) { TODO settings and about
             return false;
         } else if (id == R.id.nav_about) {
             return false;
-        }
+        }*/
 
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.content_frame, currentFragment)
@@ -521,23 +531,9 @@ public class MainActivity extends AppCompatActivity
             TextView title = (TextView) view.findViewById(R.id.title);
             TextView genre = (TextView) view.findViewById(R.id.genres);
             Pair<View, String> posterTrans = Pair.create((View) poster, getString(R.string.poster_transition));
-            Pair<View, String> titleTrans = null;
-            Pair<View, String> genreTrans = null;
-            if (title != null) {
-                //titleTrans = Pair.create((View) title, getString(R.string.title_transition));
-            }
-            if (genre != null) {
-                //genreTrans = Pair.create((View) genre, getString(R.string.genre_transition));
-            }
             ActivityOptionsCompat options;
-            if (titleTrans == null && genreTrans == null) {
-                options = ActivityOptionsCompat.
-                        makeSceneTransitionAnimation(this, posterTrans);
-
-            } else {
-                options = ActivityOptionsCompat.
-                        makeSceneTransitionAnimation(this, posterTrans, titleTrans, genreTrans);
-            }
+            options = ActivityOptionsCompat.
+                    makeSceneTransitionAnimation(this, posterTrans);
             startActivity(intent, options.toBundle());
 
         } else if (screenType == ScreenType.BIG_TABLET) {

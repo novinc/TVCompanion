@@ -103,7 +103,7 @@ public class ShowDetailActivity extends AppCompatActivity {
         IDLE
     }
 
-    public static final String ID_KEY = "traktID";
+    public static final String ID_KEY = "ID";
 
     private long id;
 
