@@ -88,6 +88,7 @@ public class MainActivity extends AppCompatActivity
     private Fragment currentFragment;
 
     private FirebaseAnalytics mFirebaseAnalytics;
+    private boolean ads = true;
 
     private enum ScreenType {
         PHONE, SMALL_TABLET, SMALL_TABLET_LAND, BIG_TABLET
@@ -123,11 +124,13 @@ public class MainActivity extends AppCompatActivity
 
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
 
-        AdRequest request = new AdRequest.Builder()
-                .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)        // All emulators
-                .addTestDevice("5B11814D0C43B2169F63811CB9BB055A")
-                .build();
-        adView.loadAd(request);
+        if (ads) {
+            AdRequest request = new AdRequest.Builder()
+                    .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)        // All emulators
+                    //.addTestDevice("5B11814D0C43B2169F63811CB9BB055A")
+                    .build();
+            adView.loadAd(request);
+        }
 
         Resources r = getResources();
         elevation = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, r.getDisplayMetrics());
