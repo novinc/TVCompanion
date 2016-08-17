@@ -4,10 +4,10 @@ apply plugin: 'android-apt'
 android {
     signingConfigs {
         release {
-            keyAlias ''
-            keyPassword ''
-            storeFile file('')
-            storePassword ''
+            keyAlias RELEASE_KEY_ALIAS
+            keyPassword RELEASE_KEY_PASSWORD
+            storeFile file(RELEASE_STORE_FILE)
+            storePassword RELEASE_STORE_PASSWORD
         }
     }
     compileSdkVersion 24
