@@ -136,6 +136,7 @@ public class ShowDetailDialog extends DialogFragment {
                                 .placeholder(R.drawable.show_background)
                                 .error(R.drawable.trakt)
                                 .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                .centerCrop()
                                 .into(poster);
                         backdropURL = showEntity.getBackdrop_url();
                         Glide.with(ShowDetailDialog.this).load(backdropURL)
@@ -335,7 +336,17 @@ public class ShowDetailDialog extends DialogFragment {
                         });
                     }
                 });
-                updateSpinnerAndEpisodes(showEntity, episodeEntityDao);
+                AsyncTask.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Thread.sleep(700);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        updateSpinnerAndEpisodes(showEntity, episodeEntityDao);
+                    }
+                });
             }
         });
         return view;

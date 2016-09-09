@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<transitionSet xmlns:android="http://schemas.android.com/apk/res/android" android:transitionOrdering="together" android:duration="400">
+<transitionSet xmlns:android="http://schemas.android.com/apk/res/android"
+    android:transitionOrdering="together" android:duration="250" android:interpolator="@android:interpolator/linear">
+
     <slide android:slideEdge="top">
         <targets>
             <target android:targetId="@id/appbar"/>
@@ -9,13 +11,22 @@
             <target android:targetId="@id/add_fab"/>
         </targets>
     </slide>
-    <slide android:slideEdge="bottom" android:interpolator="@android:interpolator/decelerate_cubic">
+
+    <slide android:slideEdge="bottom">
         <targets>
             <target android:excludeId="@id/appbar"/>
             <target android:excludeId="@id/collapsing_toolbar"/>
             <target android:excludeId="@id/toolbar"/>
             <target android:excludeId="@id/backdrop"/>
             <target android:excludeId="@id/add_fab"/>
+            <target android:excludeId="@id/card_view_poster"/>
         </targets>
     </slide>
+
+    <fade android:startDelay="250" android:duration="0">
+        <targets>
+            <target android:targetId="@id/card_view_poster"/>
+        </targets>
+    </fade>
+
 </transitionSet>

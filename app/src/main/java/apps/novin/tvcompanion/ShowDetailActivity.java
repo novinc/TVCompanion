@@ -6,6 +6,8 @@ import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.AppBarLayout;
@@ -136,6 +138,7 @@ public class ShowDetailActivity extends AppCompatActivity {
                                 .placeholder(R.drawable.show_background)
                                 .error(R.drawable.trakt)
                                 .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                .centerCrop()
                                 .into(poster);
                         backdropURL = showEntity.getBackdrop_url();
                         Glide.with(ShowDetailActivity.this).load(backdropURL)
@@ -336,7 +339,17 @@ public class ShowDetailActivity extends AppCompatActivity {
                         });
                     }
                 });
-                updateSpinnerAndEpisodes(showEntity, episodeEntityDao);
+                AsyncTask.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Thread.sleep(700);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        updateSpinnerAndEpisodes(showEntity, episodeEntityDao);
+                    }
+                });
             }
         });
 
@@ -439,6 +452,13 @@ public class ShowDetailActivity extends AppCompatActivity {
             }
 
         });
+    }
+
+    @Override
+    public void onBackPressed() {
+        ((CardView) findViewById(R.id.card_view_poster)).setCardElevation(0);
+        ((CardView) findViewById(R.id.card_view_poster)).setCardBackgroundColor(0x00000000);
+        super.onBackPressed();
     }
 
     private void scheduleStartPostponedTransition(final View sharedElement) {

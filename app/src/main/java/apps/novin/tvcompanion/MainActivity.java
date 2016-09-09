@@ -531,8 +531,6 @@ public class MainActivity extends AppCompatActivity
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && screenType != ScreenType.BIG_TABLET) {
             ImageView poster = (ImageView) view.findViewById(R.id.poster);
             poster.setTransitionName(getString(R.string.poster_transition));
-            TextView title = (TextView) view.findViewById(R.id.title);
-            TextView genre = (TextView) view.findViewById(R.id.genres);
             Pair<View, String> posterTrans = Pair.create((View) poster, getString(R.string.poster_transition));
             ActivityOptionsCompat options;
             options = ActivityOptionsCompat.
