@@ -366,10 +366,10 @@ public class ShowDetailActivity extends AppCompatActivity {
             }
             final ArrayAdapter<String> adapter = new ArrayAdapter<>(ShowDetailActivity.this, android.R.layout.simple_spinner_item, seasons);
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            spinner.setEnabled(true);
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    spinner.setEnabled(true);
                     spinner.setAdapter(adapter);
                 }
             });
@@ -386,7 +386,12 @@ public class ShowDetailActivity extends AppCompatActivity {
                 }
             });
         } else {
-            spinner.setEnabled(false);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    spinner.setEnabled(false);
+                }
+            });
         }
     }
 

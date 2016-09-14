@@ -31,6 +31,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -75,12 +76,7 @@ public class MainActivity extends AppCompatActivity
     // Instance fields
     Account mAccount;
 
-    // Sync interval constants
-    public static final long SECONDS_PER_MINUTE = 60L;
-    public static final long SYNC_INTERVAL_IN_MINUTES = 1440L; // once a day
-    public static final long SYNC_INTERVAL =
-            SYNC_INTERVAL_IN_MINUTES *
-                    SECONDS_PER_MINUTE;
+
     private float elevation;
 
 
@@ -88,7 +84,6 @@ public class MainActivity extends AppCompatActivity
     private Fragment currentFragment;
 
     private FirebaseAnalytics mFirebaseAnalytics;
-    private boolean ads = true;
 
     private enum ScreenType {
         PHONE, SMALL_TABLET, SMALL_TABLET_LAND, BIG_TABLET
@@ -124,6 +119,10 @@ public class MainActivity extends AppCompatActivity
 
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
 
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+        boolean ads = !preferences.getBoolean("remove_ads", false);
+
         if (ads) {
             AdRequest request = new AdRequest.Builder()
                     .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)        // All emulators
@@ -155,17 +154,25 @@ public class MainActivity extends AppCompatActivity
             Intent intent = new Intent(this, LoginActivity.class);
             startActivityForResult(intent, 1);
         }
-        /*
-         * Turn on periodic syncing
-         */
         ContentResolver.setIsSyncable(mAccount, AUTHORITY, 1);
-        ContentResolver.setSyncAutomatically(mAccount, AUTHORITY, true);
 
-        ContentResolver.addPeriodicSync(
-                mAccount,
-                AUTHORITY,
-                Bundle.EMPTY,
-                SYNC_INTERVAL);
+        int syncInterval = Integer.parseInt(preferences.getString("sync_interval", null));
+
+        if (syncInterval != -1) {
+
+            syncInterval = syncInterval * 60 * 60; // need it in seconds
+
+            /*
+            * Turn on periodic syncing
+            */
+            ContentResolver.setSyncAutomatically(mAccount, AUTHORITY, true);
+            ContentResolver.addPeriodicSync(
+                    mAccount,
+                    AUTHORITY,
+                    Bundle.EMPTY,
+                    syncInterval);
+        }
+
         EventBus.getDefault().register(this);
     }
 
@@ -348,6 +355,18 @@ public class MainActivity extends AppCompatActivity
                 }, 400);
             }
         }
+        boolean ads = !preferences.getBoolean("remove_ads", false);
+        LinearLayout adscontainer = (LinearLayout) findViewById(R.id.adsContainer);
+        if (!ads) {
+            adscontainer.removeView(adView);
+        } else if (adscontainer.getChildCount() == 0) {
+            adscontainer.addView(adView);
+            AdRequest request = new AdRequest.Builder()
+                    .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)        // All emulators
+                    //.addTestDevice("5B11814D0C43B2169F63811CB9BB055A")
+                    .build();
+            adView.loadAd(request);
+        }
     }
 
     @Override
@@ -486,9 +505,10 @@ public class MainActivity extends AppCompatActivity
                 return true;
             }
             return false;
-        } /*else if (id == R.id.nav_settings) { TODO settings and about
-            return false;
-        } else if (id == R.id.nav_about) {
+        } else if (id == R.id.nav_settings) {
+            startActivity(new Intent(this, SettingsActivity.class));
+            return true;
+        } /*else if (id == R.id.nav_about) { TODO about
             return false;
         }*/
 

@@ -1,0 +1,32 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ListPreference
+        android:defaultValue="12"
+        android:entries="@array/sync_interval_titles"
+        android:entryValues="@array/sync_interval_values"
+        android:key="sync_interval"
+        android:title="@string/sync_interval"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"/>
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:title="@string/night_mode"
+        android:key="night_mode"/>
+
+    <apps.novin.tvcompanion.MyDialogPreference
+        android:title="@string/clear_data"
+        android:dialogMessage="@string/clear_data_msg"
+        android:positiveButtonText="@string/yes"
+        android:negativeButtonText="@string/no"/>
+
+    <Preference
+        android:title="@string/donate">
+        <intent />
+    </Preference>
+    <CheckBoxPreference
+        android:title="@string/remove_ads"
+        android:defaultValue="false"
+        android:key="remove_ads"/>
+
+</PreferenceScreen>

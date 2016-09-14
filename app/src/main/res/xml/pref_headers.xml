@@ -1,0 +1,15 @@
+<preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- These settings headers are only used on tablets. -->
+
+    <header
+        android:fragment="apps.novin.tvcompanion.SettingsActivity$AppPreferenceFragment"
+        android:icon="@drawable/ic_info_black_24dp"
+        android:title="@string/app_settings" />
+
+    <header
+        android:fragment="apps.novin.tvcompanion.SettingsActivity$AccountPreferenceFragment"
+        android:icon="@drawable/ic_account_circle_black"
+        android:title="@string/account_settings" />
+
+</preference-headers>

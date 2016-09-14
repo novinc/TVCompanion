@@ -1,0 +1,9 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <apps.novin.tvcompanion.MyDialogPreference
+        android:title="@string/logout"
+        android:dialogMessage="@string/logout_msg"
+        android:positiveButtonText="@string/yes"
+        android:negativeButtonText="@string/no"/>
+
+</PreferenceScreen>
