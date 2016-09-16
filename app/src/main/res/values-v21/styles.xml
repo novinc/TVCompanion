@@ -1,6 +1,6 @@
 <resources>
 
-    <style name="AppTheme.NoActionBar">
+    <style name="AppTheme.NoActionBar" parent="AppTheme">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
@@ -8,10 +8,20 @@
         <item name="android:windowContentTransitions">true</item>
         <item name="android:windowActivityTransitions">true</item>
     </style>
-    <style name="AppTheme.Main" parent="AppTheme.NoActionBar">
+
+    <style name="AppTheme.Main.Light" parent="AppTheme.NoActionBar.Light">
         <item name="android:windowExitTransition">@transition/main_transition</item>
     </style>
-    <style name="AppTheme.Details" parent="AppTheme.NoActionBar">
+    <style name="AppTheme.Main.Dark" parent="AppTheme.NoActionBar.Dark">
+        <item name="android:colorBackground">?attr/backgroundColor</item>
+        <item name="android:windowExitTransition">@transition/main_transition</item>
+    </style>
+
+    <style name="AppTheme.Details.Light" parent="AppTheme.NoActionBar.Light">
+        <item name="android:windowAllowEnterTransitionOverlap">true</item>
+        <item name="android:windowEnterTransition">@transition/details_transition</item>
+    </style>
+    <style name="AppTheme.Details.Dark" parent="AppTheme.NoActionBar.Dark">
         <item name="android:windowAllowEnterTransitionOverlap">true</item>
         <item name="android:windowEnterTransition">@transition/details_transition</item>
     </style>

@@ -8,35 +8,64 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
-    <style name="AppTheme.NoActionBar">
+    <style name="AppTheme.NoActionBar" parent="AppTheme">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="AppTheme.Main" parent="AppTheme.NoActionBar">
-
+    <style name="AppTheme.NoActionBar.Light" parent="AppTheme.NoActionBar">
+        <item name="backgroundColor">#F4F4F6</item>
+        <item name="cardBackgroundColor">#FFFF</item>
+        <item name="textColor">#33343B</item>
+        <item name="secondaryTextColor">#8033343B</item>
     </style>
 
-    <style name="AppTheme.Details" parent="AppTheme.NoActionBar">
+    <style name="AppTheme.NoActionBar.Dark" parent="AppTheme.NoActionBar">
+        <item name="cardBackgroundColor">#33343B</item>
+        <item name="backgroundColor">#28292e</item>
+        <item name="textColor">#F4F4F6</item>
+        <item name="secondaryTextColor">#96F4F4F6</item>
+    </style>
 
+    <style name="AppTheme.Main.Light" parent="AppTheme.NoActionBar.Light" />
+    <style name="AppTheme.Main.Dark" parent="AppTheme.NoActionBar.Dark">
+        <item name="android:colorBackground">?attr/backgroundColor</item>
+    </style>
+
+    <style name="AppTheme.Details.Light" parent="AppTheme.NoActionBar.Light" />
+    <style name="AppTheme.Details.Dark" parent="AppTheme.NoActionBar.Dark" />
+
+    <style name="AppTheme.Settings.Light" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="AppTheme.Settings.Dark" parent="Theme.AppCompat">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
     </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
-
-
-
-    <style name="long_press_dialog" parent="ThemeOverlay.AppCompat.Dialog.Alert">
-        <item name="android:windowAnimationStyle">@style/MyAnimation.Window</item>
+    <style name="LongPressDialog.Light" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:windowAnimationStyle">@style/MyAnimation.Dialog</item>
+    </style>
+    <style name="LongPressDialog.Dark" parent="Theme.AppCompat.Dialog.Alert">
+        <item name="android:windowAnimationStyle">@style/MyAnimation.Dialog</item>
     </style>
 
-    <style name="MyAnimation.Window" parent="@android:style/Animation.Activity">
+    <style name="MyAnimation.Dialog" parent="@android:style/Animation.Dialog">
         <item name="android:windowEnterAnimation">@anim/anim_in</item>
         <item name="android:windowExitAnimation">@anim/anim_out</item>
     </style>
 
+    <style name="DrawerTitleText">
+        <item name="android:textColor">?attr/textColor</item>
+    </style>
 
 
 </resources>

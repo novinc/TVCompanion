@@ -10,7 +10,7 @@
     android:paddingLeft="@dimen/content_start_margin"
     android:paddingRight="0dp"
     android:fitsSystemWindows="true"
-    android:background="#eeeeee"
+    android:background="?attr/backgroundColor"
     tools:context="apps.novin.tvcompanion.MainActivity">
 
     <android.support.design.widget.AppBarLayout

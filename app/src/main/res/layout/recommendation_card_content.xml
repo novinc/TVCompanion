@@ -13,38 +13,35 @@
 
         <TextView
             android:id="@+id/title"
-            android:text="Mr. Robot"
             android:maxLines="2"
             android:textStyle="bold"
             android:textSize="20sp"
+            android:textColor="?attr/textColor"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            tools:ignore="HardcodedText"
             android:layout_marginLeft="16dp"
             android:layout_marginStart="16dp"
             android:layout_marginTop="16dp" />
 
         <TextView
             android:id="@+id/genres"
-            android:text="Genres: Drama, Crime, Thriller"
             android:textStyle="italic"
             android:maxLines="2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            tools:ignore="HardcodedText"
             android:textSize="12sp"
+            android:textColor="?attr/secondaryTextColor"
             android:layout_marginLeft="16dp"
             android:layout_marginStart="16dp"
             android:layout_marginTop="8dp"/>
 
         <TextView
             android:id="@+id/description"
-            android:text="The show follows Elliot, who is a cyber-security tech by day and vigilante hacker by night. He has used his hacking skills for justice and to protect those he cares about, but has problems connecting to people in the real world due to social anxiety. He strongly believes that the world is being ruled by the 1% of the 1% and, that using money and debt, they have enslaved mankind and he wishes desperately to change this. He is recruited by the head of a highly secret hacking group to take down the corporation he is being paid to protect with the hope of erasing 70% of all the debt in the world. He has had delusions in the past and sees a therapist who tries to help him and takes medication for it, but in the end he is unsure what is real and what is not, and so are we as we experience everything from his perspective."
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:maxLines="5"
-            tools:ignore="HardcodedText"
             android:textSize="12sp"
+            android:textColor="?attr/textColor"
             android:layout_marginLeft="16dp"
             android:layout_marginStart="16dp"
             android:layout_marginTop="8dp"
@@ -57,11 +54,10 @@
 
             <TextView
                 android:id="@+id/seasons"
-                android:text="2 Seasons"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                tools:ignore="HardcodedText"
+                android:textColor="?attr/secondaryTextColor"
                 android:layout_marginBottom="8dp"
                 android:layout_marginLeft="16dp"
                 android:layout_marginStart="16dp" />
@@ -73,10 +69,9 @@
 
                 <TextView
                     android:id="@+id/percentage"
-                    android:text="90%"
-                    tools:ignore="HardcodedText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:textColor="?attr/secondaryTextColor"
                     android:layout_gravity="center_vertical"
                     android:layout_marginBottom="8dp"
                     android:layout_marginRight="8dp"

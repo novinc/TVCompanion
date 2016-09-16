@@ -12,6 +12,7 @@
         android:clickable="true"
         android:foreground="?android:attr/selectableItemBackground"
         android:onClick="onShowPressed"
+        app:cardBackgroundColor="?attr/cardBackgroundColor"
         app:cardUseCompatPadding="true"
         app:cardPreventCornerOverlap="true"
         app:cardElevation="5dp">

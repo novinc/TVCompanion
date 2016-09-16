@@ -16,7 +16,7 @@
             android:title="@string/nav_my_shows" />
     </group>
 
-    <item android:title="@string/app">
+    <item android:title="@string/app" android:id="@+id/app_item">
         <menu>
             <item android:checkable="false"
                 android:id="@+id/action_refresh"

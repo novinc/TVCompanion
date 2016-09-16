@@ -116,9 +116,17 @@ public class ShowDetailActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if (((App) getApplication()).isNightModeEnabled()) {
+            setTheme(R.style.AppTheme_Details_Dark);
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_detail);
         ButterKnife.bind(this);
+        TypedValue typedValue = new TypedValue();
+        Resources.Theme theme = getTheme();
+        theme.resolveAttribute(R.attr.backgroundColor, typedValue, true);
+        int color = typedValue.data;
+        getWindow().getDecorView().setBackgroundColor(color);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             postponeEnterTransition();
             scheduleStartPostponedTransition(poster);
@@ -136,7 +144,7 @@ public class ShowDetailActivity extends AppCompatActivity {
                     public void run() {
                         Glide.with(ShowDetailActivity.this).load(showEntity.getPoster_url())
                                 .placeholder(R.drawable.show_background)
-                                .error(R.drawable.trakt)
+                                .error(R.drawable.trakt_vert)
                                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                                 .centerCrop()
                                 .into(poster);
@@ -364,8 +372,8 @@ public class ShowDetailActivity extends AppCompatActivity {
             for (int i = seasonStart; i < numSeasons + seasonStart; i++) {
                 seasons.add(getString(R.string.season) + " " + i);
             }
-            final ArrayAdapter<String> adapter = new ArrayAdapter<>(ShowDetailActivity.this, android.R.layout.simple_spinner_item, seasons);
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            final ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_item, seasons);
+            adapter.setDropDownViewResource(R.layout.dropdown_spinner_item);
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {

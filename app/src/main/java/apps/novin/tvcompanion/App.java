@@ -1,7 +1,9 @@
 package apps.novin.tvcompanion;
 
 import android.app.Application;
+import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
+import android.preference.PreferenceManager;
 
 import com.google.android.gms.ads.MobileAds;
 
@@ -17,6 +19,8 @@ public class App extends Application {
 
     private DaoSession daoSession;
 
+    private boolean isNightModeEnabled = false;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -27,9 +31,20 @@ public class App extends Application {
         daoSession = daoMaster.newSession();
         ShowEntityContentProvider.daoSession = daoSession;
         EpisodeEntityContentProvider.daoSession = daoSession;
+
+        // We load the Night Mode state here
+        SharedPreferences mPrefs =  PreferenceManager.getDefaultSharedPreferences(this);
+        this.isNightModeEnabled = mPrefs.getBoolean("night_mode", false);
     }
 
     public DaoSession getDaoSession() {
         return daoSession;
+    }
+
+    public boolean isNightModeEnabled() {
+        return isNightModeEnabled;
+    }
+    public void setIsNightModeEnabled(boolean isNightModeEnabled) {
+        this.isNightModeEnabled = isNightModeEnabled;
     }
 }

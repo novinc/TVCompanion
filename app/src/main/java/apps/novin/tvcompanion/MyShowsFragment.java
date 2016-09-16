@@ -212,7 +212,7 @@ public class MyShowsFragment extends Fragment implements LoaderManager.LoaderCal
             Glide.with(MyShowsFragment.this)
                     .load(showEntity.getPoster_url())
                     .placeholder(R.drawable.show_background)
-                    .error(R.drawable.trakt)
+                    .error(R.drawable.trakt_vert)
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .centerCrop()
                     .into(holder.poster);

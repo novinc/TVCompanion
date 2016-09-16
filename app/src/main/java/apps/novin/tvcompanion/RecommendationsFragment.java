@@ -170,7 +170,7 @@ public class RecommendationsFragment extends Fragment implements LoaderManager.L
             Glide.with(RecommendationsFragment.this)
                     .load(showEntity.getPoster_url())
                     .placeholder(R.drawable.show_background)
-                    .error(R.drawable.trakt)
+                    .error(R.drawable.trakt_vert)
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .into(holder.poster);
             holder.title.setText(showEntity.getName());

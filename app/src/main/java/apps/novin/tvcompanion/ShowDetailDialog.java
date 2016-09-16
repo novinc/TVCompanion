@@ -112,6 +112,11 @@ public class ShowDetailDialog extends DialogFragment {
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        if (((App) getActivity().getApplication()).isNightModeEnabled()) {
+            setStyle(STYLE_NO_FRAME, R.style.AppTheme_Main_Dark);
+        } else {
+            setStyle(STYLE_NO_FRAME, R.style.AppTheme_Main_Light);
+        }
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             id = getArguments().getLong(ID_KEY, 0);
@@ -134,7 +139,7 @@ public class ShowDetailDialog extends DialogFragment {
                     public void run() {
                         Glide.with(ShowDetailDialog.this).load(showEntity.getPoster_url())
                                 .placeholder(R.drawable.show_background)
-                                .error(R.drawable.trakt)
+                                .error(R.drawable.trakt_vert)
                                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                                 .centerCrop()
                                 .into(poster);
@@ -361,8 +366,8 @@ public class ShowDetailDialog extends DialogFragment {
             for (int i = seasonStart; i < numSeasons + seasonStart; i++) {
                 seasons.add(getString(R.string.season) + " " + i);
             }
-            final ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, seasons);
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            final ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), R.layout.spinner_item, seasons);
+            adapter.setDropDownViewResource(R.layout.dropdown_spinner_item);
             spinner.setEnabled(true);
             getActivity().runOnUiThread(new Runnable() {
                 @Override

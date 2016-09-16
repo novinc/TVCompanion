@@ -19,6 +19,9 @@
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:fitsSystemWindows="true"
+        android:background="?attr/backgroundColor"
+        app:itemIconTint="?attr/textColor"
+        app:itemTextColor="?attr/textColor"
         app:menu="@menu/activity_main_drawer" />
 
 </apps.novin.tvcompanion.CustomDrawerLayout>

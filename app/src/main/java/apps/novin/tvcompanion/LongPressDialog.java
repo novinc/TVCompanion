@@ -13,6 +13,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
+import android.test.mock.MockApplication;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -68,8 +69,12 @@ public class LongPressDialog extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState)
     {
         // Set a theme on the dialog builder constructor!
-        AlertDialog.Builder builder =
-                new AlertDialog.Builder(getActivity(), R.style.long_press_dialog);
+        AlertDialog.Builder builder;
+        if (((App) getActivity().getApplication()).isNightModeEnabled()) {
+            builder = new AlertDialog.Builder(getActivity(), R.style.LongPressDialog_Dark);
+        } else {
+            builder = new AlertDialog.Builder(getActivity(), R.style.LongPressDialog_Light);
+        }
         LayoutInflater inflater = getActivity().getLayoutInflater();
 
         showEntityDao = ((App) getActivity().getApplication()).getDaoSession().getShowEntityDao();

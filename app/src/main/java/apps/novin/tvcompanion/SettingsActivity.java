@@ -2,8 +2,11 @@ package apps.novin.tvcompanion;
 
 
 import android.annotation.TargetApi;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -17,9 +20,12 @@ import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
+import android.test.mock.MockApplication;
 import android.text.TextUtils;
 import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
+
+import com.jakewharton.processphoenix.ProcessPhoenix;
 
 import java.util.List;
 
@@ -97,6 +103,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if (((App) getApplication()).isNightModeEnabled()) {
+            setTheme(R.style.AppTheme_Settings_Dark);
+        }
         super.onCreate(savedInstanceState);
         setupActionBar();
     }
@@ -138,7 +147,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     @Override
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void onBuildHeaders(List<Header> target) {
-        loadHeadersFromResource(R.xml.pref_headers, target);
+        if (((App) getApplication()).isNightModeEnabled()) {
+            loadHeadersFromResource(R.xml.pref_headers_dark, target);
+        } else {
+            loadHeadersFromResource(R.xml.pref_headers, target);
+        }
     }
 
     /**
@@ -168,6 +181,30 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             // updated to reflect the new value, per the Android Design
             // guidelines.
             bindPreferenceSummaryToValue(findPreference("sync_interval"));
+            findPreference("night_mode").setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object o) {
+                    boolean b = (boolean) o;
+                    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+                    preferences.edit().putBoolean("night_mode", b).apply();
+                    ((App) getActivity().getApplication()).setIsNightModeEnabled(b);
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                            builder.setTitle("Restart to make changes");
+                            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    ProcessPhoenix.triggerRebirth(getActivity());
+                                }
+                            });
+                            builder.create().show();
+                        }
+                    });
+                    return true;
+                }
+            });
         }
 
         @Override

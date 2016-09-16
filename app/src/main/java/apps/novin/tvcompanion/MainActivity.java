@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -25,6 +26,9 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.test.mock.MockApplication;
+import android.text.SpannableString;
+import android.text.style.TextAppearanceSpan;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -97,9 +101,17 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if (((App) getApplication()).isNightModeEnabled()) {
+            setTheme(R.style.AppTheme_Main_Dark);
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+        TypedValue typedValue = new TypedValue();
+        Resources.Theme theme = getTheme();
+        theme.resolveAttribute(R.attr.backgroundColor, typedValue, true);
+        int color = typedValue.data;
+        getWindow().getDecorView().setBackgroundColor(color);
         String screen = getString(R.string.screen_type);
         switch (screen) {
             case "Phone":
@@ -134,6 +146,13 @@ public class MainActivity extends AppCompatActivity
         Resources r = getResources();
         elevation = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, r.getDisplayMetrics());
         currPage = 0;
+
+        Menu menu = mNavigationView.getMenu();
+
+        MenuItem tools= menu.findItem(R.id.app_item);
+        SpannableString s = new SpannableString(tools.getTitle());
+        s.setSpan(new TextAppearanceSpan(this, R.style.DrawerTitleText), 0, s.length(), 0);
+        tools.setTitle(s);
 
         mNavigationView.setNavigationItemSelectedListener(this);
 

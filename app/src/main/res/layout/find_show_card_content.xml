@@ -14,13 +14,12 @@
 
     <TextView
         android:id="@+id/title"
-        android:text="Person of Interest"
         android:maxLines="2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="12sp"
-        tools:ignore="HardcodedText"
         android:textStyle="normal|bold"
+        android:textColor="?attr/textColor"
         android:layout_marginLeft="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
@@ -29,7 +28,6 @@
 
     <TextView
         android:id="@+id/genres"
-        android:text="Genres: Drama, Mystery, Thriller, Action, Adventure"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="8dp"
@@ -37,7 +35,7 @@
         android:layout_marginRight="8dp"
         android:layout_marginEnd="8dp"
         android:maxLines="2"
-        tools:ignore="HardcodedText"
+        android:textColor="?attr/secondaryTextColor"
         android:textSize="12sp" />
 
     <LinearLayout
@@ -48,11 +46,10 @@
 
         <TextView
             android:id="@+id/year"
-            android:text="2011"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="13sp"
-            tools:ignore="HardcodedText"
+            android:textColor="?attr/secondaryTextColor"
             android:layout_marginLeft="8dp"
             android:layout_marginStart="8dp"/>
 
@@ -64,10 +61,9 @@
 
             <TextView
                 android:id="@+id/percentage"
-                android:text="90%"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:ignore="HardcodedText"
+                android:textColor="?attr/secondaryTextColor"
                 android:textSize="13sp" />
 
             <ImageView

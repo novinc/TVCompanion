@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
+    android:background="?attr/backgroundColor"
     android:layout_height="wrap_content"
     android:layout_width="match_parent">
 
@@ -23,16 +25,16 @@
 
         <TextView
             android:id="@+id/percentage"
-            android:text="90%"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            tools:ignore="HardcodedText"
+            android:textColor="?attr/secondaryTextColor"
             android:layout_marginRight="8dp"
             android:layout_marginEnd="8dp" />
 
         <ImageView
             android:id="@+id/eye_icon"
             android:src="@drawable/ic_visibility_black"
+            android:tint="?attr/textColor"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:contentDescription="@string/desc_watchers"
@@ -46,19 +48,17 @@
 
             <TextView
                 android:id="@+id/watchers"
-                android:text="81k watchers"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textColor="?attr/secondaryTextColor"
                 android:layout_marginRight="16dp"
-                android:layout_marginEnd="16dp"
-                tools:ignore="HardcodedText" />
+                android:layout_marginEnd="16dp" />
 
             <TextView
                 android:id="@+id/plays"
-                android:text="6.1m plays"
+                android:textColor="?attr/secondaryTextColor"
                 android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                tools:ignore="HardcodedText" />
+                android:layout_width="wrap_content"/>
 
         </LinearLayout>
 
@@ -74,10 +74,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:transitionName="@string/title_transition"
-            android:text="Mr. Robot"
             android:textSize="24sp"
             android:textStyle="normal|bold"
-            tools:ignore="HardcodedText"
+            android:textColor="?attr/textColor"
             tools:targetApi="lollipop"
             android:layout_marginLeft="16dp"
             android:layout_marginStart="16dp"/>
@@ -91,12 +90,11 @@
 
             <TextView
                 android:id="@+id/year"
-                android:text="2014"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:textSize="24sp"
-                tools:ignore="HardcodedText"
                 android:textStyle="normal|bold"
+                android:textColor="?attr/secondaryTextColor"
                 android:layout_marginRight="16dp"
                 android:layout_marginEnd="16dp" />
 
@@ -106,13 +104,12 @@
 
     <TextView
         android:id="@+id/genres"
-        android:text="Genres: Drama, Crime, Thriller"
         android:transitionName="@string/genre_transition"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="14sp"
-        tools:ignore="HardcodedText"
         android:textStyle="normal|italic"
+        android:textColor="?attr/secondaryTextColor"
         tools:targetApi="lollipop"
         android:layout_marginLeft="16dp"
         android:layout_marginStart="16dp"
@@ -122,16 +119,15 @@
 
     <TextView
         android:id="@+id/description"
-        android:text="The show follows Elliot, who is a cyber-security tech by day and vigilante hacker by night. He has used his hacking skills for justice and to protect those he cares about, but has problems connecting to people in the real world due to social anxiety. He strongly believes that the world is being ruled by the 1% of the 1% and, that using money and debt, they have enslaved mankind and he wishes desperately to change this. He is recruited by the head of a highly secret hacking group to take down the corporation he is being paid to protect with the hope of erasing 70% of all the debt in the world. He has had delusions in the past and sees a therapist who tries to help him and takes medication for it, but in the end he is unsure what is real and what is not, and so are we as we experience everything from his perspective."
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="18sp"
+        android:textColor="?attr/textColor"
         android:layout_marginLeft="16dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
         android:layout_marginRight="16dp"
-        android:layout_marginEnd="16dp"
-        tools:ignore="HardcodedText" />
+        android:layout_marginEnd="16dp"/>
 
     <Spinner
         android:id="@+id/seasons_spinner"
