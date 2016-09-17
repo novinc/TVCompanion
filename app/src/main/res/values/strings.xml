@@ -121,6 +121,7 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="logout_msg">Are you sure you want to logout?</string>
+    <string name="please_wait">Please wait...</string>
 
 
 </resources>

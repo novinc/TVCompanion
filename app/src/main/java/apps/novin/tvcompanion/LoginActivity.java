@@ -10,14 +10,13 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.renderscript.Allocation;
-import android.renderscript.Element;
-import android.renderscript.RenderScript;
-import android.renderscript.ScriptIntrinsicBlur;
+import android.support.v8.renderscript.*;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.uwetrottmann.trakt5.TraktV2;
 import com.uwetrottmann.trakt5.entities.AccessToken;
@@ -36,6 +35,10 @@ public class LoginActivity extends AppCompatActivity {
     TraktV2 traktV2;
     @BindView(R.id.login_bg)
     ImageView imageView;
+    @BindView(R.id.log_in_button)
+    Button button;
+    @BindView(R.id.log_in_prompt)
+    TextView prompt;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +60,13 @@ public class LoginActivity extends AppCompatActivity {
                 public void run() {
                     Uri uri = getIntent().getData();
                     if (uri != null && uri.toString().startsWith("tvcompanion.novin.apps://oauthredirect")) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                button.setEnabled(false);
+                                prompt.setText(R.string.please_wait);
+                            }
+                        });
                         String code = uri.getQueryParameter("code");
                         String state = uri.getQueryParameter("state");
                         if (state.equals("Logged Out")) {

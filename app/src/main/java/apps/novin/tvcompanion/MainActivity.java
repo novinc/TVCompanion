@@ -175,7 +175,7 @@ public class MainActivity extends AppCompatActivity
         }
         ContentResolver.setIsSyncable(mAccount, AUTHORITY, 1);
 
-        int syncInterval = Integer.parseInt(preferences.getString("sync_interval", null));
+        int syncInterval = Integer.parseInt(preferences.getString("sync_interval", "12"));
 
         if (syncInterval != -1) {
 

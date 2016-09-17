@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="content_start_margin">240dp</dimen>
+    <dimen name="fab_margin">216dp</dimen>
+    <dimen name="details_padding">200dp</dimen>
 </resources>

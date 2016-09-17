@@ -112,11 +112,11 @@ public class ShowDetailDialog extends DialogFragment {
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        if (((App) getActivity().getApplication()).isNightModeEnabled()) {
+        /*if (((App) getActivity().getApplication()).isNightModeEnabled()) {
             setStyle(STYLE_NO_FRAME, R.style.AppTheme_Main_Dark);
         } else {
             setStyle(STYLE_NO_FRAME, R.style.AppTheme_Main_Light);
-        }
+        }*/
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             id = getArguments().getLong(ID_KEY, 0);
@@ -388,7 +388,12 @@ public class ShowDetailDialog extends DialogFragment {
                 }
             });
         } else {
-            spinner.setEnabled(false);
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    spinner.setEnabled(false);
+                }
+            });
         }
     }
 

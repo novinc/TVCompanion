@@ -19,6 +19,8 @@ android {
         versionCode 1
         versionName "1.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        renderscriptTargetApi 18
+        renderscriptSupportModeEnabled true
         buildConfigField("String", "API_KEY", traktKey)
         buildConfigField("String", "CLIENT_SECRET", clientSecret)
     }
