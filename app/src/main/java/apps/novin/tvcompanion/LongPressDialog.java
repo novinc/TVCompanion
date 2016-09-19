@@ -79,8 +79,12 @@ public class LongPressDialog extends DialogFragment {
 
         showEntityDao = ((App) getActivity().getApplication()).getDaoSession().getShowEntityDao();
         episodeEntityDao = ((App) getActivity().getApplication()).getDaoSession().getEpisodeEntityDao();
-
-        View view = inflater.inflate(R.layout.dialog_long_press, null);
+        View view;
+        if (((App) getActivity().getApplication()).isNightModeEnabled()) {
+            view = inflater.inflate(R.layout.dialog_long_press_dark, null);
+        } else {
+            view = inflater.inflate(R.layout.dialog_long_press, null);
+        }
         browser = (Button) view.findViewById(R.id.long_press_browser);
         watchlist = (Button) view.findViewById(R.id.long_press_add_watchlist);
         recommendationRemove = (Button) view.findViewById(R.id.remove_recommendation);

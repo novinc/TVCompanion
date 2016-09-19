@@ -15,7 +15,7 @@
         <Button
             android:id="@+id/long_press_browser"
             style="?buttonBarButtonStyle"
-            android:drawableTop="@drawable/ic_open_in_browser_black"
+            android:drawableTop="@drawable/ic_open_in_browser_white"
             android:text="@string/view_browser"
             android:textColor="?attr/textColor"
             android:layout_width="0dp"
@@ -25,7 +25,7 @@
         <Button
             android:id="@+id/remove_recommendation"
             style="?buttonBarButtonStyle"
-            android:drawableTop="@drawable/ic_close_black"
+            android:drawableTop="@drawable/ic_close_white"
             android:text="@string/remove_recommendation"
             android:textColor="?attr/textColor"
             android:layout_width="0dp"
@@ -38,7 +38,7 @@
     <Button
         android:id="@+id/long_press_add_watchlist"
         style="?buttonBarButtonStyle"
-        android:drawableTop="@drawable/ic_add_black"
+        android:drawableTop="@drawable/ic_add_white"
         android:text="@string/add_watchlist"
         android:textColor="?attr/textColor"
         android:layout_width="match_parent"
