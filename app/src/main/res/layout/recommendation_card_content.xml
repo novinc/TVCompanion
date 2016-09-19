@@ -2,14 +2,14 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="horizontal"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:layout_width="match_parent">
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="0dp"
         android:layout_weight="1"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent">
 
         <TextView
             android:id="@+id/title"
@@ -49,14 +49,14 @@
 
         <LinearLayout
             android:orientation="horizontal"
+            android:gravity="bottom"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="match_parent">
 
             <TextView
                 android:id="@+id/seasons"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
                 android:textColor="?attr/secondaryTextColor"
                 android:layout_marginBottom="8dp"
                 android:layout_marginLeft="16dp"
@@ -96,7 +96,7 @@
     <LinearLayout
         android:gravity="end|center_vertical"
         android:layout_width="124dp"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content">
 
         <ImageView
             android:id="@+id/poster"

@@ -14,16 +14,16 @@
         android:title="@string/night_mode"
         android:key="night_mode"/>
 
-    <apps.novin.tvcompanion.MyDialogPreference
+    <apps.novin.tvcompanion.ClearCacheDialogPreference
         android:title="@string/clear_data"
         android:dialogMessage="@string/clear_data_msg"
         android:positiveButtonText="@string/yes"
-        android:negativeButtonText="@string/no"/>
-
+        android:negativeButtonText="@string/no" />
+    <!-- TODO donate
     <Preference
         android:title="@string/donate">
         <intent />
-    </Preference>
+    </Preference>-->
     <CheckBoxPreference
         android:title="@string/remove_ads"
         android:defaultValue="false"
