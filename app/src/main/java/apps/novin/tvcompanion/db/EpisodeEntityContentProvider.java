@@ -12,9 +12,6 @@ import android.text.TextUtils;
 
 import de.greenrobot.dao.DaoLog;
 
-import apps.novin.tvcompanion.db.DaoSession;
-import apps.novin.tvcompanion.db.EpisodeEntityDao;
-
 /* Copy this code snippet into your AndroidManifest.xml inside the
 <application> element:
 

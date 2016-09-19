@@ -46,14 +46,17 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     private DaoSession mDaoSession;
     AtomicBoolean canceled;
+    static Context context;
 
     public SyncAdapter(Context context, boolean autoInitialize, DaoSession session) {
         super(context, autoInitialize);
         mDaoSession = session;
+        SyncAdapter.context = context;
     }
 
     public SyncAdapter(Context context, boolean autoInitialize, boolean allowParallelSyncs) {
         super(context, autoInitialize, allowParallelSyncs);
+        SyncAdapter.context = context;
     }
 
     @Override
@@ -232,11 +235,13 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             preferences.edit().putBoolean("syncing", true).apply();
         }
         List<BaseShow> myShows = null;
+        List<BaseShow> watchList = null;
         List<Show> recommendations = null;
         List<TrendingShow> trendingShows;
         List<Show> popular;
         if (oauth) {
             myShows = call(traktV2.sync().watchedShows(Extended.FULLIMAGES), "couldn't get my shows");
+            watchList = call(traktV2.sync().watchlistShows(Extended.FULLIMAGES), "couldn't get watchlist");
             recommendations = call(traktV2.recommendations().shows(Extended.FULLIMAGES), "couldn't get recommendations");
         }
         trendingShows = call(traktV2.shows().trending(1, 40, Extended.FULLIMAGES), "couldn't get trending shows");
@@ -250,6 +255,14 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                     getStatsForMyShow(show, myShowsToInsert, traktV2, showEntityDao);
                 }
                 showEntityDao.insertInTx(myShowsToInsert);
+            }
+            // watchlist shows
+            if (watchList != null) {
+                List<ShowEntity> watchListToInsert = new ArrayList<>();
+                for (BaseShow show : watchList) {
+                    getStatsForWatchList(show, watchListToInsert, traktV2, showEntityDao);
+                }
+                showEntityDao.insertInTx(watchListToInsert);
             }
             // recommendations
             if (recommendations != null) {
@@ -422,6 +435,22 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
     }
 
+    private static void getStatsForWatchList(BaseShow show, List<ShowEntity> watchListToInsert, TraktV2 traktV2, ShowEntityDao showEntityDao) {
+        Stats stats = call(traktV2.shows().stats(show.show.ids.trakt.toString()), "couldn't get watchlist show stats for " + show.show.title);
+        List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(show.show.ids.trakt)).list();
+        if (sameShows.size() == 0) { // newly watched show not in app's database
+            ShowEntity newShow = getEntityFromWatchList(show, stats);
+            watchListToInsert.add(newShow);
+        } else {
+            sameShows.get(0).setWatch_list(true);
+            if (stats != null) {
+                sameShows.get(0).setWatchers(stats.watchers.longValue());
+                sameShows.get(0).setPlayers(stats.plays.longValue());
+            }
+            sameShows.get(0).update();
+        }
+    }
+
     public static void getEpisodesFor(ShowEntity showEntity, TraktV2 traktV2, EpisodeEntityDao episodeEntityDao, List<EpisodeEntity> episodesToInsert, boolean allEpisodes) {
         // load up all the seasons for show and all episodes for each season
         List<Season> seasons = call(traktV2.seasons().summary(String.format(Locale.ENGLISH, "%d", showEntity.getTrakt_id()), Extended.FULL), "couldn't get seasons for " + showEntity.getName());
@@ -476,17 +505,25 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     private static ShowEntity getEntityFromMyShow(BaseShow baseShow, Stats stats) {
         Show show = baseShow.show;
-        return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + (show.genres == null ? "" : (show.genres.toString().replace("[", "").replace("]", ""))), show.overview,
+        return new ShowEntity(null, show.ids.trakt, show.title, context.getString(R.string.genres) + (show.genres == null ? "" : (show.genres.toString().replace("[", "").replace("]", ""))), show.overview,
                 0, show.rating != null ? (int) (show.rating * 10) : 0,
                 show.images.poster.thumb, show.images.fanart.medium, show.year, stats == null ? 0 : stats.watchers.longValue(), stats == null ? 0 : stats.plays.longValue(),
-                false, null, false, null, false, null, true);
+                false, null, false, null, false, null, true, false);
+    }
+
+    private static ShowEntity getEntityFromWatchList(BaseShow baseShow, Stats stats) {
+        Show show = baseShow.show;
+        return new ShowEntity(null, show.ids.trakt, show.title, context.getString(R.string.genres) + (show.genres == null ? "" : (show.genres.toString().replace("[", "").replace("]", ""))), show.overview,
+                0, show.rating != null ? (int) (show.rating * 10) : 0,
+                show.images.poster.thumb, show.images.fanart.medium, show.year, stats == null ? 0 : stats.watchers.longValue(), stats == null ? 0 : stats.plays.longValue(),
+                false, null, false, null, false, null, false, true);
     }
 
     private static ShowEntity getEntityFromRecommendedShow(Show show, int i, Stats stats) {
-        return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + (show.genres == null ? "" : (show.genres.toString().replace("[", "").replace("]", ""))), show.overview,
+        return new ShowEntity(null, show.ids.trakt, show.title, context.getString(R.string.genres) + (show.genres == null ? "" : (show.genres.toString().replace("[", "").replace("]", ""))), show.overview,
                 0, show.rating != null ? (int) (show.rating * 10) : 0,
                 show.images.poster.thumb, show.images.fanart.medium, show.year, stats == null ? 0 : stats.watchers.longValue(), stats == null ? 0 : stats.plays.longValue(),
-                false, null, false, null, true, i, false);
+                false, null, false, null, true, i, false, false);
     }
 
     static EpisodeEntity getEpisodeEntity(Episode episode, Long id) {
@@ -495,16 +532,16 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     private static ShowEntity getEntityFromPopularShow(Show show, int i, Stats stats) {
-        return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + (show.genres == null ? "" : (show.genres.toString().replace("[", "").replace("]", ""))), show.overview,
+        return new ShowEntity(null, show.ids.trakt, show.title, context.getString(R.string.genres) + (show.genres == null ? "" : (show.genres.toString().replace("[", "").replace("]", ""))), show.overview,
                 0, show.rating != null ? (int) (show.rating * 10) : 0,
                 show.images.poster.thumb, show.images.fanart.medium, show.year, stats == null ? 0 : stats.watchers.longValue(), stats == null ? 0 : stats.plays.longValue(),
-                false, null, true, i, false, null, false);
+                false, null, true, i, false, null, false, false);
     }
 
     private static ShowEntity getEntityFromTrendingShow(Show show, int i, Stats stats) {
-        return new ShowEntity(null, show.ids.trakt, show.title, "genres: " + (show.genres == null ? "" : (show.genres.toString().replace("[", "").replace("]", ""))), show.overview,
+        return new ShowEntity(null, show.ids.trakt, show.title, context.getString(R.string.genres) + (show.genres == null ? "" : (show.genres.toString().replace("[", "").replace("]", ""))), show.overview,
                 0, show.rating != null ? (int) (show.rating * 10) : 0,
                 show.images.poster.thumb, show.images.fanart.medium, show.year, stats == null ? 0 : stats.watchers.longValue(), stats == null ? 0 : stats.plays.longValue(),
-                true, i, false, null, false, null, false);
+                true, i, false, null, false, null, false, false);
     }
 }

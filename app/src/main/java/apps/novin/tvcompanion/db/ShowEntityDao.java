@@ -42,6 +42,7 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
         public final static Property Recommendation = new Property(16, boolean.class, "recommendation", false, "RECOMMENDATION");
         public final static Property Recommendation_pos = new Property(17, Integer.class, "recommendation_pos", false, "RECOMMENDATION_POS");
         public final static Property My_show = new Property(18, boolean.class, "my_show", false, "MY_SHOW");
+        public final static Property Watch_list = new Property(19, boolean.class, "watch_list", false, "WATCH_LIST");
     };
 
     private DaoSession daoSession;
@@ -78,7 +79,8 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
                 "\"MOST_POPULAR_POS\" INTEGER UNIQUE ," + // 15: most_popular_pos
                 "\"RECOMMENDATION\" INTEGER NOT NULL ," + // 16: recommendation
                 "\"RECOMMENDATION_POS\" INTEGER UNIQUE ," + // 17: recommendation_pos
-                "\"MY_SHOW\" INTEGER NOT NULL );"); // 18: my_show
+                "\"MY_SHOW\" INTEGER NOT NULL ," + // 18: my_show
+                "\"WATCH_LIST\" INTEGER NOT NULL );"); // 19: watch_list
     }
 
     /** Drops the underlying database table. */
@@ -162,6 +164,7 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
             stmt.bindLong(18, recommendation_pos);
         }
         stmt.bindLong(19, entity.getMy_show() ? 1L: 0L);
+        stmt.bindLong(20, entity.getWatch_list() ? 1L: 0L);
     }
 
     @Override
@@ -198,7 +201,8 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
             cursor.isNull(offset + 15) ? null : cursor.getInt(offset + 15), // most_popular_pos
             cursor.getShort(offset + 16) != 0, // recommendation
             cursor.isNull(offset + 17) ? null : cursor.getInt(offset + 17), // recommendation_pos
-            cursor.getShort(offset + 18) != 0 // my_show
+            cursor.getShort(offset + 18) != 0, // my_show
+            cursor.getShort(offset + 19) != 0 // watch_list
         );
         return entity;
     }
@@ -225,6 +229,7 @@ public class ShowEntityDao extends AbstractDao<ShowEntity, Long> {
         entity.setRecommendation(cursor.getShort(offset + 16) != 0);
         entity.setRecommendation_pos(cursor.isNull(offset + 17) ? null : cursor.getInt(offset + 17));
         entity.setMy_show(cursor.getShort(offset + 18) != 0);
+        entity.setWatch_list(cursor.getShort(offset + 19) != 0);
      }
     
     /** @inheritdoc */

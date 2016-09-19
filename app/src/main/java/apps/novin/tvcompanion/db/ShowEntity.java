@@ -30,6 +30,7 @@ public class ShowEntity implements java.io.Serializable {
     private boolean recommendation;
     private Integer recommendation_pos;
     private boolean my_show;
+    private boolean watch_list;
 
     /** Used to resolve relations */
     private transient DaoSession daoSession;
@@ -46,7 +47,7 @@ public class ShowEntity implements java.io.Serializable {
         this.id = id;
     }
 
-    public ShowEntity(Long id, long trakt_id, String name, String genres, String description, Integer seasons, Integer percent_heart, String poster_url, String backdrop_url, Integer year, Long watchers, Long players, boolean trending, Integer trending_pos, boolean most_popular, Integer most_popular_pos, boolean recommendation, Integer recommendation_pos, boolean my_show) {
+    public ShowEntity(Long id, long trakt_id, String name, String genres, String description, Integer seasons, Integer percent_heart, String poster_url, String backdrop_url, Integer year, Long watchers, Long players, boolean trending, Integer trending_pos, boolean most_popular, Integer most_popular_pos, boolean recommendation, Integer recommendation_pos, boolean my_show, boolean watch_list) {
         this.id = id;
         this.trakt_id = trakt_id;
         this.name = name;
@@ -66,6 +67,7 @@ public class ShowEntity implements java.io.Serializable {
         this.recommendation = recommendation;
         this.recommendation_pos = recommendation_pos;
         this.my_show = my_show;
+        this.watch_list = watch_list;
     }
 
     /** called by internal mechanisms, do not call yourself. */
@@ -226,6 +228,14 @@ public class ShowEntity implements java.io.Serializable {
 
     public void setMy_show(boolean my_show) {
         this.my_show = my_show;
+    }
+
+    public boolean getWatch_list() {
+        return watch_list;
+    }
+
+    public void setWatch_list(boolean watch_list) {
+        this.watch_list = watch_list;
     }
 
     /** To-many relationship, resolved on first access (and after reset). Changes to to-many relations are not persisted, make changes to the target entity. */

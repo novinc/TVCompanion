@@ -32,6 +32,7 @@ public class Main {
         show.addBooleanProperty("recommendation").notNull();
         show.addIntProperty("recommendation_pos").unique();
         show.addBooleanProperty("my_show").notNull();
+        show.addBooleanProperty("watch_list").notNull();
 
         Entity episode = schema.addEntity("EpisodeEntity");
         episode.implementsSerializable();

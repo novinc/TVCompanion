@@ -177,23 +177,14 @@ public class FindShowsPageFragment extends Fragment implements LoaderManager.Loa
                             }
                             if (searchResults != null) {
                                 final List<ShowEntity> showEntities = new ArrayList<>(searchResults.size());
-                                final EpisodeEntityDao episodeEntityDao = ((App) getActivity().getApplication()).getDaoSession().getEpisodeEntityDao();
                                 for (SearchResult result : searchResults) {
                                     ShowEntityDao showEntityDao = ((App) getActivity().getApplication()).getDaoSession().getShowEntityDao();
                                     List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(result.show.ids.trakt)).list();
                                     if (sameShows.size() == 0) {
-                                        final ShowEntity showEntity;
-                                        if (result.show.genres == null) {
-                                            showEntity = new ShowEntity(null, result.show.ids.trakt, result.show.title, getString(R.string.genres), result.show.overview,
-                                                    0, 0, result.show.images.poster.thumb, result.show.images.fanart.medium,
-                                                    result.show.year, null, null,
-                                                    false, null, false, null, false, null, false);
-                                        } else {
-                                            showEntity = new ShowEntity(null, result.show.ids.trakt, result.show.title, getString(R.string.genres) + result.show.genres.toString(), result.show.overview,
-                                                    0, 0, result.show.images.poster.thumb, result.show.images.fanart.medium,
-                                                    result.show.year, null, null,
-                                                    false, null, false, null, false, null, false);
-                                        }
+                                        final ShowEntity showEntity = new ShowEntity(null, result.show.ids.trakt, result.show.title, getString(R.string.genres) + (result.show.genres == null ? "" : (result.show.genres.toString().replace("[", "").replace("]", ""))), result.show.overview,
+                                                0, 0, result.show.images.poster.thumb, result.show.images.fanart.medium,
+                                                result.show.year, null, null,
+                                                false, null, false, null, false, null, false, false);
                                         showEntities.add(showEntity);
                                         showEntityDao.insert(showEntity);
                                     } else {
