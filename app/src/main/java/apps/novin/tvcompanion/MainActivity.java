@@ -507,6 +507,13 @@ public class MainActivity extends AppCompatActivity
                 findViewById(R.id.appbar).setElevation(elevation);
             }
             currPage = 2;
+        } else if (id == R.id.nav_watchlist) {
+            currentFragment = new WatchlistFragment();
+            title = getString(R.string.nav_watchlist);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                findViewById(R.id.appbar).setElevation(elevation);
+            }
+            currPage = 3;
         } else if (id == R.id.action_refresh) {
             if (!syncing) {
                 ContentResolver.cancelSync(mAccount, AUTHORITY);
@@ -561,6 +568,8 @@ public class MainActivity extends AppCompatActivity
             id = ((RecommendationsFragment.MyAdapter.ViewHolder) view.getTag()).id;
         } else if (view.getTag() instanceof  MyShowsFragment.MyAdapter.ViewHolder) {
             id = ((MyShowsFragment.MyAdapter.ViewHolder) view.getTag()).id;
+        } else if (view.getTag() instanceof  WatchlistFragment.MyAdapter.ViewHolder) {
+            id = ((WatchlistFragment.MyAdapter.ViewHolder) view.getTag()).id;
         }
         Intent intent = new Intent(this, ShowDetailActivity.class);
         intent.putExtra(ShowDetailActivity.ID_KEY, id);

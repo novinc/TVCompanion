@@ -14,6 +14,9 @@
             android:id="@+id/nav_my_shows"
             android:icon="@drawable/ic_local_movies_black"
             android:title="@string/nav_my_shows" />
+        <item android:id="@+id/nav_watchlist"
+        android:icon="@drawable/ic_assignment_black"
+        android:title="@string/nav_watchlist"/>
     </group>
 
     <item android:title="@string/app" android:id="@+id/app_item">

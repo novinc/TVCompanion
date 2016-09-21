@@ -318,7 +318,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         List<ShowEntity> toDelete = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trending.eq(false),
                 ShowEntityDao.Properties.Most_popular.eq(false),
                 ShowEntityDao.Properties.Recommendation.eq(false),
-                ShowEntityDao.Properties.My_show.eq(false)).list();
+                ShowEntityDao.Properties.My_show.eq(false),
+                ShowEntityDao.Properties.Watch_list.eq(false)).list();
         for (ShowEntity deletingShow : toDelete) {
             List<EpisodeEntity> deletingShowEpisodeEntityList = deletingShow.getEpisodeEntityList();
             episodeEntityDao.deleteInTx(deletingShowEpisodeEntityList);

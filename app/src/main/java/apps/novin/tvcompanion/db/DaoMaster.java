@@ -51,9 +51,11 @@ public class DaoMaster extends AbstractDaoMaster {
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            Log.i("greenDAO", "Upgrading schema from version " + oldVersion + " to " + newVersion + " by dropping all tables");
-            dropAllTables(db, true);
-            onCreate(db);
+            Log.i("greenDAO", "Upgrading schema from version " + oldVersion + " to " + newVersion + " by migrating all tables data");
+
+            MigrationHelper.getInstance().migrate(db,
+                    ShowEntityDao.class,
+                    EpisodeEntityDao.class);
         }
     }
 
