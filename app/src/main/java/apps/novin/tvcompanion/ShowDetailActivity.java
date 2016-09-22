@@ -1,25 +1,18 @@
 package apps.novin.tvcompanion;
 
 import android.annotation.TargetApi;
-import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.preference.PreferenceManager;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.AppBarLayout;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,17 +28,8 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.uwetrottmann.trakt5.TraktV2;
-import com.uwetrottmann.trakt5.entities.Show;
-import com.uwetrottmann.trakt5.entities.ShowIds;
-import com.uwetrottmann.trakt5.entities.Stats;
-import com.uwetrottmann.trakt5.entities.SyncItems;
-import com.uwetrottmann.trakt5.entities.SyncShow;
-import com.uwetrottmann.trakt5.enums.Extended;
+import com.github.clans.fab.FloatingActionMenu;
 
-import org.greenrobot.eventbus.EventBus;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -67,8 +51,8 @@ public class ShowDetailActivity extends AppCompatActivity {
     CardView cardViewPoster;
     @BindView(R.id.poster)
     ImageView poster;
-    @BindView(R.id.add_fab)
-    FloatingActionButton fab;
+    /*@BindView(R.id.add_fab)
+    FloatingActionButton fab;*/
     @BindView(R.id.scrollView)
     NestedScrollView scrollView;
     @BindView(R.id.percentage)
@@ -93,6 +77,8 @@ public class ShowDetailActivity extends AppCompatActivity {
     ImageView heartIcon;
     @BindView(R.id.eye_icon)
     ImageView eyeIcon;
+    @BindView(R.id.fam)
+    FloatingActionMenu floatingActionMenu;
 
     private RecyclerView.LayoutManager mLayoutManager;
     private MyAdapter mAdapter;
@@ -169,7 +155,7 @@ public class ShowDetailActivity extends AppCompatActivity {
                             plays.setVisibility(View.INVISIBLE);
                             genres.setText(R.string.text_more_info);
                         }
-                        fab.setImageResource(showEntity.getMy_show() ? R.drawable.ic_check_black : R.drawable.ic_add_black);
+                        //fab.setImageResource(showEntity.getMy_show() ? R.drawable.ic_check_black : R.drawable.ic_add_black);
                     }
                 });
                 Resources r = getResources();
@@ -182,7 +168,7 @@ public class ShowDetailActivity extends AppCompatActivity {
                 mAdapter = new MyAdapter(new ArrayList<EpisodeEntity>(0));
                 mRecyclerView.setAdapter(mAdapter);
                 mRecyclerView.setFocusable(false);
-                fab.setOnClickListener(new View.OnClickListener() {
+                /*fab.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(final View view) {
                         final Snackbar make = Snackbar.make(view, R.string.one_sec, Snackbar.LENGTH_INDEFINITE);
@@ -346,7 +332,7 @@ public class ShowDetailActivity extends AppCompatActivity {
                             }
                         });
                     }
-                });
+                });*/
                 AsyncTask.execute(new Runnable() {
                     @Override
                     public void run() {
@@ -436,6 +422,11 @@ public class ShowDetailActivity extends AppCompatActivity {
                                 .scaleX(1)
                                 .scaleY(1)
                                 .start();
+                        ViewCompat.animate(floatingActionMenu)
+                                .setInterpolator(new OvershootInterpolator())
+                                .scaleX(1)
+                                .scaleY(1)
+                                .start();
 
                     }
                     state = State.EXPANDED;
@@ -443,6 +434,11 @@ public class ShowDetailActivity extends AppCompatActivity {
                 } else if (Math.abs(verticalOffset) >= appBarLayout.getTotalScrollRange() - px) {
                     if (state != State.COLLAPSED) {
                         ViewCompat.animate(cardViewPoster)
+                                .setInterpolator(new OvershootInterpolator())
+                                .scaleX(0)
+                                .scaleY(0)
+                                .start();
+                        ViewCompat.animate(floatingActionMenu)
                                 .setInterpolator(new OvershootInterpolator())
                                 .scaleX(0)
                                 .scaleY(0)
@@ -458,10 +454,16 @@ public class ShowDetailActivity extends AppCompatActivity {
                                     .scaleX(1)
                                     .scaleY(1)
                                     .start();
+                            ViewCompat.animate(floatingActionMenu)
+                                    .setInterpolator(new OvershootInterpolator())
+                                    .scaleX(1)
+                                    .scaleY(1)
+                                    .start();
                         }
                     }
                     state = State.IDLE;
                 }
+
             }
 
         });
@@ -471,6 +473,19 @@ public class ShowDetailActivity extends AppCompatActivity {
     public void onBackPressed() {
         ((CardView) findViewById(R.id.card_view_poster)).setCardElevation(0);
         ((CardView) findViewById(R.id.card_view_poster)).setCardBackgroundColor(0x00000000);
+        long duration = 200;
+        ViewCompat.animate(floatingActionMenu)
+                .setInterpolator(new OvershootInterpolator())
+                .scaleX(0)
+                .scaleY(0)
+                .setDuration(duration)
+                .start();
+        floatingActionMenu.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                floatingActionMenu.setVisibility(View.GONE);
+            }
+        }, duration);
         super.onBackPressed();
     }
 
@@ -487,6 +502,7 @@ public class ShowDetailActivity extends AppCompatActivity {
                     }
                 });
     }
+
     public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         private List<EpisodeEntity> mDataset;
 
