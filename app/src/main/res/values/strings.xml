@@ -109,6 +109,12 @@
     <string name="remove_ads">Remove ads</string>
 
     <string name="logout">Logout</string>
+    <string name="fab_update">Update show and episodes</string>
+    <string name="fab_browser">Open show in browser</string>
+    <string name="fab_add">Add to your shows</string>
+    <string name="fab_remove">Remove from your shows</string>
+    <string name="fab_watchlist_add">Add to watchlist</string>
+    <string name="fab_watchlist_remove">Remove from watchlist</string>
 
     <string-array name="sync_interval_titles">
         <item>2 hours</item>

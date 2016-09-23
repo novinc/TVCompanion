@@ -18,6 +18,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.LinearInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -28,6 +30,7 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 
 import java.util.ArrayList;
@@ -51,8 +54,16 @@ public class ShowDetailActivity extends AppCompatActivity {
     CardView cardViewPoster;
     @BindView(R.id.poster)
     ImageView poster;
-    /*@BindView(R.id.add_fab)
-    FloatingActionButton fab;*/
+    @BindView(R.id.fam)
+    FloatingActionMenu floatingActionMenu;
+    @BindView(R.id.add_fab)
+    FloatingActionButton addFab;
+    @BindView(R.id.watchlist_fab)
+    FloatingActionButton watchlistFab;
+    @BindView(R.id.update_fab)
+    FloatingActionButton updateFab;
+    @BindView(R.id.browser_fab)
+    FloatingActionButton browserFab;
     @BindView(R.id.scrollView)
     NestedScrollView scrollView;
     @BindView(R.id.percentage)
@@ -77,13 +88,12 @@ public class ShowDetailActivity extends AppCompatActivity {
     ImageView heartIcon;
     @BindView(R.id.eye_icon)
     ImageView eyeIcon;
-    @BindView(R.id.fam)
-    FloatingActionMenu floatingActionMenu;
 
     private RecyclerView.LayoutManager mLayoutManager;
     private MyAdapter mAdapter;
-    // used for poster shrinking
-    private float px;
+    // used for appbar elements' shrinking
+    private float pxPoster;
+    private float pxFam;
 
     private enum State {
         EXPANDED,
@@ -155,11 +165,38 @@ public class ShowDetailActivity extends AppCompatActivity {
                             plays.setVisibility(View.INVISIBLE);
                             genres.setText(R.string.text_more_info);
                         }
-                        //fab.setImageResource(showEntity.getMy_show() ? R.drawable.ic_check_black : R.drawable.ic_add_black);
+                        if (((App) getApplication()).isNightModeEnabled()) {
+                            floatingActionMenu.getMenuIconView().setImageResource(R.drawable.ic_settings_black);
+                            addFab.setImageResource(showEntity.getMy_show() ? R.drawable.ic_close_black : R.drawable.ic_add_black);
+                            watchlistFab.setImageResource(R.drawable.ic_assignment_black);
+                            updateFab.setImageResource(R.drawable.ic_refresh_black);
+                            browserFab.setImageResource(R.drawable.ic_open_in_browser_black);
+                        } else {
+                            floatingActionMenu.getMenuIconView().setImageResource(R.drawable.ic_settings_white);
+                            addFab.setImageResource(showEntity.getMy_show() ? R.drawable.ic_close_white : R.drawable.ic_add_white);
+                            watchlistFab.setImageResource(R.drawable.ic_assignment_white);
+                            updateFab.setImageResource(R.drawable.ic_refresh_white);
+                            browserFab.setImageResource(R.drawable.ic_open_in_browser_white);
+                        }
+                        addFab.setLabelText(getString(!showEntity.getMy_show() ? R.string.fab_add : R.string.fab_remove));
+                        addFab.setLabelVisibility(View.VISIBLE);
+                        if (!showEntity.getMy_show()) {
+                            watchlistFab.setLabelText(getString(!showEntity.getWatch_list() ? R.string.fab_watchlist_add : R.string.fab_watchlist_remove));
+                            watchlistFab.setLabelVisibility(View.VISIBLE);
+                        } else {
+                            watchlistFab.setEnabled(false);
+                            watchlistFab.setLabelText("");
+                            watchlistFab.setLabelVisibility(View.GONE);
+                        }
+                        updateFab.setLabelText(getString(R.string.fab_update));
+                        updateFab.setLabelVisibility(View.VISIBLE);
+                        browserFab.setLabelText(getString(R.string.fab_browser));
+                        browserFab.setLabelVisibility(View.VISIBLE);
                     }
                 });
                 Resources r = getResources();
-                px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 75, r.getDisplayMetrics());
+                pxPoster = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 75, r.getDisplayMetrics());
+                pxFam = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, r.getDisplayMetrics());
                 mLayoutManager = new LinearLayoutManager(ShowDetailActivity.this);
                 mLayoutManager.setAutoMeasureEnabled(true);
                 mRecyclerView.setLayoutManager(mLayoutManager);
@@ -408,65 +445,7 @@ public class ShowDetailActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        mAppBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
-
-            private State state;
-
-            @Override
-            public synchronized void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
-                if (verticalOffset == 0) {
-                    if (state != State.EXPANDED) {
-
-                        ViewCompat.animate(cardViewPoster)
-                                .setInterpolator(new OvershootInterpolator())
-                                .scaleX(1)
-                                .scaleY(1)
-                                .start();
-                        ViewCompat.animate(floatingActionMenu)
-                                .setInterpolator(new OvershootInterpolator())
-                                .scaleX(1)
-                                .scaleY(1)
-                                .start();
-
-                    }
-                    state = State.EXPANDED;
-
-                } else if (Math.abs(verticalOffset) >= appBarLayout.getTotalScrollRange() - px) {
-                    if (state != State.COLLAPSED) {
-                        ViewCompat.animate(cardViewPoster)
-                                .setInterpolator(new OvershootInterpolator())
-                                .scaleX(0)
-                                .scaleY(0)
-                                .start();
-                        ViewCompat.animate(floatingActionMenu)
-                                .setInterpolator(new OvershootInterpolator())
-                                .scaleX(0)
-                                .scaleY(0)
-                                .start();
-
-                    }
-                    state = State.COLLAPSED;
-                } else {
-                    if (state != State.IDLE) {
-                        if (state == State.COLLAPSED) {
-                            ViewCompat.animate(cardViewPoster)
-                                    .setInterpolator(new OvershootInterpolator())
-                                    .scaleX(1)
-                                    .scaleY(1)
-                                    .start();
-                            ViewCompat.animate(floatingActionMenu)
-                                    .setInterpolator(new OvershootInterpolator())
-                                    .scaleX(1)
-                                    .scaleY(1)
-                                    .start();
-                        }
-                    }
-                    state = State.IDLE;
-                }
-
-            }
-
-        });
+        setupPosterFamAnimations();
     }
 
     @Override
@@ -475,9 +454,8 @@ public class ShowDetailActivity extends AppCompatActivity {
         ((CardView) findViewById(R.id.card_view_poster)).setCardBackgroundColor(0x00000000);
         long duration = 200;
         ViewCompat.animate(floatingActionMenu)
-                .setInterpolator(new OvershootInterpolator())
-                .scaleX(0)
-                .scaleY(0)
+                .setInterpolator(new DecelerateInterpolator())
+                .alpha(0)
                 .setDuration(duration)
                 .start();
         floatingActionMenu.postDelayed(new Runnable() {
@@ -501,6 +479,88 @@ public class ShowDetailActivity extends AppCompatActivity {
                         return true;
                     }
                 });
+    }
+
+    private void setupPosterFamAnimations() {
+        mAppBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
+
+            private State statePoster;
+            private State stateFam;
+
+            @Override
+            public synchronized void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
+                int abs = Math.abs(verticalOffset);
+                int totalScrollRange = appBarLayout.getTotalScrollRange();
+                if (verticalOffset == 0) {
+                    if (statePoster != State.EXPANDED) {
+                        ViewCompat.animate(cardViewPoster)
+                                .setInterpolator(new OvershootInterpolator())
+                                .scaleX(1)
+                                .scaleY(1)
+                                .start();
+                        ViewCompat.animate(floatingActionMenu)
+                                .setInterpolator(new OvershootInterpolator())
+                                .scaleX(1)
+                                .scaleY(1)
+                                .start();
+
+                    }
+                    statePoster = State.EXPANDED;
+
+                } else if (abs >= totalScrollRange - pxPoster) {
+                    if (statePoster != State.COLLAPSED) {
+                        ViewCompat.animate(cardViewPoster)
+                                .setInterpolator(new OvershootInterpolator())
+                                .scaleX(0)
+                                .scaleY(0)
+                                .start();
+                    }
+                    statePoster = State.COLLAPSED;
+                } else {
+                    if (statePoster != State.IDLE) {
+                        if (statePoster == State.COLLAPSED) {
+                            ViewCompat.animate(cardViewPoster)
+                                    .setInterpolator(new OvershootInterpolator())
+                                    .scaleX(1)
+                                    .scaleY(1)
+                                    .start();
+                        }
+                    }
+                    statePoster = State.IDLE;
+                }
+                if (verticalOffset == 0) {
+                    if (stateFam != State.EXPANDED) {
+                        ViewCompat.animate(floatingActionMenu)
+                                .setInterpolator(new LinearInterpolator())
+                                .setDuration(0)
+                                .alpha(255)
+                                .start();
+
+                    }
+                    stateFam = State.EXPANDED;
+                } else if (abs >= totalScrollRange - pxFam) {
+                    if (stateFam != State.COLLAPSED) {
+                        ViewCompat.animate(floatingActionMenu)
+                                .setInterpolator(new LinearInterpolator())
+                                .setDuration(0)
+                                .alpha(0)
+                                .start();
+                    }
+                    stateFam = State.COLLAPSED;
+                } else {
+                    if (stateFam != State.IDLE) {
+                        if (stateFam == State.COLLAPSED) {
+                            ViewCompat.animate(floatingActionMenu)
+                                    .setInterpolator(new LinearInterpolator())
+                                    .setDuration(0)
+                                    .alpha(255)
+                                    .start();
+                        }
+                    }
+                    stateFam = State.IDLE;
+                }
+            }
+        });
     }
 
     public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
