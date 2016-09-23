@@ -2,6 +2,7 @@ package apps.novin.tvcompanion;
 
 import android.annotation.TargetApi;
 import android.content.res.Resources;
+import android.graphics.PorterDuff;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -402,6 +403,11 @@ public class ShowDetailActivity extends AppCompatActivity {
                 public void run() {
                     spinner.setEnabled(true);
                     spinner.setAdapter(adapter);
+                    TypedValue typedValue = new TypedValue();
+                    Resources.Theme theme = getTheme();
+                    theme.resolveAttribute(R.attr.textColor, typedValue, true);
+                    int color = typedValue.data;
+                    spinner.getBackground().setColorFilter(color, PorterDuff.Mode.SRC_ATOP);
                 }
             });
             spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {

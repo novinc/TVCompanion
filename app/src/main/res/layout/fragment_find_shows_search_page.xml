@@ -15,9 +15,11 @@
         <EditText
             android:id="@+id/search_edit_text"
             android:hint="@string/action_search"
+            android:textColorHint="?attr/secondaryTextColor"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:textColor="?attr/textColor"
             android:imeOptions="actionSearch"
             android:imeActionLabel="@string/action_search"
             android:inputType="text" />

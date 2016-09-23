@@ -64,16 +64,21 @@
 
     </LinearLayout>
 
-    <LinearLayout
+    <RelativeLayout
         android:paddingTop="8dp"
+        android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
         <TextView
             android:id="@+id/title"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:transitionName="@string/title_transition"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:layout_toLeftOf="@+id/year"
+            android:layout_toStartOf="@+id/year"
             android:textSize="24sp"
             android:textStyle="normal|bold"
             android:textColor="?attr/textColor"
@@ -81,26 +86,21 @@
             android:layout_marginLeft="16dp"
             android:layout_marginStart="16dp"/>
 
-        <LinearLayout
-            android:orientation="horizontal"
+        <TextView
+            android:id="@+id/year"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
             android:gravity="end"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content">
+            android:textSize="24sp"
+            android:textStyle="normal|bold"
+            android:textColor="?attr/secondaryTextColor"
+            android:maxLines="1"
+            android:layout_marginRight="16dp"
+            android:layout_marginEnd="16dp" />
 
-            <TextView
-                android:id="@+id/year"
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:textSize="24sp"
-                android:textStyle="normal|bold"
-                android:textColor="?attr/secondaryTextColor"
-                android:layout_marginRight="16dp"
-                android:layout_marginEnd="16dp" />
-
-        </LinearLayout>
-
-    </LinearLayout>
+    </RelativeLayout>
 
     <TextView
         android:id="@+id/genres"
