@@ -2,6 +2,7 @@ package apps.novin.tvcompanion;
 
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.graphics.PorterDuff;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -18,6 +19,7 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.LinearInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -29,6 +31,7 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.github.clans.fab.FloatingActionButton;
+import com.github.clans.fab.FloatingActionMenu;
 import com.uwetrottmann.trakt5.TraktV2;
 import com.uwetrottmann.trakt5.entities.Show;
 import com.uwetrottmann.trakt5.entities.ShowIds;
@@ -65,8 +68,16 @@ public class ShowDetailDialog extends DialogFragment {
     CardView cardViewPoster;
     @BindView(R.id.poster)
     ImageView poster;
+    @BindView(R.id.fam)
+    FloatingActionMenu floatingActionMenu;
     @BindView(R.id.add_fab)
-    FloatingActionButton fab;
+    FloatingActionButton addFab;
+    @BindView(R.id.watchlist_fab)
+    FloatingActionButton watchlistFab;
+    @BindView(R.id.update_fab)
+    FloatingActionButton updateFab;
+    @BindView(R.id.browser_fab)
+    FloatingActionButton browserFab;
     @BindView(R.id.scrollView)
     NestedScrollView scrollView;
     @BindView(R.id.percentage)
@@ -94,8 +105,9 @@ public class ShowDetailDialog extends DialogFragment {
 
     private RecyclerView.LayoutManager mLayoutManager;
     private ShowDetailDialog.MyAdapter mAdapter;
-    // used for poster shrinking
-    private float px;
+    // used for appbar elements' shrinking
+    private float pxPoster;
+    private float pxFam;
 
     private enum State {
         EXPANDED,
@@ -163,11 +175,38 @@ public class ShowDetailDialog extends DialogFragment {
                             plays.setVisibility(View.INVISIBLE);
                             genres.setText(R.string.text_more_info);
                         }
-                        fab.setImageResource(showEntity.getMy_show() ? R.drawable.ic_check_black : R.drawable.ic_add_black);
+                        if (((App) getActivity().getApplication()).isNightModeEnabled()) {
+                            floatingActionMenu.getMenuIconView().setImageResource(R.drawable.ic_settings_black);
+                            addFab.setImageResource(showEntity.getMy_show() ? R.drawable.ic_close_black : R.drawable.ic_add_black);
+                            watchlistFab.setImageResource(R.drawable.ic_assignment_black);
+                            updateFab.setImageResource(R.drawable.ic_refresh_black);
+                            browserFab.setImageResource(R.drawable.ic_open_in_browser_black);
+                        } else {
+                            floatingActionMenu.getMenuIconView().setImageResource(R.drawable.ic_settings_white);
+                            addFab.setImageResource(showEntity.getMy_show() ? R.drawable.ic_close_white : R.drawable.ic_add_white);
+                            watchlistFab.setImageResource(R.drawable.ic_assignment_white);
+                            updateFab.setImageResource(R.drawable.ic_refresh_white);
+                            browserFab.setImageResource(R.drawable.ic_open_in_browser_white);
+                        }
+                        addFab.setLabelText(getString(!showEntity.getMy_show() ? R.string.fab_add : R.string.fab_remove));
+                        addFab.setLabelVisibility(View.VISIBLE);
+                        if (!showEntity.getMy_show()) {
+                            watchlistFab.setLabelText(getString(!showEntity.getWatch_list() ? R.string.fab_watchlist_add : R.string.fab_watchlist_remove));
+                            watchlistFab.setLabelVisibility(View.VISIBLE);
+                        } else {
+                            watchlistFab.setEnabled(false);
+                            watchlistFab.setLabelText("");
+                            watchlistFab.setLabelVisibility(View.GONE);
+                        }
+                        updateFab.setLabelText(getString(R.string.fab_update));
+                        updateFab.setLabelVisibility(View.VISIBLE);
+                        browserFab.setLabelText(getString(R.string.fab_browser));
+                        browserFab.setLabelVisibility(View.VISIBLE);
                     }
                 });
                 Resources r = getResources();
-                px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 75, r.getDisplayMetrics());
+                pxPoster = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 75, r.getDisplayMetrics());
+                pxFam = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, r.getDisplayMetrics());
                 mLayoutManager = new LinearLayoutManager(getContext());
                 mLayoutManager.setAutoMeasureEnabled(true);
                 mRecyclerView.setLayoutManager(mLayoutManager);
@@ -176,7 +215,7 @@ public class ShowDetailDialog extends DialogFragment {
                 mAdapter = new MyAdapter(new ArrayList<EpisodeEntity>(0));
                 mRecyclerView.setAdapter(mAdapter);
                 mRecyclerView.setFocusable(false);
-                fab.setOnClickListener(new View.OnClickListener() {
+                /*fab.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(final View view) {
                         final Snackbar make = Snackbar.make(view, R.string.one_sec, Snackbar.LENGTH_INDEFINITE);
@@ -339,7 +378,7 @@ public class ShowDetailDialog extends DialogFragment {
                             }
                         });
                     }
-                });
+                });*/
                 AsyncTask.execute(new Runnable() {
                     @Override
                     public void run() {
@@ -371,7 +410,13 @@ public class ShowDetailDialog extends DialogFragment {
             getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    spinner.setEnabled(true);
                     spinner.setAdapter(adapter);
+                    TypedValue typedValue = new TypedValue();
+                    Resources.Theme theme = getActivity().getTheme();
+                    theme.resolveAttribute(R.attr.textColor, typedValue, true);
+                    int color = typedValue.data;
+                    spinner.getBackground().setColorFilter(color, PorterDuff.Mode.SRC_ATOP);
                 }
             });
             spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -411,37 +456,47 @@ public class ShowDetailDialog extends DialogFragment {
     @Override
     public void onResume() {
         super.onResume();
+        setupPosterFamAnimations();
+    }
+
+    private void setupPosterFamAnimations() {
         mAppBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
 
-            private ShowDetailDialog.State state;
+            private State statePoster;
+            private State stateFam;
 
             @Override
             public synchronized void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
+                int abs = Math.abs(verticalOffset);
+                int totalScrollRange = appBarLayout.getTotalScrollRange();
                 if (verticalOffset == 0) {
-                    if (state != ShowDetailDialog.State.EXPANDED) {
-
+                    if (statePoster != State.EXPANDED) {
                         ViewCompat.animate(cardViewPoster)
+                                .setInterpolator(new OvershootInterpolator())
+                                .scaleX(1)
+                                .scaleY(1)
+                                .start();
+                        ViewCompat.animate(floatingActionMenu)
                                 .setInterpolator(new OvershootInterpolator())
                                 .scaleX(1)
                                 .scaleY(1)
                                 .start();
 
                     }
-                    state = ShowDetailDialog.State.EXPANDED;
+                    statePoster = State.EXPANDED;
 
-                } else if (Math.abs(verticalOffset) >= appBarLayout.getTotalScrollRange() - px) {
-                    if (state != ShowDetailDialog.State.COLLAPSED) {
+                } else if (abs >= totalScrollRange - pxPoster) {
+                    if (statePoster != State.COLLAPSED) {
                         ViewCompat.animate(cardViewPoster)
                                 .setInterpolator(new OvershootInterpolator())
                                 .scaleX(0)
                                 .scaleY(0)
                                 .start();
-
                     }
-                    state = ShowDetailDialog.State.COLLAPSED;
+                    statePoster = State.COLLAPSED;
                 } else {
-                    if (state != ShowDetailDialog.State.IDLE) {
-                        if (state == ShowDetailDialog.State.COLLAPSED) {
+                    if (statePoster != State.IDLE) {
+                        if (statePoster == State.COLLAPSED) {
                             ViewCompat.animate(cardViewPoster)
                                     .setInterpolator(new OvershootInterpolator())
                                     .scaleX(1)
@@ -449,12 +504,43 @@ public class ShowDetailDialog extends DialogFragment {
                                     .start();
                         }
                     }
-                    state = ShowDetailDialog.State.IDLE;
+                    statePoster = State.IDLE;
+                }
+                if (verticalOffset == 0) {
+                    if (stateFam != State.EXPANDED) {
+                        ViewCompat.animate(floatingActionMenu)
+                                .setInterpolator(new LinearInterpolator())
+                                .setDuration(0)
+                                .alpha(255)
+                                .start();
+
+                    }
+                    stateFam = State.EXPANDED;
+                } else if (abs >= totalScrollRange - pxFam) {
+                    if (stateFam != State.COLLAPSED) {
+                        ViewCompat.animate(floatingActionMenu)
+                                .setInterpolator(new LinearInterpolator())
+                                .setDuration(0)
+                                .alpha(0)
+                                .start();
+                    }
+                    stateFam = State.COLLAPSED;
+                } else {
+                    if (stateFam != State.IDLE) {
+                        if (stateFam == State.COLLAPSED) {
+                            ViewCompat.animate(floatingActionMenu)
+                                    .setInterpolator(new LinearInterpolator())
+                                    .setDuration(0)
+                                    .alpha(255)
+                                    .start();
+                        }
+                    }
+                    stateFam = State.IDLE;
                 }
             }
-
         });
     }
+
     public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         private List<EpisodeEntity> mDataset;
 

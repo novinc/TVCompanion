@@ -76,7 +76,7 @@
     <string name="players">%1$s plays</string>
     <string name="added_show">Added show and all episodes to watched history</string>
     <string name="add_show_failed">Could not add to trakt, try again later. Most likely due to connectivity issues</string>
-    <string name="genres">genres:</string>
+    <string name="genres">genres: </string>
     <string name="days">days</string>
     <string name="hours">hours</string>
     <string name="minutes">minutes</string>
@@ -98,6 +98,14 @@
     <string name="nav_watchlist">Watchlist</string>
     <string name="no_Watchlist">No watchlist, long press shows to add them to watchlist</string>
 
+    <string name="logout">Logout</string>
+    <string name="fab_update">Update show and episodes</string>
+    <string name="fab_browser">Open show in browser</string>
+    <string name="fab_add">Add to your shows</string>
+    <string name="fab_remove">Remove from your shows</string>
+    <string name="fab_watchlist_add">Add to watchlist</string>
+    <string name="fab_watchlist_remove">Remove from watchlist</string>
+
     <!-- Strings related to Settings -->
     <string name="app_settings">Application settings</string>
     <string name="account_settings">Account settings</string>
@@ -107,14 +115,6 @@
     <string name="clear_data">Clear show and episode data</string>
     <string name="donate">Donate</string>
     <string name="remove_ads">Remove ads</string>
-
-    <string name="logout">Logout</string>
-    <string name="fab_update">Update show and episodes</string>
-    <string name="fab_browser">Open show in browser</string>
-    <string name="fab_add">Add to your shows</string>
-    <string name="fab_remove">Remove from your shows</string>
-    <string name="fab_watchlist_add">Add to watchlist</string>
-    <string name="fab_watchlist_remove">Remove from watchlist</string>
 
     <string-array name="sync_interval_titles">
         <item>2 hours</item>
