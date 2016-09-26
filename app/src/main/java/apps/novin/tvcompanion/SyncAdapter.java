@@ -25,7 +25,6 @@ import com.uwetrottmann.trakt5.enums.Extended;
 
 import org.greenrobot.eventbus.EventBus;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -45,26 +44,37 @@ import retrofit2.Response;
 public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     private DaoSession mDaoSession;
-    AtomicBoolean canceled;
-    static Context context;
+    private AtomicBoolean canceled;
 
-    public SyncAdapter(Context context, boolean autoInitialize, DaoSession session) {
+    SyncAdapter(Context context, boolean autoInitialize, DaoSession session) {
         super(context, autoInitialize);
         mDaoSession = session;
-        SyncAdapter.context = context;
-    }
-
-    public SyncAdapter(Context context, boolean autoInitialize, boolean allowParallelSyncs) {
-        super(context, autoInitialize, allowParallelSyncs);
-        SyncAdapter.context = context;
     }
 
     @Override
     public void onSyncCanceled() {
-        super.onSyncCanceled();
+        Log.d("sync", "sync cancelled");
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-        preferences.edit().putBoolean("syncing", false).apply();
+        SharedPreferences.Editor edit = preferences.edit();
+        edit.putBoolean(SyncPreferences.KEY_SYNCING, false);
+        edit.putBoolean(SyncPreferences.KEY_INTERRUPTED, true);
+        edit.apply();
         canceled.set(true);
+        super.onSyncCanceled();
+    }
+
+    // static helper that updates sync preferences synchronously
+    public static void cancel(Context context) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        if (preferences.getBoolean(SyncPreferences.KEY_SYNCING, false)) {
+            Log.d("sync", "sync cancelled static");
+            SharedPreferences.Editor edit = preferences.edit();
+            edit.putBoolean(SyncPreferences.KEY_SYNCING, false);
+            edit.putBoolean(SyncPreferences.KEY_INTERRUPTED, true);
+            edit.apply();
+        } else {
+            Log.d("sync", "sync cancelled static: sync not running");
+        }
     }
 
     @Override
@@ -90,7 +100,10 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
         Log.d("sync", "oauth true, starting");
 
-        preferences.edit().putBoolean("syncing", true).apply();
+        SharedPreferences.Editor edit = preferences.edit();
+        edit.putBoolean(SyncPreferences.KEY_SYNCING, true);
+        edit.putBoolean(SyncPreferences.KEY_INTERRUPTED, false);
+        edit.apply();
 
         ShowEntityDao showEntityDao = mDaoSession.getShowEntityDao();
         final EpisodeEntityDao episodeEntityDao = mDaoSession.getEpisodeEntityDao();
@@ -136,8 +149,10 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
 
         Log.d("sync", "episodes sync complete");
-        preferences.edit().putBoolean("syncing", false).apply();
-        preferences.edit().putLong("sync_time", System.currentTimeMillis()).apply();
+        edit = preferences.edit();
+        edit.putBoolean(SyncPreferences.KEY_SYNCING, false);
+        edit.putLong(SyncPreferences.KEY_SYNC_TIME, System.currentTimeMillis());
+        edit.apply();
         EventBus.getDefault().postSticky(new DatabaseUpdatedEvent());
     }
 
@@ -180,8 +195,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
         if (user != null) {
             SharedPreferences.Editor edit = preferences.edit();
-            edit.putString("user_photo", user.images.avatar.full);
-            edit.putString("user_name", user.username);
+            edit.putString(SyncPreferences.KEY_USER_PHOTO, user.images.avatar.full);
+            edit.putString(SyncPreferences.KEY_USER_NAME, user.username);
             edit.apply();
         }
     }
@@ -204,10 +219,10 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 }
             }
             if (token != null) {
-                SharedPreferences.Editor editor = preferences.edit();
-                editor.putString("access_token", token.access_token);
-                editor.putString("refresh_token", token.refresh_token);
-                editor.apply();
+                SharedPreferences.Editor edit = preferences.edit();
+                edit.putString(SyncPreferences.KEY_ACCESS_TOKEN, token.access_token);
+                edit.putString(SyncPreferences.KEY_REFRESH_TOKEN, token.refresh_token);
+                edit.apply();
                 traktV2.accessToken(token.access_token);
             }
         }
@@ -232,7 +247,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             }
         }
         if (!fromSync) {
-            preferences.edit().putBoolean("syncing", true).apply();
+            preferences.edit().putBoolean(SyncPreferences.KEY_SYNCING, true).apply();
         }
         List<BaseShow> myShows = null;
         List<BaseShow> watchList = null;
@@ -252,7 +267,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             if (myShows != null) {
                 List<ShowEntity> myShowsToInsert = new ArrayList<>();
                 for (BaseShow show : myShows) {
-                    getStatsForMyShow(show, myShowsToInsert, traktV2, showEntityDao);
+                    getStatsForMyShow(show, myShowsToInsert, traktV2, showEntityDao, context);
                 }
                 showEntityDao.insertInTx(myShowsToInsert);
             }
@@ -260,7 +275,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             if (watchList != null) {
                 List<ShowEntity> watchListToInsert = new ArrayList<>();
                 for (BaseShow show : watchList) {
-                    getStatsForWatchList(show, watchListToInsert, traktV2, showEntityDao);
+                    getStatsForWatchList(show, watchListToInsert, traktV2, showEntityDao, context);
                 }
                 showEntityDao.insertInTx(watchListToInsert);
             }
@@ -268,7 +283,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             if (recommendations != null) {
                 List<ShowEntity> recommendationsToInsert = new ArrayList<>();
                 for (Show show : recommendations) {
-                    getStatsForRecommendationAndUpdatePositions(show, recommendationsToInsert, recommendations, traktV2, showEntityDao);
+                    getStatsForRecommendationAndUpdatePositions(show, recommendationsToInsert, recommendations, traktV2, showEntityDao, context);
                 }
                 showEntityDao.insertInTx(recommendationsToInsert);
             }
@@ -277,7 +292,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         if (trendingShows != null) {
             List<ShowEntity> trendingToInsert = new ArrayList<>();
             for (TrendingShow show : trendingShows) {
-                getStatsForTrendingAndUpdatePositions(show, trendingShows, trendingToInsert, traktV2, showEntityDao);
+                getStatsForTrendingAndUpdatePositions(show, trendingShows, trendingToInsert, traktV2, showEntityDao, context);
             }
             showEntityDao.insertInTx(trendingToInsert);
         }
@@ -285,15 +300,17 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         if (popular != null) {
             List<ShowEntity> mostPopularToInsert = new ArrayList<>();
             for (Show show : popular) {
-                getStatsForMostPopularAndUpdatePositions(show, popular, mostPopularToInsert, traktV2, showEntityDao);
+                getStatsForMostPopularAndUpdatePositions(show, popular, mostPopularToInsert, traktV2, showEntityDao, context);
             }
             showEntityDao.insertInTx(mostPopularToInsert);
         }
         Log.d("sync", "shows sync complete");
         if (!fromSync) {
             EventBus.getDefault().postSticky(new DatabaseUpdatedEvent());
-            preferences.edit().putBoolean("syncing", false).apply();
-            preferences.edit().putLong("sync_time", System.currentTimeMillis()).apply();
+            SharedPreferences.Editor edit = preferences.edit();
+            edit.putBoolean(SyncPreferences.KEY_SYNCING, false);
+            edit.putLong(SyncPreferences.KEY_SYNC_TIME, System.currentTimeMillis());
+            edit.apply();
         }
     }
 
@@ -327,7 +344,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         showEntityDao.deleteInTx(toDelete);
     }
 
-    private static void getStatsForMostPopularAndUpdatePositions(Show show, List<Show> popular, List<ShowEntity> mostPopularToInsert, TraktV2 traktV2, ShowEntityDao showEntityDao) {
+    private static void getStatsForMostPopularAndUpdatePositions(Show show, List<Show> popular, List<ShowEntity> mostPopularToInsert, TraktV2 traktV2, ShowEntityDao showEntityDao, Context context) {
         Stats stats = call(traktV2.shows().stats(show.ids.trakt.toString()), "couldn't get popular show stats for " + show.title);
         List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(show.ids.trakt)).list();
         if (sameShows.size() == 0) {
@@ -337,7 +354,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 samePos.get(0).setMost_popular_pos(null);
                 samePos.get(0).update();
             }
-            ShowEntity newShow = getEntityFromPopularShow(show, popular.indexOf(show), stats);
+            ShowEntity newShow = getEntityFromPopularShow(show, popular.indexOf(show), stats, context);
             // add oauth needed columns
             mostPopularToInsert.add(newShow);
         } else {
@@ -358,7 +375,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
     }
 
-    private static void getStatsForTrendingAndUpdatePositions(TrendingShow show, List<TrendingShow> trendingShows, List<ShowEntity> trendingToInsert, TraktV2 traktV2, ShowEntityDao showEntityDao) {
+    private static void getStatsForTrendingAndUpdatePositions(TrendingShow show, List<TrendingShow> trendingShows, List<ShowEntity> trendingToInsert, TraktV2 traktV2, ShowEntityDao showEntityDao, Context context) {
         Stats stats = call(traktV2.shows().stats(show.show.ids.trakt.toString()), "couldn't get trending show stats for " + show.show.title);
         List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(show.show.ids.trakt)).list();
         if (sameShows.size() == 0) {
@@ -368,7 +385,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 samePos.get(0).setTrending_pos(null);
                 samePos.get(0).update();
             }
-            ShowEntity newShow = getEntityFromTrendingShow(show.show, trendingShows.indexOf(show), stats);
+            ShowEntity newShow = getEntityFromTrendingShow(show.show, trendingShows.indexOf(show), stats, context);
             // add oauth needed columns
             trendingToInsert.add(newShow);
         } else {
@@ -389,7 +406,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
     }
 
-    static void getStatsForRecommendationAndUpdatePositions(Show show, List<ShowEntity> recommendationsToInsert, List<Show> recommendations, TraktV2 traktV2, ShowEntityDao showEntityDao) {
+    static void getStatsForRecommendationAndUpdatePositions(Show show, List<ShowEntity> recommendationsToInsert, List<Show> recommendations, TraktV2 traktV2, ShowEntityDao showEntityDao, Context context) {
         Stats stats = call(traktV2.shows().stats(show.ids.trakt.toString()), "couldn't get recommendation show stats for " + show.title);
         List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(show.ids.trakt)).list();
         if (sameShows.size() == 0) {
@@ -399,7 +416,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 samePos.get(0).setRecommendation_pos(null);
                 samePos.get(0).update();
             }
-            ShowEntity newShow = getEntityFromRecommendedShow(show, recommendations.indexOf(show), stats);
+            ShowEntity newShow = getEntityFromRecommendedShow(show, recommendations.indexOf(show), stats, context);
             // add oauth needed columns
             recommendationsToInsert.add(newShow);
         } else {
@@ -420,11 +437,11 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
     }
 
-    private static void getStatsForMyShow(BaseShow show, List<ShowEntity> myShowsToInsert, TraktV2 traktV2, ShowEntityDao showEntityDao) {
+    private static void getStatsForMyShow(BaseShow show, List<ShowEntity> myShowsToInsert, TraktV2 traktV2, ShowEntityDao showEntityDao, Context context) {
         Stats stats = call(traktV2.shows().stats(show.show.ids.trakt.toString()), "couldn't get my show stats for " + show.show.title);
         List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(show.show.ids.trakt)).list();
         if (sameShows.size() == 0) { // newly watched show not in app's database
-            ShowEntity newShow = getEntityFromMyShow(show, stats);
+            ShowEntity newShow = getEntityFromMyShow(show, stats, context);
             myShowsToInsert.add(newShow);
         } else {
             sameShows.get(0).setMy_show(true);
@@ -436,11 +453,11 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
     }
 
-    private static void getStatsForWatchList(BaseShow show, List<ShowEntity> watchListToInsert, TraktV2 traktV2, ShowEntityDao showEntityDao) {
+    private static void getStatsForWatchList(BaseShow show, List<ShowEntity> watchListToInsert, TraktV2 traktV2, ShowEntityDao showEntityDao, Context context) {
         Stats stats = call(traktV2.shows().stats(show.show.ids.trakt.toString()), "couldn't get watchlist show stats for " + show.show.title);
         List<ShowEntity> sameShows = showEntityDao.queryBuilder().where(ShowEntityDao.Properties.Trakt_id.eq(show.show.ids.trakt)).list();
         if (sameShows.size() == 0) { // newly watched show not in app's database
-            ShowEntity newShow = getEntityFromWatchList(show, stats);
+            ShowEntity newShow = getEntityFromWatchList(show, stats, context);
             watchListToInsert.add(newShow);
         } else {
             sameShows.get(0).setWatch_list(true);
@@ -504,7 +521,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
     }
 
-    private static ShowEntity getEntityFromMyShow(BaseShow baseShow, Stats stats) {
+    private static ShowEntity getEntityFromMyShow(BaseShow baseShow, Stats stats, Context context) {
         Show show = baseShow.show;
         return new ShowEntity(null, show.ids.trakt, show.title, context.getString(R.string.genres) + (show.genres == null ? "" : (show.genres.toString().replace("[", "").replace("]", ""))), show.overview,
                 0, show.rating != null ? (int) (show.rating * 10) : 0,
@@ -512,7 +529,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 false, null, false, null, false, null, true, false);
     }
 
-    private static ShowEntity getEntityFromWatchList(BaseShow baseShow, Stats stats) {
+    private static ShowEntity getEntityFromWatchList(BaseShow baseShow, Stats stats, Context context) {
         Show show = baseShow.show;
         return new ShowEntity(null, show.ids.trakt, show.title, context.getString(R.string.genres) + (show.genres == null ? "" : (show.genres.toString().replace("[", "").replace("]", ""))), show.overview,
                 0, show.rating != null ? (int) (show.rating * 10) : 0,
@@ -520,7 +537,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 false, null, false, null, false, null, false, true);
     }
 
-    private static ShowEntity getEntityFromRecommendedShow(Show show, int i, Stats stats) {
+    private static ShowEntity getEntityFromRecommendedShow(Show show, int i, Stats stats, Context context) {
         return new ShowEntity(null, show.ids.trakt, show.title, context.getString(R.string.genres) + (show.genres == null ? "" : (show.genres.toString().replace("[", "").replace("]", ""))), show.overview,
                 0, show.rating != null ? (int) (show.rating * 10) : 0,
                 show.images.poster.thumb, show.images.fanart.medium, show.year, stats == null ? 0 : stats.watchers.longValue(), stats == null ? 0 : stats.plays.longValue(),
@@ -532,14 +549,14 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 episode.rating != null ? (int) (episode.rating * 10) : 0, episode.images.screenshot.full);
     }
 
-    private static ShowEntity getEntityFromPopularShow(Show show, int i, Stats stats) {
+    private static ShowEntity getEntityFromPopularShow(Show show, int i, Stats stats, Context context) {
         return new ShowEntity(null, show.ids.trakt, show.title, context.getString(R.string.genres) + (show.genres == null ? "" : (show.genres.toString().replace("[", "").replace("]", ""))), show.overview,
                 0, show.rating != null ? (int) (show.rating * 10) : 0,
                 show.images.poster.thumb, show.images.fanart.medium, show.year, stats == null ? 0 : stats.watchers.longValue(), stats == null ? 0 : stats.plays.longValue(),
                 false, null, true, i, false, null, false, false);
     }
 
-    private static ShowEntity getEntityFromTrendingShow(Show show, int i, Stats stats) {
+    private static ShowEntity getEntityFromTrendingShow(Show show, int i, Stats stats, Context context) {
         return new ShowEntity(null, show.ids.trakt, show.title, context.getString(R.string.genres) + (show.genres == null ? "" : (show.genres.toString().replace("[", "").replace("]", ""))), show.overview,
                 0, show.rating != null ? (int) (show.rating * 10) : 0,
                 show.images.poster.thumb, show.images.fanart.medium, show.year, stats == null ? 0 : stats.watchers.longValue(), stats == null ? 0 : stats.plays.longValue(),

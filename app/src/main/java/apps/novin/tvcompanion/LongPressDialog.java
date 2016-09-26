@@ -13,7 +13,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
-import android.test.mock.MockApplication;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -120,7 +119,7 @@ public class LongPressDialog extends DialogFragment {
                 snackbar.show();
                 SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
                 final TraktV2 traktV2 = new TraktV2(BuildConfig.API_KEY, BuildConfig.CLIENT_SECRET, "tvcompanion.novin.apps://oauthredirect");
-                String accessToken = preferences.getString("access_token", null);
+                String accessToken = preferences.getString(SyncPreferences.KEY_ACCESS_TOKEN, null);
                 if (accessToken != null) {
                     traktV2.accessToken(accessToken);
                     // make sync items for the show and add to watchlist
@@ -180,7 +179,7 @@ public class LongPressDialog extends DialogFragment {
                                 }
                                 final List<ShowEntity> recommendationsToInsert = new ArrayList<>();
                                 for (Show show : recommendations) {
-                                    SyncAdapter.getStatsForRecommendationAndUpdatePositions(show, recommendationsToInsert, recommendations, traktV2, showEntityDao);
+                                    SyncAdapter.getStatsForRecommendationAndUpdatePositions(show, recommendationsToInsert, recommendations, traktV2, showEntityDao, getActivity());
                                 }
                                 showEntityDao.insertInTx(recommendationsToInsert);
                                 List<EpisodeEntity> episodesToInsert = new ArrayList<>();
@@ -215,7 +214,7 @@ public class LongPressDialog extends DialogFragment {
                     snackbar.show();
                     SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
                     final TraktV2 traktV2 = new TraktV2(BuildConfig.API_KEY, BuildConfig.CLIENT_SECRET, "tvcompanion.novin.apps://oauthredirect");
-                    String accessToken = preferences.getString("access_token", null);
+                    String accessToken = preferences.getString(SyncPreferences.KEY_ACCESS_TOKEN, null);
                     if (accessToken != null) {
                         traktV2.accessToken(accessToken);
                         AsyncTask.execute(new Runnable() {
@@ -253,7 +252,7 @@ public class LongPressDialog extends DialogFragment {
                                 }
                                 final List<ShowEntity> recommendationsToInsert = new ArrayList<>();
                                 for (Show show : recommendations) {
-                                    SyncAdapter.getStatsForRecommendationAndUpdatePositions(show, recommendationsToInsert, recommendations, traktV2, showEntityDao);
+                                    SyncAdapter.getStatsForRecommendationAndUpdatePositions(show, recommendationsToInsert, recommendations, traktV2, showEntityDao, getActivity());
                                 }
                                 showEntityDao.insertInTx(recommendationsToInsert);
                                 List<EpisodeEntity> episodesToInsert = new ArrayList<>();

@@ -8,7 +8,6 @@ import android.preference.PreferenceManager;
 import android.util.AttributeSet;
 
 import com.jakewharton.processphoenix.ProcessPhoenix;
-import com.uwetrottmann.trakt5.TraktV2;
 
 /**
  * Created by ncnov on 9/18/2016.
@@ -26,9 +25,9 @@ public class LogoutDialogPreference extends DialogPreference{
                 // Ok button press
                 SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
                 SharedPreferences.Editor editor = preferences.edit();
-                editor.putBoolean("loggedIn", false);
-                editor.putString("access_token", null);
-                editor.putString("refresh_token", null);
+                editor.putBoolean(SyncPreferences.KEY_LOGGED_IN, false);
+                editor.putString(SyncPreferences.KEY_ACCESS_TOKEN, null);
+                editor.putString(SyncPreferences.KEY_REFRESH_TOKEN, null);
                 editor.apply();
                 ProcessPhoenix.triggerRebirth(getContext());
                 break;

@@ -14,6 +14,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityOptionsCompat;
@@ -166,10 +167,11 @@ public class MainActivity extends AppCompatActivity
         super.onStart();
         // launch login if not logged in
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean loggedIn = preferences.getBoolean("loggedIn", false);
+        boolean loggedIn = preferences.getBoolean(SyncPreferences.KEY_LOGGED_IN, false);
         if (!loggedIn) {
             Intent intent = new Intent(this, LoginActivity.class);
             startActivityForResult(intent, 1);
+            finish();
         }
         ContentResolver.setIsSyncable(mAccount, AUTHORITY, 1);
 
@@ -209,9 +211,9 @@ public class MainActivity extends AppCompatActivity
 
         ImageView profile = (ImageView) mNavigationView.getHeaderView(0).findViewById(R.id.profile);
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        String userPhoto = preferences.getString("user_photo", null);
+        String userPhoto = preferences.getString(SyncPreferences.KEY_USER_PHOTO, null);
         Glide.with(this).load(userPhoto).centerCrop().error(R.drawable.ic_close_black).into(profile);
-        ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.user_name)).setText(preferences.getString("user_name", null));
+        ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.user_name)).setText(preferences.getString(SyncPreferences.KEY_USER_NAME, null));
         ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.last_synced)).setText(formatLastSync(preferences));
 
         if (e.showMessage()) {
@@ -222,7 +224,7 @@ public class MainActivity extends AppCompatActivity
 
     private String formatLastSync(SharedPreferences preferences) {
         long now = System.currentTimeMillis();
-        long syncTime = preferences.getLong("sync_time", now);
+        long syncTime = preferences.getLong(SyncPreferences.KEY_SYNC_TIME, now);
         long milliDif = now - syncTime;
         String unit;
         int num;
@@ -304,17 +306,17 @@ public class MainActivity extends AppCompatActivity
             View header = mNavigationView.inflateHeaderView(R.layout.nav_header_main);
             ImageView imageView = (ImageView) header.findViewById(R.id.profile);
             if (imageView != null) {
-                Glide.with(this).load(preferences.getString("user_photo", null)).centerCrop().error(R.drawable.ic_close_black).into(imageView);
+                Glide.with(this).load(preferences.getString(SyncPreferences.KEY_USER_PHOTO, null)).centerCrop().error(R.drawable.ic_close_black).into(imageView);
             }
-            ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.user_name)).setText(preferences.getString("user_name", null));
+            ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.user_name)).setText(preferences.getString(SyncPreferences.KEY_USER_NAME, null));
             ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.last_synced)).setText(formatLastSync(preferences));
         } else {
             View header = mNavigationView.getHeaderView(0);
             ImageView imageView = (ImageView) header.findViewById(R.id.profile);
             if (imageView != null) {
-                Glide.with(this).load(preferences.getString("user_photo", null)).centerCrop().error(R.drawable.ic_close_black).into(imageView);
+                Glide.with(this).load(preferences.getString(SyncPreferences.KEY_USER_PHOTO, null)).centerCrop().error(R.drawable.ic_close_black).into(imageView);
             }
-            ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.user_name)).setText(preferences.getString("user_name", null));
+            ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.user_name)).setText(preferences.getString(SyncPreferences.KEY_USER_NAME, null));
             ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.last_synced)).setText(formatLastSync(preferences));
         }
         if (getIntent() != null) {
@@ -325,7 +327,7 @@ public class MainActivity extends AppCompatActivity
                     bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
                     ContentResolver.requestSync(mAccount, AUTHORITY, bundle);
                 }
-                preferences.edit().putBoolean("syncing", true).apply();
+                preferences.edit().putBoolean(SyncPreferences.KEY_SYNCING, true).apply();
                 progressBar.setVisibility(View.VISIBLE);
                 make = Snackbar.make(contentFragment, getString(R.string.full_sync_message), Snackbar.LENGTH_INDEFINITE);
                 make.show();
@@ -341,8 +343,20 @@ public class MainActivity extends AppCompatActivity
                 dialogFragment.show(getSupportFragmentManager(), "details");
             }
         }
-        syncing = preferences.getBoolean("syncing", false);
-        if (!syncing && make != null && make.isShown()) {
+        syncing = preferences.getBoolean(SyncPreferences.KEY_SYNCING, false);
+        boolean interrupted = preferences.getBoolean(SyncPreferences.KEY_INTERRUPTED, false);
+        if (interrupted) {
+            if (!ContentResolver.isSyncPending(mAccount, AUTHORITY) && !ContentResolver.isSyncActive(mAccount, AUTHORITY)) {
+                Bundle bundle = new Bundle();
+                bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+                ContentResolver.requestSync(mAccount, AUTHORITY, bundle);
+                preferences.edit().putBoolean(SyncPreferences.KEY_SYNCING, true).apply();
+                progressBar.setVisibility(View.VISIBLE);
+                make = Snackbar.make(contentFragment, getString(R.string.full_sync_message), Snackbar.LENGTH_INDEFINITE);
+                make.show();
+                syncing = true;
+            }
+        } else if (!syncing && make != null && make.isShown()) {
             progressBar.setVisibility(View.INVISIBLE);
             make.dismiss();
             Snackbar.make(contentFragment, getString(R.string.sync_complete), Snackbar.LENGTH_LONG).show();
@@ -480,7 +494,7 @@ public class MainActivity extends AppCompatActivity
     @SuppressLint("CommitTransaction")
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
@@ -517,7 +531,9 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.action_refresh) {
             if (!syncing) {
                 ContentResolver.cancelSync(mAccount, AUTHORITY);
-                ContentResolver.requestSync(mAccount, AUTHORITY, Bundle.EMPTY);
+                Bundle bundle = new Bundle();
+                bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+                ContentResolver.requestSync(mAccount, AUTHORITY, bundle);
                 progressBar.setVisibility(View.VISIBLE);
                 make = Snackbar.make(contentFragment, getString(R.string.full_sync_message), Snackbar.LENGTH_INDEFINITE);
                 make.show();

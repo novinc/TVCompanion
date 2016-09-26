@@ -46,7 +46,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import apps.novin.tvcompanion.db.EpisodeEntityDao;
 import apps.novin.tvcompanion.db.ShowEntity;
 import apps.novin.tvcompanion.db.ShowEntityDao;
 import butterknife.BindView;
@@ -159,7 +158,7 @@ public class FindShowsPageFragment extends Fragment implements LoaderManager.Loa
                         public void run() {
                             final TraktV2 traktV2 = new TraktV2(BuildConfig.API_KEY, BuildConfig.CLIENT_SECRET, "tvcompanion.novin.apps://oauthredirect");
                             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-                            String accessToken = preferences.getString("access_token", null);
+                            String accessToken = preferences.getString(SyncPreferences.KEY_ACCESS_TOKEN, null);
                             traktV2.accessToken(accessToken);
                             List<SearchResult> searchResults = null;
                             try {

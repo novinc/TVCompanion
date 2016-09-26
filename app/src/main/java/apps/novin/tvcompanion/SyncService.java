@@ -3,6 +3,7 @@ package apps.novin.tvcompanion;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
+import android.util.Log;
 
 /**
  * Define a Service that returns an IBinder for the
@@ -26,7 +27,7 @@ public class SyncService extends Service {
          */
         synchronized (sSyncAdapterLock) {
             if (sSyncAdapter == null) {
-                sSyncAdapter = new SyncAdapter(getApplicationContext(), true, ((App) getApplication()).getDaoSession());
+                sSyncAdapter = new SyncAdapter(this, true, ((App) getApplication()).getDaoSession());
             }
         }
     }
@@ -37,6 +38,8 @@ public class SyncService extends Service {
      */
     @Override
     public IBinder onBind(Intent intent) {
+        // need this so onTaskRemoved is called so we can change sync preference keys
+        startService(new Intent(this, SyncService.class));
         /*
          * Get the object that allows external processes
          * to call onPerformSync(). The object is created
@@ -44,5 +47,17 @@ public class SyncService extends Service {
          * constructors call super()
          */
         return sSyncAdapter.getSyncAdapterBinder();
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        Log.d("sync", "task removed");
+        SyncAdapter.cancel(this);
+        super.onTaskRemoved(rootIntent);
+    }
+    @Override
+    public boolean onUnbind(Intent intent) {
+        stopSelf();
+        return super.onUnbind(intent);
     }
 }
